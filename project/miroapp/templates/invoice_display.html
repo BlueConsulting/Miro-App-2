@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Display</title>
+    <style>
+        .tab-buttons {
+            position: fixed;
+            top: 0; /* Position at the top of the page */
+            left: 0;
+            width: 100%; /* Full width */
+            background-color: #d8c5b6; /* Light background color */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+            z-index: 1000; /* Ensure it stays on top of other elements */
+            padding: 10px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Space between buttons */
+        }
+
+        .tab-buttons button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff; /* Primary color */
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .tab-buttons button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+       
+        .tab-buttons button.active {
+            background-color: #00eeff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .centered {
+            text-align: center;
+            margin-top: 20px; /* Optional spacing */
+            margin-bottom: 20px; /* Optional spacing */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            border: 1px solid #161313;
+            padding: 8px;
+        }
+        table th {
+            background-color: #f0e4e4;
+            
+        }
+        .sticky-footer {
+            position: fixed;
+            bottom: 10px; /* Slightly above the bottom edge for visibility */
+            right: 10px; /* Positioned at the far right of the page */
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 10px; /* Space between the buttons */
+            background-color: transparent; /* Make the container background transparent */
+            z-index: 1000; /* Ensure it stays above other elements */
+        }
+
+        .sticky-footer button {
+            padding: 10px 20px;
+            font-size: 14px;
+            background-color: rgba(0, 123, 255, 0.308); /* Semi-transparent button background */
+            color: rgb(19, 18, 18);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            backdrop-filter: blur(5px); /* Optional: add a blur effect to the background */
+        }
+
+        .sticky-footer button:hover {
+            background-color: rgba(0, 123, 255, 1); /* Solid color on hover for clarity */
+        }
+        .tooltip {
+            position: relative;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip); /* Use data-tooltip instead of title */
+            position: absolute;
+            top: -150%; /* Position below the element */
+            left: -10%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 10;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        /* Styles for narrower tables */
+        .narrow-table {
+            width: 70%; /* Adjust width as needed */
+            margin: 0 auto; /* Center-align the table */
+            border-collapse: collapse;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .narrow-table th,
+        .narrow-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .narrow-table th {
+            background-color: #333; /* Dark background for better contrast */
+            font-weight: bold;
+            color: white; /* Set text color to white */
+        }
+
+        .narrow-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+
+
+
+
+        
+    </style>
+    <script>
+        function showTab(tabId) {
+            // Remove active class from all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+            // Show the selected tab
+            document.getElementById(tabId).classList.add('active');
+            // Highlight the active button
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        }
+    </script>
+</head>
+<body>
+    
+    
+    <div class="tab-buttons">
+        <button data-tab="account" class="active" onclick="showTab('account')">Invoice Check</button>
+        <button data-tab="gst" onclick="showTab('gst')">GST Data</button>
+        <button data-tab="Invoice-Grn" onclick="showTab('Invoice-Grn')">Invoice vs GRN Data</button>
+        <button data-tab="Table_data" onclick="showTab('Table_data')">Table Data</button>
+        <button data-tab="invoice" onclick="showTab('invoice')">Invoice Data</button>
+    </div>
+
+    <div id="invoice" class="tab-content">
+        <h2 class="centered">Invoice Data</h2>
+        <table class="narrow-table">
+            <tbody>
+                {% for key, value in invoice_data.items %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    
+
+    <div id="account" class="tab-content active">
+        <h2 class="centered">Invoice Checks</h2>
+        <!-- Table for Customer GST Data -->
+        <h3 class="centered">Table 1: Source - GSTN & Invoice</h3>
+        
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>Parameters</th>
+                    <th>As per Invoice</th>
+                    <th>As per GST Portal</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if Checks.invoice_vs_gstin_protal %}
+                    {% for key, item in Checks.invoice_vs_gstin_protal.items %}
+                        <tr style="background-color: {% if item.Result == 'Matching' %}#BFF4BE{% else %}#FFCCCB{% endif %};">
+                            <td>{{ item.parameter }}</td>
+                            <td>{{ item.As_per_Invoice }}</td>
+                            <td>
+                                Trade Name: {{ item.As_per_GST_Portal }}
+                                {% if item.As_per_GST_Portal_legal %}
+                                    <br>
+                                    Legal Name: {{ item.As_per_GST_Portal_legal }}
+                                {% endif %}
+                            </td>
+                            <td>{{ item.Result }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Table for Source - Invoice -->
+        <h3 class="centered">Table 2A: Source - Invoice</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>Parameters</th>
+                    <th>Result</th>
+                    <th>Supporting Information (As per Invoice)</th>   
+                </tr>
+            </thead>
+            <tbody>
+                {% if Checks.invoice_validations %}
+                    {% for key, item in Checks.invoice_validations.items %}
+                        <tr style="background-color: 
+                            {% if item.Result in 2b_olive_color %}
+                                #BFF4BE
+                            {% else %}
+                                #FFCCCB
+                            {% endif %};
+                        ">
+                            <td>{{ item.parameter }}</td>
+                            <td>{{ item.Result }}</td>
+                            <td>
+                                {% if key in keys_with_tooltip %}
+                                    <span class="tooltip" data-tooltip="{{ item.As_per_Invoice }}">info</span>
+                                {% else %}
+                                    {{ item.As_per_Invoice }}
+                                {% endif %}
+                            </td>    
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+
+        <!-- Table for Source - GSTN Data -->
+        <h3 class="centered">Table 2B: Source - GSTN Data</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>Parameters</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if Checks.gst_portal_check %}
+                    {% for key, item in Checks.gst_portal_check.items %}
+                        <tr style="background-color: 
+                            {% if item.Result in 2b_olive_color %}
+                                #BFF4BE
+                            {% elif item.Result == '' %}
+                                grey
+                            {% else %}
+                                #FFCCCB
+                            {% endif %};
+                        ">
+                            <td>{{ item.parameter }}</td>
+                            <td>{{ item.Result }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+
+        <!-- Table for Source - Income Tax Data -->
+        <h3 class="centered">Table 2C: Source - Income Tax Data</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>Parameters</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if Checks.income_tax_check %}
+                    {% for key, item in Checks.income_tax_check.items %}
+                        <tr>
+                            <td>{{ item.parameter }}</td>
+                            <td>{{ item.Result }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    
+    </div>
+
+    
+    <div id="Table_data" class="tab-content">
+        <h2 class="centered">Table Data</h3>
+        <h3 class="centered">Table</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    {% if table_data %}
+                        <!-- Dynamically get column names from the first row -->
+                        {% for column_name in table_data.tabledata_.0 %}
+                            <th>{{ column_name }}</th>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if table_data.tabledata_ %}
+                    {% for row in table_data.tabledata_ %}
+                        <tr>
+                            {% for value in row.values %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">No Data Available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <h3 class="centered">Check2</h3>
+        <table class="narrow-table">
+            <tbody>
+                {% for key, value in table_data.check_2.items %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <h3 class="centered">Check3</h3>
+        <table class="narrow-table">
+            <tbody>
+                {% for key, value in table_data.check_3.items %}
+                    <tr>
+                        <th>{{ key }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    </div>
+
+    <div id="Invoice-Grn" class="tab-content">
+        <h2 class="centered">Table VS Grn</h3>
+        <h3 class="centered">Invoice Table</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    {% if grn_vs_invoice.invoice_data %}
+                        <!-- Dynamically get column names from the first row -->
+                        {% for column_name in grn_vs_invoice.invoice_data.0 %}
+                            <th>{{ column_name }}</th>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if grn_vs_invoice.invoice_data %}
+                    {% for row in grn_vs_invoice.invoice_data %}
+                        <tr>
+                            {% for value in row.values %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">No Data Available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <h3 class="centered">Grn Data</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    {% if grn_vs_invoice.grn_data %}
+                        <!-- Dynamically get column names from the first row -->
+                        {% for column_name in grn_vs_invoice.grn_data.0 %}
+                            <th>{{ column_name }}</th>
+                        {% endfor %}
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if grn_vs_invoice.grn_data %}
+                    {% for row in grn_vs_invoice.grn_data %}
+                        <tr>
+                            {% for value in row.values %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">Invoice Id did not match any OPEN GRN data or no data available against invoice id</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <h3 class="centered">Invoice VS GRN</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>Particulars </th>
+                    <th>As per Open GRN Report</th>
+                    <th>As per Invoice (OCR)</th> 
+                    <th>Result </th>  
+                </tr>
+            </thead>
+            <tbody>
+                {% if Invoicetable_vs_Grntable_compare %}
+                    {% for key, item in Invoicetable_vs_Grntable_compare.items %}
+                        <tr>
+                            <td>{{ item.Particulars }}</td>
+                            <td>{{ item.As_per_grn }}</td>
+                            <td>{{ item.As_per_invoice }}</td>
+                            <td>{{ item.result }}</td>
+                               
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4">No data available</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        
+    </div>
+
+    <div id="gst" class="tab-content">
+        <h2 class="centered">GST Data</h2>
+        <!-- Table for Customer GST Data -->
+        <h3 class="centered">Customer GST Data</h3>
+        <table class="narrow-table">   
+            <tbody>
+                {% if gst_data.customer_gst_data %}
+                    {% for key, value in gst_data.customer_gst_data.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2">No data available , Invalid GST NO or invoice does not have GST NO</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Table for Vendor GST Data -->
+        <h3 class="centered">Vendor GST Data</h3>
+        <table class="narrow-table">
+            <tbody>
+                {% if gst_data.vendor_gst_data %}
+                    {% for key, value in gst_data.vendor_gst_data.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2">No data available , Invalid GST NO or invoice does not have GST NO</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <!-- <pre>{{ gst_data | safe }}</pre> -->
+
+        <!-- Table for Filing Frequency Data -->
+        <h3 class="centered">Filing Frequency GST Portal</h3>
+        <table class="narrow-table">
+            <thead>
+                <tr>
+                    <th>quarter</th>
+                    <th>preference</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if Filinq_frequency %}
+                    {% for item in Filinq_frequency %}
+                        <tr>
+                            <td>{{ item.quarter }}</td>
+                            <td>{{ item.preference }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2">No data available , Invalid GST NO or invoice does not have GST NO</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+        <h2 class="centered">Filing Status GST Portal</h2>
+        <h3 class="centered">GSTR-1 Data</h3>
+        <div class="narrow-table">
+            {% if df_gstr1_html %}
+                {{ df_gstr1_html|safe }}
+            {% else %}
+                <p>No GSTR-1 data available.</p>
+            {% endif %}
+        </div>
+
+        <h3 class="centered">GSTR-3B Data</h3>
+        <div class="narrow-table">
+            {% if df_3b_html %}
+                {{ df_3b_html|safe }}
+            {% else %}
+                <p>No GSTR-3B data available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Table for Filing Status Data -->
+        <!-- <h3 class="centered">Filing Status GST Portal</h3> -->
+        <!-- <table class="narrow-table"> -->
+            <!-- <thead> -->
+                <!-- <tr> -->
+                    <!-- <th>valid</th> -->
+                    <!-- <th>mof</th> -->
+                    <!-- <th>dof</th> -->
+                    <!-- <th>rtntype</th> -->
+                    <!-- <th>ret_prd</th> -->
+                    <!-- <th>arn</th> -->
+                    <!-- <th>status</th> -->
+                <!-- </tr> -->
+            <!-- </thead> -->
+            <!-- <tbody> -->
+                <!-- {% if Filinq_status %} -->
+                    <!-- {% for item in Filinq_status %} -->
+                        <!-- <tr> -->
+                            <!-- <td>{{ item.valid }}</td>
+                            <td>{{ item.mof }}</td>
+                            <td>{{ item.dof }}</td>
+                            <td>{{ item.rtntype }}</td>
+                            <td>{{ item.ret_prd }}</td>
+                            <td>{{ item.arn }}</td>
+                            <td>{{ item.status }}</td> -->
+                        <!-- </tr> -->
+                    <!-- {% endfor %} -->
+                <!-- {% else %} -->
+                <!-- <tr> -->
+                    <!-- <td colspan="2">No data available , Invalid GST NO or invoice does not have GST NO</td> -->
+                <!-- </tr> -->
+                <!-- {% endif %} -->
+            <!-- </tbody> -->
+        <!-- </table> -->
+        <!-- Table for Vendor GST Data -->
+        <h3 class="centered">Pan Details</h3>
+        <table class="narrow-table">
+            <tbody>
+                {% if gst_data.Pan_Status %}
+                    {% for key, value in gst_data.Pan_Status.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2">No data available , Invalid PAN NO or invoice does not have PAN NO</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <h3 class="centered">206AB Compliance</h3>
+        <table class="narrow-table">
+            <tbody>
+                {% if gst_data.206AB_Compliance %}
+                    {% for key, value in gst_data.206AB_Compliance.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="2">No data available , Invalid PAN NO or invoice does not have PAN NO</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        
+    </div>
+
+    
+    <div class="sticky-footer">
+        <button onclick="window.location.href='/show-invoice/'">Back</button>
+        <!-- <button onclick="saveTemplate()">Save Template for This Invoice</button> -->
+        <!-- Save Template button inside a form -->
+        <!-- <form id="saveTemplateForm" action="{% url 'save_template' %}" method="POST"> -->
+            <!-- {% csrf_token %} -->
+            <!-- <button type="submit">Save Template</button> -->
+        <!-- </form> -->
+    </div>
+    
+</body>
+</html>

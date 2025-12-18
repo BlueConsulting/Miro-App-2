@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        main {
+            padding: 20px;
+            text-align: center;
+        }
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/home/" style="text-decoration: none; color: inherit;">Miro App</a>
+        </h1>
+        <nav>
+            <button onclick="window.location.href='/all-invoices/'">Show Uploaded Invoices</button>
+            <button onclick="window.location.href='/upload-data/'">Pending Invoices</button>  
+            <button onclick="window.location.href='/upload-data/'">Upload Data</button>    
+            <button onclick="exportTemplates()">Export Templates</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <!-- Display messages -->
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li class="alert {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h2>Welcome to the Home Page</h2>
+        <p>Use the buttons above to navigate.</p>
+    </main>
+
+    <script>
+        function exportTemplates() {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('/export-templates/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob(); // Convert the response to a binary blob
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Error exporting templates.');
+                    });
+                }
+            })
+            .then(blob => {
+                // Create a link to download the file
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Aptemplate'; // Set a default file name
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        }
+    </script>
+</body>
+</html>

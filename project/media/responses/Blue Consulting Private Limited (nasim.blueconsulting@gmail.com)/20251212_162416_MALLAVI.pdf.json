@@ -1,0 +1,552 @@
+{
+    "result": {
+        "CHECKS": {
+            "Account_check": {
+                "Complete_Invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Customer_Adress": {
+                    "Gst_Portal": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
+                    "Invoice_data": "No.151, None, Hoodi Village, Karnataka, None, None",
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Customer_Name": {
+                    "Gst_Portal": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+                    "Invoice_data": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+                    "status": "Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Invoice_Blocked_Credit": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Invoice_Date": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "2025-03-31",
+                    "status": "Okay"
+                },
+                "Invoice_Number": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "SO/1710/24-25",
+                    "status": "Okay"
+                },
+                "Invoice_RCM-Services": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "Pre_year": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "gstnumber_gstcharged": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "valid_invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                }
+            },
+            "data_from_gst": {
+                "206AB_Compliance": {
+                    "fin_year": "2024-25",
+                    "pan": "AAFFN7846L",
+                    "pan_allotment_date": "2006-03-22",
+                    "pan_name": "MXXXXXXE GXXXXL MXXXXXXXXXXXG",
+                    "pan_operative_status": "operative",
+                    "specified_person": "N"
+                },
+                "Filing Frequency": [
+                    {
+                        "preference": "M",
+                        "quarter": "Q1"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q2"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q3"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q4"
+                    }
+                ],
+                "Filing Status": [
+                    {
+                        "arn": "AB290325747755N",
+                        "dof": "22-04-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "032025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB291124240201R",
+                        "dof": "20-12-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "112024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB291024261110R",
+                        "dof": "20-11-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "102024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290824282196N",
+                        "dof": "20-09-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "082024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2907243014951",
+                        "dof": "20-08-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "072024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2905243610555",
+                        "dof": "20-06-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "052024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290424271506Z",
+                        "dof": "20-05-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "042024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290225378513Y",
+                        "dof": "20-03-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "022025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2912242402396",
+                        "dof": "20-01-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "122024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290924428585K",
+                        "dof": "19-10-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "092024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2906242495013",
+                        "dof": "19-07-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "062024",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2901251475048",
+                        "dof": "19-02-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "012025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291124540531H",
+                        "dof": "11-12-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "112024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291024528521G",
+                        "dof": "11-11-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "102024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290924551002A",
+                        "dof": "11-10-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "092024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290824525030F",
+                        "dof": "11-09-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "082024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2906246095035",
+                        "dof": "11-07-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "062024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290524483736M",
+                        "dof": "11-06-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "052024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2904245250981",
+                        "dof": "11-05-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "042024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290325627214A",
+                        "dof": "11-04-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "032025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290225551907U",
+                        "dof": "11-03-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "022025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290125570992U",
+                        "dof": "11-02-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "012025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291224507435A",
+                        "dof": "11-01-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "122024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290724447749F",
+                        "dof": "10-08-2024",
+                        "mof": "ONLINE",
+                        "ret_prd": "072024",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    }
+                ],
+                "Pan_Status": {
+                    "aadhaar_linked": null,
+                    "aadhaar_number": "",
+                    "aadhaar_seeding_status": "NA",
+                    "address": {
+                        "building_name": "NO 95, 9th Main",
+                        "city": "BANGALORE",
+                        "country": "India",
+                        "locality": "Peenya I Stage S.O",
+                        "pincode": "560058",
+                        "state": "Karnataka",
+                        "street_name": "Peenya 3rd Stage"
+                    },
+                    "dob": "01/03/2006",
+                    "email": "",
+                    "first_name": "",
+                    "fullname": "MALLAVEE GLOBAL MANUFACTURING",
+                    "gender": null,
+                    "last_name": "MALLAVEE GLOBAL MANUFACTURING",
+                    "middle_name": "",
+                    "mobile": "",
+                    "pan": "AAFFN7846L",
+                    "pan_status": "Active",
+                    "pan_type": "Firm/Limited Liability Partnership"
+                },
+                "customer_gst_data": {
+                    "Address": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
+                    "Central tax Jurisdiction": "RANGE-BED7",
+                    "Central tax Jurisdiction Code": "YT0702",
+                    "Date of Registration": "01/07/2017",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "29AAGCG0335D2ZX",
+                    "Legal Name": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "KA119",
+                    "Trade Name": "GLODESI TECHNOLOGIES PRIVATE LIMITED"
+                },
+                "vendor_gst_data": {
+                    "Address": "NO 25 PLOT NO 9E ,  , 2ND PHASE PEENYA, , Bengaluru Urban , Karnataka , 560058",
+                    "Central tax Jurisdiction": "RANGE-ENWD1",
+                    "Central tax Jurisdiction Code": "YX0105",
+                    "Date of Registration": "01/07/2017",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "29AAFFN7846L1ZJ",
+                    "Legal Name": "MALLAVEE GLOBAL MANUFACTURING",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "KA021",
+                    "Trade Name": "MALLAVEE GLOBAL MANUFACTURING"
+                }
+            },
+            "e-invoice_data": {
+                "einvoice_liability": "Yes",
+                "reason": "E-Invoice is applicable but IRN/ACK NO not found on invoice or ocr is unable to capture it",
+                "status": "not okay"
+            },
+            "eway_bill_data": {
+                "Invoice_No": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "SO/1710/24-25",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Total_Amount": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "944000.00",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Vendor_Gst": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "29AAFFN7846L1ZJ",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "reason": "Vendor is liable to raise E-Way Bill, but Eway bill Number not found or ocr is unable to capture it",
+                "status": "not okay"
+            },
+            "table_data": {
+                "Table_Check_data": "[{\"item_description\":\"300177_Shroud Family Mold Tool (8 and 18 pole) .\",\"item_quantity\":1.0,\"unit\":\"Nos\",\"unit_price\":250000.0,\"product_code\":\"84879000\",\"amount\":250000.0,\"qty_unitprice\":250000.0,\"check1\":\"correct\"},{\"item_description\":\"300178_Housing Family Mold Tool (8 and 18 pole) .\",\"item_quantity\":1.0,\"unit\":\"Nos\",\"unit_price\":250000.0,\"product_code\":\"84879000\",\"amount\":250000.0,\"qty_unitprice\":250000.0,\"check1\":\"correct\"},{\"item_description\":\"300179_Big Terminal Semi progressive tool (8 and 18\\npole)\",\"item_quantity\":1.0,\"unit\":\"Nos\",\"unit_price\":130000.0,\"product_code\":\"84879000\",\"amount\":130000.0,\"qty_unitprice\":130000.0,\"check1\":\"correct\"},{\"item_description\":\"300180_Small Terminal Semi progressive tool (8 and 18\\npole) .\",\"item_quantity\":1.0,\"unit\":\"Nos\",\"unit_price\":130000.0,\"product_code\":\"84879000\",\"amount\":130000.0,\"qty_unitprice\":130000.0,\"check1\":\"correct\"},{\"item_description\":\"300181_Bending tool (8 and 18 pole) .\",\"item_quantity\":1.0,\"unit\":\"Nos\",\"unit_price\":40000.0,\"product_code\":\"84879000\",\"amount\":40000.0,\"qty_unitprice\":40000.0,\"check1\":\"correct\"}]"
+            },
+            "tax_check": {
+                "Company_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Company_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Vendor_206AB": {
+                    "Gst_Portal": "N",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Filing_status": {
+                    "Gst_Portal": "",
+                    "Invoice_data": " ",
+                    "status": "Filled"
+                },
+                "Vendor_Gst_Active": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "Active",
+                    "status": "YES"
+                },
+                "Vendor_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29AAFFN7846L1ZJ",
+                    "status": "YES"
+                },
+                "Vendor_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29AAFFN7846L1ZJ",
+                    "status": "YES"
+                },
+                "Vendor_Pan-Adhar_Linked": {
+                    "Gst_Portal": null,
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Pan_Active": {
+                    "Gst_Portal": "Active",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_TaxPayer_type": {
+                    "Gst_Portal": "Regular",
+                    "Invoice_data": "-",
+                    "status": "Regular"
+                },
+                "Vendor_Taxfiliging_Frequency": {
+                    "Gst_Portal": "Monthly",
+                    "Invoice_data": " ",
+                    "status": "Monthly"
+                },
+                "tax_type_on_invoice": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": " ",
+                    "status": "Okay"
+                }
+            }
+        },
+        "Invoice_data": {
+            "Ack_No": null,
+            "Bank_Details": {
+                "Account_holder_name": "MALLAVEE GLOBAL MANUFACTURING",
+                "Bank_Account_No": null,
+                "Email": null,
+                "VendorAddress": "No25, plot no.9E, 3rd main 2nd phase peenya industrial area bangalore 560058 karnataka, None, None, None, None"
+            },
+            "BillingAddress": "No.151, None, Hoodi Village, Karnataka, None, None",
+            "BillingAddressRecipient": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+            "Currency": "INR",
+            "CustomerName": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+            "Cutomer Gst No.": "29AAGCG0335D2ZX",
+            "EwayBill_No": null,
+            "Invoice items:": {
+                "item#1": {
+                    "amount": "250000.0",
+                    "item_description": "300177_Shroud Family Mold Tool (8 and 18 pole) .",
+                    "item_quantity": 1.0,
+                    "product_code": "84879000",
+                    "unit": "Nos",
+                    "unit_price": "250000.0"
+                },
+                "item#2": {
+                    "amount": "250000.0",
+                    "item_description": "300178_Housing Family Mold Tool (8 and 18 pole) .",
+                    "item_quantity": 1.0,
+                    "product_code": "84879000",
+                    "unit": "Nos",
+                    "unit_price": "250000.0"
+                },
+                "item#3": {
+                    "amount": "130000.0",
+                    "item_description": "300179_Big Terminal Semi progressive tool (8 and 18\npole)",
+                    "item_quantity": 1.0,
+                    "product_code": "84879000",
+                    "unit": "Nos",
+                    "unit_price": "130000.0"
+                },
+                "item#4": {
+                    "amount": "130000.0",
+                    "item_description": "300180_Small Terminal Semi progressive tool (8 and 18\npole) .",
+                    "item_quantity": 1.0,
+                    "product_code": "84879000",
+                    "unit": "Nos",
+                    "unit_price": "130000.0"
+                },
+                "item#5": {
+                    "amount": "40000.0",
+                    "item_description": "300181_Bending tool (8 and 18 pole) .",
+                    "item_quantity": 1.0,
+                    "product_code": "84879000",
+                    "unit": "Nos",
+                    "unit_price": "40000.0"
+                }
+            },
+            "InvoiceDate": "2025-03-31",
+            "InvoiceId": "SO/1710/24-25",
+            "InvoiceTotal": "944000.00",
+            "Irn_No": "",
+            "PurchaseOrder": "24900003 ,",
+            "ShippingAddress": "None, None, None, None, None, None",
+            "ShippingAddressRecipient": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+            "SubTotal": "800000.00",
+            "Tax Items": {
+                "CGST": {
+                    "amount": 72000.0,
+                    "rate": 0
+                },
+                "SGST": {
+                    "amount": 72000.0,
+                    "rate": 0
+                }
+            },
+            "Tax_Invoice": "Tax Invoice",
+            "TotalDiscount": "0.00",
+            "TotalTax": "144000.00",
+            "Vendor Gst No.": "29AAFFN7846L1ZJ",
+            "VendorAddress": "No25, plot no.9E, 3rd main 2nd phase peenya industrial area bangalore 560058 karnataka, None, None, None, None",
+            "VendorAddressRecipient": "MALLAVEE GLOBAL MANUFACTURING",
+            "VendorName": "MALLAVEE GLOBAL MANUFACTURING",
+            "relevent_page": [
+                "1"
+            ]
+        },
+        "Okay_NotOkay": {
+            "status": "Not All Okay",
+            "message": [
+                "Customer_Adress Not Matched",
+                "Vendor_Filing_status"
+            ]
+        }
+    }
+}

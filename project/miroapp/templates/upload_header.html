@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Headers - Miro App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f8f9fa;
+    }
+    .main-header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .main-header h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .main-header nav button {
+        margin-left: 10px;
+        padding: 6px 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .main-header nav button:hover {
+        background-color: #2980b9;
+    }
+
+    nav button {
+      
+      padding: 10px 15px;
+      background: white;
+      color: #007bff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    nav button:hover {
+      background: #e2e6ea;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+    input[type="file"] {
+      margin-top: 5px;
+      margin-bottom: 15px;
+    }
+    button[type="submit"] {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: green;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>Miro App</h1>
+        <nav>
+            <button onclick="window.location.href='/configurations/'">Home</button>
+            <button onclick="window.location.href='/upload-headerss/'">Upload Header</button>
+            <button onclick="window.location.href='/mapping-config/'">Header Mapping</button>
+            <button onclick="window.location.href='/mapping-addvariable/'">Additional Variable</button>
+            <button onclick="window.location.href='/template-setting/'">Template Setting</Template></button>
+            <button onclick="window.location.href='/unallocatedcost-gl/'">GL Codes</Template></button>
+            <button onclick="window.location.href='/users/'">Users</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+
+  <div class="container">
+    <h2>Upload Headers</h2>
+
+    <form id="uploadForm" enctype="multipart/form-data" method="POST">
+      {% csrf_token %}
+      <label for="po_header">Upload PO Header Excel:</label>
+      <input type="file" name="po_header" id="po_header" accept=".xlsx, .xls" />
+
+      <label for="miro_header">Upload MIGO Header Excel:</label>
+      <input type="file" name="miro_header" id="miro_header" accept=".xlsx, .xls" />
+
+      <label for="se_header">Upload Service Entry Header Excel:</label>
+      <input type="file" name="se_header" id="se_header" accept=".xlsx, .xls" />
+
+      <label for="vmaster_header">Upload Vendor Master Header Excel:</label>
+      <input type="file" name="vmaster_header" id="vmaster_header" accept=".xlsx, .xls" />
+
+      <label for="wholdtax_master_header">Upload WithholdTax Master Header Excel:</label>
+      <input type="file" name="wholdtax_master_header" id="wholdtax_master_header" accept=".xlsx, .xls" />
+
+      <label for="gsttax_master_header">Upload WithholdTax Master Header Excel:</label>
+      <input type="file" name="gsttax_master_header" id="gsttax_master_header" accept=".xlsx, .xls" />
+
+      <label for="hsn_master_header">Upload WithholdTax Master Header Excel:</label>
+      <input type="file" name="hsn_master_header" id="hsn_master_header" accept=".xlsx, .xls" />
+
+      <label for="sac_master_header">Upload WithholdTax Master Header Excel:</label>
+      <input type="file" name="sac_master_header" id="sac_master_header" accept=".xlsx, .xls" />
+
+      <button type="submit">Upload Headers</button>
+    </form>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      try {
+        console.log("url called");
+        
+        const response = await fetch("{% url 'headers' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrfToken },
+          body: formData
+        });
+
+        const result = await response.json();
+        document.getElementById("status").textContent = result.message || "Upload complete.";
+      } catch (error) {
+        document.getElementById("status").textContent = "Upload failed. Try again.";
+      }
+    });
+  </script>
+</body>
+</html>

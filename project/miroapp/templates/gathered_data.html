@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapped Data with Popup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #0078D7; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+
+        .status-radio {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin: 0 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        .status-radio:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 12px;
+            padding: 5px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .g { background-color: #28a745; }
+        .o { background-color: #fd7e14; }
+        .r { background-color: #dc3545; }
+
+        .checkbox-col input { transform: scale(1.3); cursor: pointer; }
+
+        .modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        padding-top: 80px;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-content {
+        background-color: #fff;
+        margin: auto;
+        padding: 20px;
+        width: 80%;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #eee;
+        }
+
+        .close {
+        font-size: 24px;
+        cursor: pointer;
+        }
+
+        .table-container {
+        max-height: 60vh;
+        overflow-y: auto;
+        margin-top: 15px;
+        }
+
+        .popup-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 14px;
+        }
+
+        .popup-table th, .popup-table td {
+        border: 1px solid #f0e2e2;
+        padding: 8px 10px;
+        text-align: left;
+        }
+
+        .popup-table th {
+        background-color: #494646;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        }
+
+        .popup-table tr:nth-child(even) {
+        background-color: #fafafa;
+        }
+
+        @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h2>Invoice Summary</h2>
+
+    <table id="invoiceTable">
+        <thead>
+            <tr>
+                <th>Vendor Name</th>
+                <th>Invoice No.</th>
+                <th>Invoice Date</th>
+                <th>Invoice Value</th>
+                <th>Invoice Status</th>
+                <th>
+                    Check All
+                    <input type="checkbox" id="checkAll">
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr data-groupkey="{{ row.InvoiceGroupKey }}">
+                <td>{{ row.VendorName }}</td>
+                <td>{{ row.InvoiceNo }}</td>
+                <td>{{ row.InvoiceDate }}</td>
+                <td>{{ row.InvoiceValue }}</td>
+                <td>
+                    {% for key, status in row.InvoiceCheck.items %}
+                        <span class="status-radio {{ status.color }}"
+                            title="{{ key }}"
+                            data-tooltip="{{ status.message }}"
+                            data-data='{{ status.data|safe }}'
+                            onclick="showData(this.dataset.data, '{{ status.message|escapejs }}')">
+                        </span>
+                    {% endfor %}
+                </td>
+                <td class="checkbox-col">
+                    <input type="checkbox" class="row-check">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ✅ New Generate Template Button -->
+    <div style="text-align:center; margin-top:20px;">
+        <button id="generateTemplateBtn" style="
+            background-color:#007bff; 
+            color:white; 
+            border:none; 
+            padding:10px 20px; 
+            border-radius:6px; 
+            cursor:pointer;">
+            Generate Template
+        </button>
+    </div>
+
+    <!-- Modal (unchanged) -->
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="popupContent"></div>
+        </div>
+    </div>
+     <script>
+        document.getElementById('checkAll').addEventListener('change', function() {
+            const checked = this.checked;
+            document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+        });
+
+        // ✅ New Script for "Generate Template"
+        document.getElementById("generateTemplateBtn").addEventListener("click", function() {
+            const selectedKeys = [];
+            document.querySelectorAll("#invoiceTable tbody tr").forEach(row => {
+                const checkbox = row.querySelector(".row-check");
+                if (checkbox && checkbox.checked) {
+                    selectedKeys.push(row.getAttribute("data-groupkey"));
+                }
+            });
+            console.log(selectedKeys);
+            
+
+            if (selectedKeys.length === 0) {
+                alert("Please select at least one invoice to generate template.");
+                return;
+            }
+
+            // Send to backend
+            fetch("/template-generate/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_keys: selectedKeys })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Response: " + JSON.stringify(data, null, 2));
+                console.log("Backend response:", data);
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Error sending data to backend.");
+            });
+        });
+
+        // Helper to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function showData(rawData, message) {
+            try {
+                const data = typeof rawData === "string" ? JSON.parse(rawData) : rawData;
+                console.log("Parsed Data:", data);
+
+                const modal = document.getElementById("dataModal");
+                const modalTitle = document.getElementById("modalTitle");
+                const popupContent = document.getElementById("popupContent");
+
+                modalTitle.textContent = message;
+
+                if (!data || (Array.isArray(data) && data.length === 0) || (Object.keys(data).length === 0)) {
+                    popupContent.innerHTML = `<p style="text-align:center; color:gray;">No data available for this check.</p>`;
+                } else {
+                    popupContent.innerHTML = generateTableHTML(data);
+                }
+
+                modal.style.display = "block";
+            } catch (e) {
+                console.error("Error parsing data:", e, rawData);
+                alert("Unable to display data for this check.");
+            }
+        }
+
+        function generateTableHTML(data) {
+            // Case 1: Array of Objects (r1, r4)
+            if (Array.isArray(data)) {
+                const headers = Object.keys(data[0] || {});
+                let table = `<div class="table-container"><table class="popup-table"><thead><tr>`;
+                headers.forEach(h => table += `<th>${h}</th>`);
+                table += `</tr></thead><tbody>`;
+                data.forEach(row => {
+                    table += `<tr>`;
+                    headers.forEach(h => {
+                        let val = row[h] ?? "";
+                        table += `<td>${val}</td>`;
+                    });
+                    table += `</tr>`;
+                });
+                table += `</tbody></table></div>`;
+                return table;
+            }
+
+            // Case 2: Object of nested objects (r2, r6)
+            if (typeof data === "object" && Object.values(data)[0] && typeof Object.values(data)[0] === "object") {
+                let table = `<div class="table-container"><table class="popup-table"><thead><tr><th>Field</th>`;
+                const subKeys = Object.keys(Object.values(data)[0]);
+                subKeys.forEach(k => table += `<th>${k}</th>`);
+                table += `</tr></thead><tbody>`;
+                for (const [key, values] of Object.entries(data)) {
+                    table += `<tr><td><b>${key}</b></td>`;
+                    subKeys.forEach(k => {
+                        let val = values[k] ?? "";
+                        let color = "";
+                        if (String(val).toLowerCase().includes("not")) color = "red";
+                        else if (String(val).toLowerCase().includes("match")) color = "orange";
+                        else if (String(val).toLowerCase().includes("ok")) color = "green";
+                        table += `<td style="color:${color}">${val}</td>`;
+                    });
+                    table += `</tr>`;
+                }
+                table += `</tbody></table></div>`;
+                return table;
+            }
+
+            // Case 3: Simple flat object (r5, r7)
+            if (typeof data === "object") {
+                let table = `<div class="table-container"><table class="popup-table"><thead><tr><th>Key</th><th>Value</th></tr></thead><tbody>`;
+                for (const [key, val] of Object.entries(data)) {
+                    table += `<tr><td>${key}</td><td>${val}</td></tr>`;
+                }
+                table += `</tbody></table></div>`;
+                return table;
+            }
+
+            return `<p style="text-align:center;">Unsupported data format</p>`;
+        }
+
+        function closeModal() {
+            document.getElementById('dataModal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('dataModal');
+            if (event.target === modal) modal.style.display = "none";
+        };
+    </script>
+    
+</body>
+
+
+</html>

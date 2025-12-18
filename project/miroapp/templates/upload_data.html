@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        main {
+            padding: 30px;
+            text-align: center;
+        }
+        form {
+            display: inline-block;
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        select, input[type=file] {
+            margin: 10px;
+            padding: 8px;
+            font-size: 15px;
+        }
+        input[type=submit] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type=submit]:hover {
+            background-color: #0056b3;
+        }
+        .table {
+            border-collapse: collapse;
+            margin: 20px auto;
+            width: 80%;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .error {
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/home/" style="text-decoration: none; color: inherit;">My App</a>
+        </h1>
+        <nav>
+            <button onclick="window.location.href='/upload-invoice/'">Upload Invoice</button>
+            <button onclick="window.location.href='/show-invoice/'">Show Uploaded Invoices</button> 
+            <button onclick="window.location.href='/upload-data/'">Upload Data</button>    
+            <button onclick="exportTemplates()">Export Templates</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <h2>Upload Data File</h2>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="data_type">Select Data Type:</label>
+            <select name="data_type" id="data_type" required>
+                <option value="">-- Select Type --</option>
+                <option value="migo">MIGO</option>
+                <option value="po">Purchase Order (PO)</option>
+                <option value="vendormaster">Vendor Master</option>
+                <option value="withholdtaxmaster">WithHold Tax Master</option>
+                <option value="gsttaxmaster">GST Tax Master</option>
+                <option value="hsnmaster">HSN Master</option>
+                <option value="sacmaster">SAC Master</option>
+            </select><br>
+            
+            <input type="file" name="excel_file" accept=".xlsx,.xls" required><br>
+            <input type="submit" value="Upload File">
+        </form>
+
+        {% if data_type %}
+            <h3>Showing contents for: {{ data_type }}</h3>
+        {% endif %}
+
+        {% if file_content %}
+            <div>{{ file_content|safe }}</div>
+        {% endif %}
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </main>
+</body>
+</html>

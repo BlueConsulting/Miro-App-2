@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Configuration - Accounting Rules</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--card:#fff;--muted:#666;--accent:#2c3e50;--primary:#007BFF;--light:#f5f6fa}
+  body{font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f9;}
+  .container{max-width:1100px;margin:0 auto}
+  header1{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  h1{margin:0;font-size:20px;color:var(--accent)}
+  .card{background:var(--card);border-radius:10px;padding:18px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .section-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+  .section-title{font-weight:700}
+  .section-sub{color:var(--muted);font-size:13px}
+  .section-body{margin-top:12px;display:none}
+  .section-body.open{display:block}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1 1 240px;min-width:220px}
+  label{display:block;font-weight:600;margin-bottom:6px;font-size:13px}
+  input[type="text"],input[type="number"],select{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px}
+  .inline{display:flex;gap:10px;align-items:center}
+  .muted{color:var(--muted);font-size:13px}
+  .btn{background:var(--primary);color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
+  .btn.secondary{background:#6c757d}
+  .small{font-size:13px;padding:6px 10px}
+  .help{font-size:12px;color:#666;margin-top:6px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .narration-list{display:flex;flex-wrap:wrap;gap:8px}
+  .narration-list label{font-weight:400}
+  .status{margin-top:12px;padding:10px;border-radius:8px;background:#fafafa;color:#333}
+  .required{color:#c0392b;margin-left:6px}
+  .file-row{display:flex;gap:10px;align-items:center}
+
+  .main-header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    }
+
+    .main-header h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .main-header nav button {
+        margin-left: 10px;
+        padding: 6px 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .main-header nav button:hover {
+        background-color: #2980b9;
+    }
+
+    nav {
+            display: flex;
+            gap: 10px;
+        }
+    nav button {
+        background-color: white;
+        color: #007bff;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    nav button:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 12px;
+    }
+    input[type="file"] {
+      margin-top: 5px;
+      margin-bottom: 15px;
+    }
+    button[type="submit"] {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: green;
+      text-align: center;
+    }
+    #tabs {
+      margin-bottom: 10px;
+    }
+
+    #tabs button {
+      padding: 8px 16px;
+      margin-right: 4px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    #tabs button.active {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    .tab-content {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #fff;
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .small-input {
+      width: 60px !important;   /* Perfect for 2 digits */
+      display: inline-block;
+    }
+    
+</style>
+</head>
+<body>
+    <header class="main-header">
+        <h1>Miro App</h1>
+        <nav>
+             <button onclick="loadSection('configurations')">Basic Configurations</button> 
+            <button onclick="loadSection('upload_headers')">Upload Headers</button>
+            <button onclick="window.location.href='/mapping-config/'">Header Mapping</button>
+            <button onclick="window.location.href='/mapping-addvariable/'">Additional Variable Settings</button>
+            <button onclick="window.location.href='/template-setting/'">Template Setting</Template></button>
+            <button onclick="window.location.href='/unallocatedcost-gl/'">GL Codes</Template></button>
+            <button onclick="loadSection('Roles')">Roles</button>
+            <button onclick="window.location.href='/users/'">Users Settings</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+        <!-- <nav>
+           
+            <button onclick="loadSection('header_mapping')">Header Mapping</button>
+            <button onclick="loadSection('additional_variable')">Additional Variable</button>
+            <button onclick="loadSection('template_setting')">Template Setting</button>
+            <button onclick="loadSection('gl_codes')">GL Codes</button>
+            <button onclick="loadSection('roles')">Roles</button>
+            <button onclick="loadSection('users')">Users</button>    
+            <button onclick="exportTemplates()">Logout</button>
+            
+        </nav> -->
+    </header>
+  <div id="contentArea">
+    <div class="container">
+      <header1>
+        <h1>Accounting Configuration</h1>
+        <div>
+          <!-- You can wire this to open a modal later -->
+          <button class="btn secondary" id="loadDefaults">Load Defaults</button>
+        </div>
+      </header1>
+
+      <form id="configForm" class="card" onsubmit="return false;">
+        
+
+        <!-- SECTION 1 - Posting Date -->
+        <div class="card">
+          <div class="section-head" data-toggle="s1">
+            <div>
+              <div class="section-title">1. Posting Date</div>
+              <div class="section-sub">Monthly close / posting date rules</div>
+            </div>
+            <div class="muted">Configure posting date behaviour</div>
+          </div>
+          <div id="s1" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Keep provision of monthly close of WFS?</label>
+                <div class="inline">
+                  <label><input type="radio" name="monthly_close" value="N" checked /> No</label>
+                  <label><input type="radio" name="monthly_close" value="Y" /> Yes</label>
+                </div>
+              </div>
+
+              <div id="ifNo" class="col">
+                <label>If No → Date of Entry</label>
+                <select id="date_of_entry" name="date_of_entry">
+                  <option value="system">System Date</option>
+                  <option value="invoice">Invoice Date</option>
+                  <option value="migo">MIGO Date</option>
+                </select>
+              </div>
+
+              <div id="ifYes" class="col" style="display:none">
+                <label>If Yes → Automatic on</label>
+                <input type="number" name="auto_on_date" min="1" max="28" placeholder="day of month (e.g. 1..28)" />
+                <div class="help">Or select Manual in the next field</div>
+                <label style="margin-top:8px">Automatic or Manual?</label>
+                <select name="auto_or_manual">
+                  <option value="automatic">Automatic</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+            </div>
+
+            <hr style="margin:12px 0" />
+
+            <div>
+              <label>Posting Scenarios (when Yes)</label>
+              <div class="help">Select how posting date is chosen in different invoice/book scenarios</div>
+
+              <div class="grid" style="margin-top:8px">
+                <div>
+                  <label>IF month(invoice) = month(entry)</label>
+                  <select name="scenario_same_month">
+                    <option value="system">System Date</option>
+                    <option value="invoice">Invoice Date</option>
+                    <option value="migo">MIGO Date</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label>IF month(invoice) ≠ month(entry) → books closed of month of invoice</label>
+                  <select name="scenario_books_closed">
+                    <option value="system">System Date</option>
+                    <option value="first_day">First Day of Month</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label>IF month(invoice) ≠ month(entry) → books not closed</label>
+                  <select name="scenario_books_not_closed">
+                    <option value="last_date">Last date of invoice month</option>
+                    <option value="system">System Date</option>
+                    <option value="invoice">Invoice Date</option>
+                    <option value="migo">MIGO Date</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="help" style="margin-top:8px">Note: MIRO Date can never be before MIGO date.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2 - Baseline Date -->
+        <div class="card">
+          <div class="section-head" data-toggle="s2">
+            <div>
+              <div class="section-title">2. Baseline Date</div>
+              <div class="section-sub">Activate baseline date?</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s2" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Activate Baseline date?</label>
+                <div class="inline">
+                  <label><input type="radio" name="baseline_active" value="N" checked /> No</label>
+                  <label><input type="radio" name="baseline_active" value="Y" /> Yes</label>
+                </div>
+              </div>
+
+              <div id="baseline_choice" class="col" style="display:none">
+                <label>If Yes → baseline date should be</label>
+                <select name="baseline_choice">
+                  <option value="posting">Posting Date</option>
+                  <option value="invoice">Invoice Date</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3 - Blocking Decision -->
+        <div class="card">
+          <div class="section-head" data-toggle="s3">
+            <div>
+              <div class="section-title">3.Flags for Blocking</div>
+              <div class="section-sub">Rules whether to block accounting/payment based on vendor PAN/GST parameters</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s3" class="section-body">
+            <div class="help">Indicate Yes/No for each parameter; if GSTR fields are Y, indicate months (1..4)</div>
+
+            <table style="width:100%;border-collapse:collapse;margin-top:10px">
+              <thead>
+                <tr style="text-align:left">
+                  <th style="padding:8px;border-bottom:1px solid #eee">Parameter</th>
+                  <th style="padding:8px;border-bottom:1px solid #eee">Flag to Block Accounting</th>
+                  <th style="padding:8px;border-bottom:1px solid #eee">Flag to Block Payment</th>
+                  <th style="padding:8px;border-bottom:1px solid #eee">Code</th>
+                  <th style="padding:8px;border-bottom:1px solid #eee">If Y → months</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:8px">Vendor PAN Inactive</td>
+                  <td style="padding:8px">
+                    <select name="pan_inactive_acc">
+                      <option value="N">N</option><option value="Y">Y</option>
+                    </select>
+                  </td>
+                  <td style="padding:8px">
+                    <select name="pan_inactive_pay">
+                      <option value="N">N</option><option value="Y">Y</option>
+                    </select>
+                  </td>
+                  <td style="padding:8px">
+                    <input type="text" name="pan_inactive_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px">Vendor Aadhar & PAN linked (Individual & Proprietor)</td>
+                  <td style="padding:8px"><select name="aadhar_pan_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="aadhar_pan_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="aadhar_pan_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px">GST Inactive</td>
+                  <td style="padding:8px"><select name="gst_inactive_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="gst_inactive_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="gst_inactive_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px">GSTR1 not Filed</td>
+                  <td style="padding:8px"><select name="gstr1_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="gstr1_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="gstr1_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td style="padding:8px">
+                    <select name="gstr1_months">
+                      <option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px">GSTR3B Filed (not filed flag)</td>
+                  <td style="padding:8px"><select name="gstr3b_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="gstr3b_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="gstr3b_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td style="padding:8px">
+                    <select name="gstr3b_months">
+                      <option value="">-</option><option>1</option><option>2</option><option>3</option><option>4</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px">GST not appearing in 2B (13 days rule)</td>
+                  <td style="padding:8px"><select name="gst_2b_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="gst_2b_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="gst_2b_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td style="padding:8px">Under Developement....</td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px; padding-left:30px; color:#555;">
+                    New Vendor / Irregular Transactions
+                  </td>
+                  <td style="padding:8px"><select name="new_vendor_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="new_vendor_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="new_vendor_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td></td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px; padding-left:30px; color:#555;">
+                    Regular Vendor
+                  </td>
+                  <td style="padding:8px"><select name="regular_vendor_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="regular_vendor_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="regular_vendor_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td></td>
+                </tr>
+
+                <tr>
+                  <td style="padding:8px; padding-left:30px; color:#555;">
+                    Previous invoice GST not appearing
+                  </td>
+                  <td style="padding:8px"><select name="prev_gst_acc"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px"><select name="prev_gst_pay"><option>N</option><option>Y</option></select></td>
+                  <td style="padding:8px">
+                    <input type="text" name="prev_gst_code"
+                          maxlength="3"
+                          style="width:50px;text-transform:uppercase;"
+                          oninput="this.value=this.value.toUpperCase();">
+                  </td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 4 - 2-way or 3-way -->
+        <div class="card">
+          <div class="section-head" data-toggle="s4">
+            <div>
+              <div class="section-title">4. Matching Type</div>
+              <div class="section-sub">Choose 3-way or 2-way matching for invoice verification</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s4" class="section-body">
+            <label>Matching Type</label>
+            <div class="inline">
+              <label><input type="radio" name="matching_type" value="3way" /> 3-way (PO vs GRN vs Invoice)</label>
+              <label><input type="radio" name="matching_type" value="2way" checked /> 2-way (GRN vs Invoice)</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5 - Reporting Currency & Conversion -->
+        <div class="card">
+          <div class="section-head" data-toggle="s5">
+            <div>
+              <div class="section-title">5. Reporting Currency</div>
+              <div class="section-sub">Reporting currency</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s5" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Reporting Currency Name</label>
+                <input type="text" name="reporting_currency_name" placeholder="e.g. Indian Rupee" />
+              </div>
+              <div class="col">
+                <label>Reporting Currency Code</label>
+                <input type="text" name="reporting_currency_code" placeholder="e.g. INR" maxlength="5" />
+              </div>
+              <div class="col">
+                <label>Exchange Rate Tolerenace %</label>
+                <input  type="text"
+                        name="exchange_rate_tolerance"
+                        placeholder="e.g. 2"
+                        maxlength="2"
+                        class="small-input" />
+              </div>  
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- SECTION 6 - Duplicate invoice -->
+        <div class="card">
+          <div class="section-head" data-toggle="s6">
+            <div>
+              <div class="section-title">6. Duplicate Invoice</div>
+              <div class="section-sub">Duplicate checking</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s6" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Enable duplicate invoice check?</label>
+                <div class="inline">
+                  <label><input type="radio" name="dup_check" value="Y" checked /> Yes</label>
+                  <label><input type="radio" name="dup_check" value="N" /> No</label>
+                </div>
+                <div class="help">If enabled, the system will produce potential duplicate invoice reports.</div>
+              </div>
+
+              
+            </div>
+          </div>
+        </div>
+        <!-- SECTION 7 - Narration -->
+        <div class="card">
+          <div class="section-head" data-toggle="s7">
+            <div>
+              <div class="section-title">7. Narration String</div>
+              <div class="section-sub">narration composition</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s7" class="section-body">
+            <div class="row">
+              
+              <div class="col">
+                <label>Narration String - select fields to include</label>
+                <div class="narration-list" id="narrationFields">
+                  <!-- example fields; update as per available fields -->
+                  <label><input type="checkbox" name="nar_fields" value="invoice_no" /> Invoice No</label>
+                  <label><input type="checkbox" name="nar_fields" value="vendor_name" /> Vendor Name</label>
+                  <label><input type="checkbox" name="nar_fields" value="amount" /> Amount</label>
+                  <label><input type="checkbox" name="nar_fields" value="date" /> Date</label>
+                  <label><input type="checkbox" name="nar_fields" value="po_no" /> PO No</label>
+                  <label><input type="checkbox" name="nar_fields" value="item" /> Item</label>
+                </div>
+
+                <label style="margin-top:8px">Choose delimiter/symbol</label>
+                <select id="nar_symbol" name="nar_symbol">
+                  <option value="!">!</option>
+                  <option value="@">@</option>
+                  <option value="#">#</option>
+                  <option value="$">$</option>
+                  <option value="%">%</option>
+                  <option value="^">^</option>
+                  <option value="&">&amp;</option>
+                  <option value="*">*</option>
+                </select>
+                <div class="help">The system will join chosen fields using selected symbol in narration.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SECTION 8 - Unplanned Cost -->
+        <div class="card">
+          <div class="section-head" data-toggle="s8">
+            <div>
+              <div class="section-title">8. Unplanned Cost</div>
+              <div class="section-sub">Handle costs not considered at PO stage</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+
+          <div id="s8" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Add unplanned cost to Material/Service?</label>
+                <div class="inline" style="align-items:center; gap:20px;">
+
+                  <label>
+                    <input type="radio" name="add_to_material_service" value="Y" onchange="handleUnplannedCostChoice(this)"> Yes
+                  </label>
+
+                  <label>
+                    <input type="radio" name="add_to_material_service" value="N" onchange="handleUnplannedCostChoice(this)"> No
+                  </label>
+
+                  <!-- ⭐ Stylish Threshold Input -->
+                  <div class="threshold-box">
+                      <label>Threshold %</label>
+                      <input 
+                        type="number" 
+                        name="unplanned_threshold"
+                        min="0"
+                        max="99"
+                        maxlength="2"
+                        placeholder="0–99"
+                        class="threshold-input"
+                      />
+                  </div>
+
+                </div>
+
+                <!-- 🔥 Message appears here based on selection -->
+                <div id="unplanned_message" style="margin-top:10px; font-size:14px; font-weight:bold; color:#0066cc;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 9 - Threshold Check (u/s 194Q) -->
+        <div class="card">
+          <div class="section-head" data-toggle="s9">
+            <div>
+              <div class="section-title">9. Threshold Check (u/s 194Q)</div>
+              <div class="section-sub">Check if turnover exceeds the defined threshold</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s9" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Is company's turnover above threshold limit?</label>
+                <div class="inline">
+                  <label><input type="radio" name="turnover_above_threshold" value="Y" /> Yes</label>
+                  <label><input type="radio" name="turnover_above_threshold" value="N" /> No</label>
+                </div>
+              </div>
+
+              <div class="col" id="threshold_details" style="display:none;">
+                <label>Threshold Amount</label>
+                <input type="number" name="threshold_amount" placeholder="e.g. 5000000" />
+
+                <label>WT Rate (%)</label>
+                <input type="number" name="wt_rate" placeholder="e.g. 0.1" step="0.01" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 10 - Service Entry in MIGO -->
+        <div class="card">
+          <div class="section-head" data-toggle="s10">
+            <div>
+              <div class="section-title">10. Service Entry in MIGO Report</div>
+              <div class="section-sub">Specify if Service Entry is part of MIGO</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s10" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Is Service Entry part of MIGO report?</label>
+                <select name="service_entry_migo" id="service_entry_migo" style="width: 120px;">
+                    <option value="">-- Select --</option>
+                    <option value="Y">Yes</option>
+                    <option value="N">No</option>
+                </select>
+                <div class="help">If No, a separate Service Entry report must be uploaded.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 11 - Reporting Currency & Conversion -->
+        <div class="card">
+          <div class="section-head" data-toggle="s11">
+            <div>
+              <div class="section-title">11. Matching Logic</div>
+              <div class="section-sub">Matching Logic</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+          <div id="s11" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Fuzzy Ratio</label>
+                <input type="text" name="fuzzyratio" placeholder="e.g. 50" />
+              </div>
+              <div class="col">
+                <label>Sementic Ratio</label>
+                <input type="text" name="sementicratio" placeholder="e.g. 50" maxlength="5" />
+              </div>
+              <div class="col">
+                <label>Matching Tolerenace %</label>
+                <input  type="text"
+                        name="matching_tolerance"
+                        placeholder="e.g. 70"
+                        maxlength="2"
+                        class="small-input" />
+              </div>  
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- SECTION 12 - Data Upload Rights -->
+        <div class="card">
+          <div class="section-head" data-toggle="s12">
+            <div>
+              <div class="section-title">12. Data Upload Rights</div>
+              <div class="section-sub">Who can upload data?</div>
+            </div>
+            <div class="muted"></div>
+          </div>
+
+          <div id="s12" class="section-body">
+            <div class="row checkbox-row">
+              
+              <div class="col">
+                <label>
+                  <input type="checkbox" name="upload_uploader" />
+                  Uploader
+                </label>
+              </div>
+
+              <div class="col">
+                <label>
+                  <input type="checkbox" name="upload_processor" />
+                  Processor
+                </label>
+              </div>
+
+              <div class="col">
+                <label>
+                  <input type="checkbox" name="upload_checker" />
+                  Checker
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+
+        <div style="display:flex;gap:10px;align-items:center">
+          <button id="submitBtn" class="btn" type="button">Submit Configuration</button>
+          <button id="previewBtn" class="btn secondary" type="button">Preview JSON</button>
+          <div id="status" class="status" style="display:none"></div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+      const defaultContent = document.getElementById("contentArea").innerHTML;
+
+      function loadSection(section) {
+
+        console.log(section);
+        
+          const contentArea = document.getElementById("contentArea");
+
+          if (section === "configurations") {
+              contentArea.innerHTML = defaultContent; // Restore original table
+              return;
+          }
+
+          // -------------------------------
+          // Upload Headers Section
+          // -------------------------------
+          else if (section === "upload_headers") {
+            contentArea.innerHTML = `
+                <div class="container">
+                    <h2>Upload Headers</h2>
+
+                    <form id="uploadForm" enctype="multipart/form-data" method="POST">
+                        {% csrf_token %}
+                        <label for="po_header">Upload PO Header</label>
+                        <input type="file" name="po_header" id="po_header" accept=".xlsx, .xls" />
+
+                        <label for="miro_header">Upload MIGO Header</label>
+                        <input type="file" name="miro_header" id="miro_header" accept=".xlsx, .xls" />
+
+                        <label for="se_header">Upload Service Entry Header</label>
+                        <input type="file" name="se_header" id="se_header" accept=".xlsx, .xls" />
+
+                        <label for="vmaster_header">Upload Vendor Master Header</label>
+                        <input type="file" name="vmaster_header" id="vmaster_header" accept=".xlsx, .xls" />
+
+                        <label for="wholdtax_master_header">Upload WithholdTax Master Header</label>
+                        <input type="file" name="wholdtax_master_header" id="wholdtax_master_header" accept=".xlsx, .xls" />
+
+                        <label for="gsttax_master_header">Upload GstTax Master Header</label>
+                        <input type="file" name="gsttax_master_header" id="gsttax_master_header" accept=".xlsx, .xls" />
+
+                        <label for="hsn_master_header">Upload HSN Master Header</label>
+                        <input type="file" name="hsn_master_header" id="hsn_master_header" accept=".xlsx, .xls" />
+
+                        <label for="sac_master_header">Upload SAC Master Header</label>
+                        <input type="file" name="sac_master_header" id="sac_master_header" accept=".xlsx, .xls" />
+
+                        <button type="submit">Upload Headers</button>
+                    </form>
+
+                    <div id="status" class="status"></div>
+                </div>
+            `;
+
+            // ✅ Reattach the form submit event listener
+            setupUploadForm();
+
+            // ✅ Important: Stop here, don’t overwrite this content
+            return;
+          }
+          // -------------------------------
+          // Roles Section
+          // -------------------------------
+          else if (section === "Roles") {
+            const contentArea = document.getElementById("contentArea");
+
+            // Create tabbed layout
+            // <button class="tab-button" onclick="showTab('unallocatedTab')">Unallocated Cost Matrix</button>
+            // <button class="tab-button" onclick="showTab('currencyTab')">Currency Matrix</button>
+            contentArea.innerHTML = `
+              <div class="container">
+                <h2>👥 Role Matrix Configuration</h2>
+
+                <div id="tabs">
+                  <button class="tab-button active" onclick="showTab('fieldTab')">Field Matrix</button>
+                  <button class="tab-button" onclick="showTab('radioTab')">Radio Matrix</button>
+                  
+                </div>
+
+                <form id="roleMatrixForm">
+                  <!-- Field Matrix -->
+                  <div id="fieldTab" class="tab-content">
+                    <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                      <thead>
+                        <tr>
+                          <th>Parameter</th>
+                          <th>Processor Edit</th>
+                          <th>Checker Approval</th>
+                          <th>Checker Edit</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fieldMatrixBody"></tbody>
+                    </table>
+                  </div>
+
+                  <!-- Radio Matrix -->
+                  <div id="radioTab" class="tab-content" style="display:none;">
+                    <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse;">
+                      <thead>
+                        <tr>
+                          <th>Parameter</th>
+                          <th>Checker Approval</th>
+                        </tr>
+                      </thead>
+                      <tbody id="radioMatrixBody"></tbody>
+                    </table>
+                  </div>
+
+                  <br>
+                  <button type="submit">💾 Save Matrix</button>
+
+                  
+                </form>
+
+                <div id="roleStatus"></div>
+              </div>
+            `;
+
+            // Load all matrices
+            loadRoleMatrix();
+
+            return;
+          }
+          // For now just display section clicked
+          contentArea.innerHTML = `
+              <div style="padding: 20px; text-align:center;">
+                  <h2>${section.toUpperCase()} is clicked</h2>
+                  <p>(Here you will display data related to ${section} later)</p>
+              </div>
+          `;
+      }
+
+      async function loadRoleMatrix() {
+        const statusDiv = document.getElementById("roleStatus");
+
+        try {
+          const response = await fetch(`/get-role-matrix/`);
+          const data = await response.json();
+
+          const matrices = data.matrices || {};
+          const radiobuttondict = data.radiobuttondict || {};
+
+          // Store all in global variable
+          window.roleMatrixData = matrices;
+
+          // Render each matrix into its respective tab
+          renderMatrixTable("field_matrix", "fieldMatrixBody", matrices.field_matrix);
+          renderMatrixTable("radio_matrix", "radioMatrixBody", matrices.radio_matrix, radiobuttondict);
+          
+          // Hook save button (shared)
+          document.getElementById("roleMatrixForm").onsubmit = async (e) => {
+            e.preventDefault();
+            await saveRoleMatrix();
+          };
+
+        } catch (err) {
+          console.error("Error loading role matrices:", err);
+          statusDiv.textContent = "⚠️ Failed to load role matrices.";
+        }
+      }
+      function renderMatrixTable(matrixType, tableBodyId, matrixData) {
+        const body = document.getElementById(tableBodyId);
+        if (!body) return;
+
+        // RADIO MATRIX SECTION (nested)
+        if (matrixType === "radio_matrix") {
+          body.innerHTML = matrixData
+            .map((row, idx) => {
+              let html = `
+                <tr>
+                  <td><b>${row.parameter}</b></td>
+                  <td></td>
+                </tr>
+              `;
+
+              row.sub.forEach((subItem, sIdx) => {
+                html += `
+                  <tr>
+                    <td style="padding-left:30px;">→ ${subItem.name}</td>
+                    <td>
+                      <input type="checkbox"
+                        data-matrix="radio_matrix"
+                        data-param="${idx}"
+                        data-sub="${sIdx}"
+                        ${subItem.checker_approval ? "checked" : ""}
+                      >
+                    </td>
+                  </tr>
+                `;
+              });
+
+              return html;
+            })
+            .join("");
+
+          // Checkbox listeners for nested rows
+          body.addEventListener("change", (e) => {
+            if (e.target.tagName === "INPUT" && e.target.type === "checkbox") {
+              const p = e.target.getAttribute("data-param");
+              const s = e.target.getAttribute("data-sub");
+
+              window.roleMatrixData.radio_matrix[p].sub[s].checker_approval = e.target.checked;
+            }
+          });
+
+          return;
+        }
+
+        // FIELD MATRIX (no change)
+        const matrix = matrixData || [];
+        body.innerHTML = matrix
+          .map((row, idx) => {
+            return `
+              <tr>
+                <td>${row.parameter}</td>
+                <td>
+                  <input type="checkbox"
+                    data-matrix="${matrixType}"
+                    data-param="${idx}"
+                    data-key="processor_edit"
+                    ${row.processor_edit ? "checked" : ""}
+                  >
+                </td>
+                <td>
+                  <input type="checkbox"
+                    data-matrix="${matrixType}"
+                    data-param="${idx}"
+                    data-key="checker_approval"
+                    ${row.checker_approval ? "checked" : ""}
+                  >
+                </td>
+                <td>
+                  <input type="checkbox"
+                    data-matrix="${matrixType}"
+                    data-param="${idx}"
+                    data-key="checker_edit"
+                    ${row.checker_edit ? "checked" : ""}
+                  >
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        // Normal listeners
+        body.addEventListener("change", (e) => {
+          const matrixType = e.target.getAttribute("data-matrix");
+          const idx = e.target.getAttribute("data-param");
+          const key = e.target.getAttribute("data-key");
+          window.roleMatrixData[matrixType][idx][key] = e.target.checked;
+        });
+      }
+
+
+      async function saveRoleMatrix() {
+        const statusDiv = document.getElementById("roleStatus");
+        const csrfToken = getCookie("csrftoken");
+
+        try {
+          // Detect the active tab
+          const activeTab = document.querySelector(".tab-content:not([style*='display: none'])");
+          if (!activeTab) {
+            statusDiv.textContent = "⚠️ No active tab selected.";
+            return;
+          }
+
+          // Map tab ID to matrix_type name used by backend
+          const tabToMatrixType = {
+            fieldTab: "field_matrix",
+            radioTab: "radio_matrix",
+            
+          };
+
+          const tabId = activeTab.id;
+          const matrixType = tabToMatrixType[tabId];
+          const matrix = window.roleMatrixData[matrixType];
+
+          if (!matrixType || !matrix) {
+            statusDiv.textContent = "⚠️ Could not identify matrix type or data.";
+            return;
+          }
+
+          // Send only the active tab’s data
+          const response = await fetch("/save-role-matrix/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+              matrix_type: matrixType,
+              matrix: matrix,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            statusDiv.textContent = result.message || `✅ ${matrixType} saved successfully!`;
+          } else {
+            statusDiv.textContent = `❌ Error: ${result.error || "Save failed."}`;
+          }
+        } catch (err) {
+          console.error("Save failed:", err);
+          statusDiv.textContent = "❌ Error saving role matrix.";
+        }
+      }
+
+      function showTab(tabId) {
+        // Hide all tab contents
+        document.querySelectorAll(".tab-content").forEach(tab => {
+          tab.style.display = "none";
+        });
+
+        // Show the selected one
+        const activeTab = document.getElementById(tabId);
+        if (activeTab) {
+          activeTab.style.display = "block";
+        }
+
+        // Update active tab button styling
+        document.querySelectorAll("#tabs button").forEach(btn => {
+          btn.classList.remove("active");
+        });
+        const activeBtn = Array.from(document.querySelectorAll("#tabs button"))
+          .find(btn => btn.textContent.includes(activeTab.id.replace("Tab", "")));
+        if (activeBtn) {
+          activeBtn.classList.add("active");
+        }
+      }
+      // ✅ Move form logic into a reusable function
+      function setupUploadForm() {
+        const form = document.getElementById("uploadForm");
+        if (!form) return;
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(form);
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+          try {
+            console.log("Upload URL called");
+
+            const response = await fetch("{% url 'headers' %}", {
+              method: "POST",
+              headers: { "X-CSRFToken": csrfToken },
+              body: formData
+            });
+
+            const result = await response.json();
+            document.getElementById("status").textContent = result.message || "Upload complete.";
+          } catch (error) {
+            document.getElementById("status").textContent = "Upload failed. Try again.";
+          }
+        });
+      }
+      function handleUnplannedCostChoice(radio) {
+        const messageBox = document.getElementById("unplanned_message");
+        console.log(radio.value);
+        
+        if (radio.value === "Y") {
+            messageBox.innerHTML = "✅ Same GL code will be used for Unallocated Cost which is being used for other items.";
+            messageBox.style.color = "#0b8457"; // green shade
+        } 
+        else if (radio.value === "N") {
+            messageBox.innerHTML = "⚠️ User must select a GL code from dropdown while submitting Unallocated Cost.";
+            messageBox.style.color = "#d9534f"; // red shade
+        }
+    }
+    (function(){
+      // Toggle sections
+      document.querySelectorAll('.section-head').forEach(h=>{
+        h.addEventListener('click', ()=> {
+          const id = h.getAttribute('data-toggle');
+          const el = document.getElementById(id);
+          el.classList.toggle('open');
+        });
+      });
+
+      // Show/hide posting-date blocks
+      function updatePostingUI(){
+        const monthly = document.querySelector('input[name="monthly_close"]:checked').value;
+        document.getElementById('ifNo').style.display = monthly === 'N' ? 'block' : 'none';
+        document.getElementById('ifYes').style.display = monthly === 'Y' ? 'block' : 'none';
+      }
+      document.querySelectorAll('input[name="monthly_close"]').forEach(i=>i.addEventListener('change', updatePostingUI));
+      updatePostingUI();
+
+      // Baseline UI
+      function updateBaselineUI(){
+        const val = document.querySelector('input[name="baseline_active"]:checked').value;
+        document.getElementById('baseline_choice').style.display = val === 'Y' ? 'block' : 'none';
+      }
+      document.querySelectorAll('input[name="baseline_active"]').forEach(i=>i.addEventListener('change', updateBaselineUI));
+      updateBaselineUI();
+
+      // Preview JSON
+      document.getElementById('previewBtn').addEventListener('click', ()=>{
+        const json = buildPayload();
+        // show in new tab
+        const w = window.open();
+        w.document.body.innerHTML = '<pre>'+JSON.stringify(json,null,2)+'</pre>';
+      });
+
+      function buildPayload(){
+        const form = document.getElementById('configForm');
+        const q = (name) => form.querySelector(`[name="${name}"]`);
+        const qVal = (name) => q(name)?.value || null;
+
+        // SECTION 1: Monthly Close Config
+        const monthly_close = {
+          monthly_close: qVal('monthly_close') || 'N',
+          date_of_entry: qVal('date_of_entry'),
+          auto_on_date: qVal('auto_on_date'),
+          auto_or_manual: qVal('auto_or_manual'),
+          scenario_same_month: qVal('scenario_same_month'),
+          scenario_books_closed: qVal('scenario_books_closed'),
+          scenario_books_not_closed: qVal('scenario_books_not_closed'),
+        };
+
+        // SECTION 2: Baseline
+        const baseline = {
+          baseline_active: qVal('baseline_active') || 'N',
+          baseline_choice: qVal('baseline_choice'),
+        };
+
+        // // SECTION 3: Blocking
+        // const blocking = {};
+        // ['pan_inactive','aadhar_pan','gst_inactive','gstr1','gstr3b','gst_2b','new_vendor','regular_vendor','prev_gst']
+        //   .forEach(key=>{
+        //     blocking[key] = {
+        //       acc: q(`${key}_acc`)?.value || 'N',
+        //       pay: q(`${key}_pay`)?.value || 'N',
+        //       months: q(`${key}_months`)?.value || ''
+        //     };
+        //   });
+
+        // SECTION 3: Blocking
+        const blocking = {};
+        ['pan_inactive','aadhar_pan','gst_inactive','gstr1','gstr3b','gst_2b','new_vendor','regular_vendor','prev_gst']
+          .forEach(key=>{
+            blocking[key] = {
+              acc: q(`${key}_acc`)?.value || 'N',
+              pay: q(`${key}_pay`)?.value || 'N',
+              months: q(`${key}_months`)?.value || '',
+              code: q(`${key}_code`)?.value || ''
+            };
+          });
+
+
+        // SECTION 4: Matching Type
+        const matching = {
+          matching_type: form.querySelector('input[name="matching_type"]:checked')?.value || '2way',
+        };
+
+        // SECTION 5: Reporting Currency 
+        const currency = {
+          reporting_currency_name: qVal('reporting_currency_name'),
+          reporting_currency_code: qVal('reporting_currency_code'),
+          exchange_rate_tolerance: qVal('exchange_rate_tolerance'),
+        };
+
+        // SECTION 6: Narration
+        const narration = {
+          fields: Array.from(form.querySelectorAll('input[name="nar_fields"]:checked')).map(n=>n.value),
+          symbol: qVal('nar_symbol') || '!',
+        };
+
+        // SECTION 7: Duplicate Check
+        const duplicate_check = {
+          dup_check: form.querySelector('input[name="dup_check"]:checked')?.value || 'Y'
+        };
+
+        // SECTION 8: Unplanned Cost
+        const unplanned_cost = {
+            add_to_material_service: form.querySelector('input[name="add_to_material_service"]:checked')?.value || 'N',
+            unplanned_threshold: qVal('unplanned_threshold') || "0"
+        };
+
+        // SECTION 9: Threshold Check
+        const threshold = {
+          turnover_above_threshold: form.querySelector('input[name="turnover_above_threshold"]:checked')?.value || 'N',
+          threshold_amount: qVal('threshold_amount'),
+          wt_rate: qVal('wt_rate')
+        };
+
+        // SECTION 10: Service Entry in MIGO
+        const service_entry_migo = {
+          service_entry_migo: qVal('service_entry_migo')
+        };
+        // SECTION 10: Service Entry in MIGO
+        const matching_logic = {
+          fuzzyratio: qVal('fuzzyratio'),
+          sementicratio: qVal('sementicratio'),
+          matching_tolerance: qVal('matching_tolerance'),
+        };
+        // ========================
+        // SECTION 12 - Upload Rights
+        // ========================
+        data_upload_rights = {
+            uploader: form.querySelector('input[name="upload_uploader"]').checked,
+            processor: form.querySelector('input[name="upload_processor"]').checked,
+            checker: form.querySelector('input[name="upload_checker"]').checked
+        };
+
+        // Combine into one structured payload
+        return {
+          monthly_close,
+          baseline,
+          blocking,
+          matching,
+          currency,
+          narration,
+          duplicate_check,
+          unplanned_cost,
+          threshold,
+          service_entry_migo,
+          matching_logic,
+          data_upload_rights
+        };
+      }
+
+
+      // Submit handler (multipart if file)
+      document.getElementById('submitBtn').addEventListener('click', async ()=>{
+        const statusEl = document.getElementById('status');
+        statusEl.style.display='block';
+        statusEl.textContent = 'Preparing payload...';
+
+        const payload = buildPayload();
+        console.log(payload);
+        
+        // Files (erp mapping or conversion file)
+        const formData = new FormData();
+        formData.append('payload', JSON.stringify(payload));
+
+        
+
+        
+        // console.log(formData);
+        
+        // If you use Django, include CSRF token:
+        // const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfToken = getCookie('csrftoken');
+        const response = await fetch("/save-config/", {
+            method: "POST",
+            headers: { "X-CSRFToken": csrfToken },
+            body: formData
+        });
+
+        const result = await response.json();
+        // console.log(result);
+        // ✅ Show success message
+        if (result.status === "success") {
+            alert(result.message);   // <-- Shows “Configuration created” or “Configuration updated”
+        } else {
+            alert("Error: " + (result.message || "Something went wrong"));
+        }
+      });
+
+      // Load defaults (example)
+      document.getElementById('loadDefaults').addEventListener('click', ()=>{
+        // simple demo: open all sections
+        document.querySelectorAll('.section-body').forEach(e=>e.classList.add('open'));
+        // populate some defaults
+        document.querySelector('input[name="monthly_close"][value="Y"]').checked = true;
+        updatePostingUI();
+        document.querySelector('input[name="baseline_active"][value="N"]').checked = true;
+        updateBaselineUI();
+        alert('Defaults loaded (example). Modify as needed and Submit.');
+      });
+
+    })();
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+      // Show/hide threshold fields
+      document.querySelectorAll('input[name="turnover_above_threshold"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+          document.getElementById('threshold_details').style.display = this.value === 'Y' ? 'block' : 'none';
+        });
+      });
+    async function loadConfiguration() {
+        try {
+            const res = await fetch("/get-configuration/");
+            const response = await res.json();
+            if (response.status !== "success") return; // No configuration saved yet
+
+            const data = response.data;
+
+            const form = document.getElementById("configForm");
+            const setRadio = (name, val) => {
+                const el = form.querySelector(`input[name="${name}"][value="${val}"]`);
+                if (el) el.checked = true;
+            };
+            const setValue = (name, val) => {
+                const el = form.querySelector(`[name="${name}"]`);
+                if (el) el.value = val;
+            };
+
+            // 1️⃣ Monthly Close
+            if (data.monthly_close) {
+                setRadio("monthly_close", data.monthly_close.monthly_close);
+                setValue("date_of_entry", data.monthly_close.date_of_entry);
+                setValue("auto_on_date", data.monthly_close.auto_on_date);
+                setValue("auto_or_manual", data.monthly_close.auto_or_manual);
+                setValue("scenario_same_month", data.monthly_close.scenario_same_month);
+                setValue("scenario_books_closed", data.monthly_close.scenario_books_closed);
+                setValue("scenario_books_not_closed", data.monthly_close.scenario_books_not_closed);
+                // Trigger UI update
+                document.querySelectorAll('input[name="monthly_close"]').forEach(i=>i.dispatchEvent(new Event('change')));
+            }
+
+            // 2️⃣ Baseline
+            if (data.baseline) {
+                setRadio("baseline_active", data.baseline.baseline_active);
+                setValue("baseline_choice", data.baseline.baseline_choice);
+                document.querySelectorAll('input[name="baseline_active"]').forEach(i=>i.dispatchEvent(new Event('change')));
+            }
+            // =====================
+            //  SECTION 3: BLOCKING
+            // =====================
+            if (data.blocking) {
+
+                const blockingKeys = [
+                    'pan_inactive',
+                    'aadhar_pan',
+                    'gst_inactive',
+                    'gstr1',
+                    'gstr3b',
+                    'gst_2b',
+                    'new_vendor',
+                    'regular_vendor',
+                    'prev_gst'
+                ];
+
+                blockingKeys.forEach(key => {
+                    const item = data.blocking[key];
+                    if (!item) return;
+
+                    // Load accounting block flag
+                    const accSel = form.querySelector(`select[name="${key}_acc"]`);
+                    if (accSel) accSel.value = item.acc || "N";
+
+                    // Load payment block flag
+                    const paySel = form.querySelector(`select[name="${key}_pay"]`);
+                    if (paySel) paySel.value = item.pay || "N";
+                    
+                    // Load payment block flag
+                    const code = document.querySelector(`[name="${key}_code"]`);
+                    if (code) code.value = item.code || "";
+
+                    // Load months (only applicable to gstr1, gstr3b)
+                    const monthSel = form.querySelector(`select[name="${key}_months"]`);
+                    if (monthSel && item.months !== undefined) {
+                        monthSel.value = item.months;
+                    }
+                });
+            }
+
+            // 3️⃣ Matching Type
+            if (data.matching) setRadio("matching_type", data.matching.matching_type);
+
+            // 4️⃣ Currency exchange_rate_tolerance
+            if (data.currency) {
+                setValue("reporting_currency_name", data.currency.reporting_currency_name || "");
+                setValue("reporting_currency_code", data.currency.reporting_currency_code || "");
+
+                // Default to 0 if missing / undefined / null / empty string
+                const tolerance = data.currency.exchange_rate_tolerance;
+                setValue("exchange_rate_tolerance", tolerance ? tolerance : 0);
+            }
+
+            // 5️⃣ Narration
+            if (data.narration) {
+                document.querySelectorAll("input[name='nar_fields']").forEach(cb => {
+                    cb.checked = data.narration.fields?.includes(cb.value);
+                });
+                setValue("nar_symbol", data.narration.symbol);
+            }
+
+            // 6️⃣ Duplicate Check
+            if (data.duplicate_check) setRadio("dup_check", data.duplicate_check.dup_check);
+
+            // 7️⃣ Unplanned Cost
+            if (data.unplanned_cost) {
+
+              // --- 1) Load Radio Button (Y/N) ---
+              setRadio("add_to_material_service", data.unplanned_cost.add_to_material_service);
+
+              // --- 2) Load Threshold Value (0–99) ---
+              if (data.unplanned_cost.unplanned_threshold !== undefined) {
+                  const thresholdInput = form.querySelector('input[name="unplanned_threshold"]');
+                  thresholdInput.value = data.unplanned_cost.unplanned_threshold;
+              }
+
+              // --- 3) Trigger UI behaviors ---
+              const selectedRadio = form.querySelector(`input[name="add_to_material_service"]:checked`);
+              
+              // Update display text/behavior
+              handleUnplannedCostChoice(selectedRadio);
+
+            }
+
+            // 8️⃣ Threshold
+            if (data.threshold) {
+                setRadio("turnover_above_threshold", data.threshold.turnover_above_threshold);
+                setValue("threshold_amount", data.threshold.threshold_amount);
+                setValue("wt_rate", data.threshold.wt_rate);
+                document.querySelectorAll('input[name="turnover_above_threshold"]').forEach(r=>r.dispatchEvent(new Event('change')));
+            }
+
+            // 9️⃣ Service Entry MIGO
+            if (data.service_entry_migo) setValue("service_entry_migo", data.service_entry_migo.service_entry_migo);
+
+            // 11  matching logic
+            if (data.matching_logic_ratio) {
+                setValue("fuzzyratio", data.matching_logic_ratio.fuzzyratio);
+                setValue("sementicratio", data.matching_logic_ratio.sementicratio);
+                setValue("matching_tolerance", data.matching_logic_ratio.matching_tolerance);
+                
+            }
+
+            // =============================
+            // SECTION 12 - Load Upload Rights
+            // =============================
+            if (data.data_upload_rights) {
+                const rights = data.data_upload_rights;
+                const uploader = form.querySelector('input[name="upload_uploader"]');
+                const processor = form.querySelector('input[name="upload_processor"]');
+                const checker = form.querySelector('input[name="upload_checker"]');
+
+                if (uploader) uploader.checked = rights.uploader || false;
+                if (processor) processor.checked = rights.processor || false;
+                if (checker) checker.checked = rights.checker || false;
+            }
+
+            console.log("%c✅ Configuration Loaded Successfully", "color:green;font-weight:bold;");
+
+            
+
+        } catch (err) {
+            console.error("Failed to load config:", err);
+        }
+    }
+    document.addEventListener("DOMContentLoaded", loadConfiguration);
+
+  </script>
+</body>
+</html>

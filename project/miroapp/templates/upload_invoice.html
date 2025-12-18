@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Invoice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        form {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .loader-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #007bff; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/uploader_dashboard/" style="text-decoration: none; color: inherit;">Miro App</a>
+        </h1>
+        <nav>
+            
+            <button onclick="window.location.href='/pending-invoices/'">Show Pending Invoices</button> 
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+    <h1>Upload Invoices</h1>
+    <form action="" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+        {% csrf_token %}
+        <label for="file">Select Invoices:</label>
+        <input type="file" id="file" name="files" accept=".pdf, .jpg" multiple>
+        <button type="submit">Upload</button>
+    </form>
+    <!-- <div class="loader-overlay" id="loader-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <script>
+        // Function to show the loader
+        function showLoader() {
+            document.getElementById('loader-overlay').style.display = 'flex';
+        }
+    </script> -->
+    <!-- <form action="" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+        {% csrf_token %}
+        <label for="file">Select an Invoice:</label>
+        <input type="file" id="file" name="file" accept=".pdf, .jpg">
+        <button type="submit">Upload</button>
+    </form>
+    Loader overlay -->
+    <!-- <div class="loader-overlay" id="loader-overlay"> -->
+        <!-- <div class="loader"></div> -->
+    <!-- </div> -->
+
+    <!-- <script> -->
+        <!-- // Function to show the loader -->
+        <!-- function showLoader() { -->
+            <!-- document.getElementById('loader-overlay').style.display = 'flex'; -->
+        <!-- } -->
+    <!-- </script> -->
+</body>
+</html>

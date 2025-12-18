@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapped Data with Popup</title>
+    
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0;}
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #0078D7; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+
+        .status-radio {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin: 0 4px;
+            position: relative;
+            cursor: pointer;
+        }
+        .status-radio:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            font-size: 12px;
+            padding: 5px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .g { background-color: #28a745; }
+        .o { background-color: #fd7e14; }
+        .r { background-color: #dc3545; }
+        .y { background-color: #ebe710; }
+
+        .checkbox-col input { transform: scale(1.3); cursor: pointer; }
+
+        .modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        padding-top: 80px;
+        left: 0; top: 0;
+        width: 100%; height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-content {
+        background-color: #fff;
+        margin: auto;
+        padding: 20px;
+        width: 80%;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #eee;
+        }
+
+        .close {
+        font-size: 24px;
+        cursor: pointer;
+        }
+
+        .table-container {
+        max-height: 60vh;
+        overflow-y: auto;
+        margin-top: 15px;
+        }
+
+        .popup-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 14px;
+        }
+
+        .popup-table th, .popup-table td {
+        border: 1px solid #f0e2e2;
+        padding: 8px 10px;
+        text-align: left;
+        }
+
+        .popup-table th {
+        background-color: #494646;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        }
+
+        .popup-table tr:nth-child(even) {
+        background-color: #fafafa;
+        }
+
+        @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        .action-btn {
+            padding: 6px 10px;
+            border: 1px solid #007bff;
+            background: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .action-btn:hover {
+            background:#0056b3;
+        }
+        .action-menu button {
+            display:block;
+            width:100%;
+            background:none;
+            border:none;
+            text-align:left;
+            padding:5px 8px;
+            cursor:pointer;
+        }
+        .action-menu button:hover {
+            background:#eee;
+        }
+        /* MODAL BACKDROP */
+        .custom-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.25s;
+            z-index: 9999;
+        }
+
+        .custom-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* MODAL BOX */
+        .custom-modal-content {
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            animation: popup 0.25s ease;
+        }
+
+        @keyframes popup {
+            from { transform: scale(0.9); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+
+        /* CLOSE BUTTON */
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            font-size: 26px;
+            cursor: pointer;
+            top: 15px;
+            color: #666;
+        }
+
+        /* TWO FIELDS IN ONE LINE */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px 25px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .section {
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+
+        .section h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+            border-left: 5px solid #007bff;
+            padding-left: 10px;
+        }
+
+        .btn-save {
+            background: #008037;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: none;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background: #00682e;
+        }
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .popup-box {
+            background: white;
+            padding: 20px;
+            width: 50%;
+            border-radius: 8px;
+            box-shadow: 0 0 10px black;
+        }
+
+        
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/all-invoices/" style="text-decoration: none; color: inherit;">Miro App</a>
+        </h1>
+        <nav>
+            
+            <button onclick="loadSection('uploaded')">Pending Actions</button> 
+            <button onclick="loadSection('hold')">On Hold</button>
+            <button onclick="loadSection('rejected')">Rejected</button>
+            <button onclick="loadSection('ready')">Ready For Template</button>
+            <button onclick="loadSection('generated')">Template Generated</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+
+        </nav>
+    </header>
+    <h2>Invoice Summary</h2>
+    <div id="contentArea">
+        <!-- Default Table -->
+        <table id="invoiceTable">
+            <thead>
+                <tr>
+                    <th>Vendor Name</th>
+                    <th>Invoice No.</th>
+                    <th>Invoice Date</th>
+                    <th>Invoice Value</th>
+                    <th>Invoice Status</th>
+                    <th>Response</th>
+                    <th>File</th>
+                    <th>Preview</th>
+                    <th>Approval</th>
+                    <th>
+                        Check All
+                        <input type="checkbox" id="checkAll">
+                    </th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr data-groupkey="{{ row.InvoiceGroupKey }}">
+                    <td>{{ row.VendorName }}</td>
+                    <td>{{ row.InvoiceNo }}</td>
+                    <td>{{ row.InvoiceDate}}</td>
+                    <td>{{ row.InvoiceValue }}</td>
+                    <td>
+                        {% for key, status in row.InvoiceCheck.items %}
+                            <span class="status-radio {{ status.color }}"
+                                title="{{ key }}"
+                                data-tooltip="{{ status.message }}"
+                                data-data='{{ status.data|safe }}'
+                                onclick="showData(this.dataset.data, '{{ status.message|escapejs }}', '{{ status.color|escapejs }}', '{{ key|escapejs }}', '{{ row.InvoiceGroupKey|escapejs }}')">
+                            </span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="/invoice-display/?response_file={{ row.unique_name }}.json" target="_blank">
+                            Show Response
+                        </a>
+                    </td>
+                    <td>
+                        <a href="/media/invoices/{{ company }}/{{ row.unique_name }}" target="_blank">
+                            📎 PDF
+                        </a>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="previewFunction('{{ row.InvoiceGroupKey }}')">
+                            Preview
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm"
+                            onclick="approvalFunction('{{ row.InvoiceGroupKey }}', {{ row.checker_approval|safe }})">
+                            Approval
+                        </button>
+                    </td>
+                    <td class="checkbox-col">
+                        <input type="checkbox" class="row-check">
+                    </td>
+                    <td class="action-col" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleActionMenu(this)">
+                            Action
+                        </button>
+
+                        <div class="action-menu" style="
+                            display:none;
+                            position:absolute;
+                            background:white;
+                            border:1px solid #ccc;
+                            padding:5px;
+                            border-radius:4px;
+                            z-index:1000;
+                        ">
+                            
+                            <button class="btn btn-success btn-sm"
+                                    onclick="approveInvoice('{{ row.InvoiceGroupKey|escapejs }}', {{ row.checker_approval|safe }})">
+                                Approve
+                            </button>
+                            <button class="btn btn-success btn-sm"
+                                    onclick="holdInvoice('{{ row.InvoiceGroupKey|escapejs }}')">
+                                Hold
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="rejectInvoice('{{ row.InvoiceGroupKey|escapejs }}')">
+                                Reject
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="editInvoice('{{ rolematrix|escapejs }}', '{{ row.InvoiceGroupKey|escapejs }}')">
+                                Edit
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- ✅ New Generate Template Button -->
+        <div style="text-align:center; margin-top:20px;">
+            <button id="generateTemplateBtn" style="
+                background-color:#007bff; 
+                color:white; 
+                border:none; 
+                padding:10px 20px; 
+                border-radius:6px; 
+                cursor:pointer;">
+                Generate Template
+            </button>
+        </div>
+
+        <!-- Modal (unchanged) -->
+        <div id="dataModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle"></h2>
+                    <span class="close" onclick="closeModal()">&times;</span>
+                </div>
+                <div id="popupContent"></div>
+            </div>
+        </div>
+    </div>
+    <div id="approvePopup" class="popup-overlay">
+        <div class="popup-box">
+            <h3>Checker Approval</h3>
+
+            <table id="approvalTable"></table>
+
+            <br><button onclick="closeApprovePopup()" class="btn btn-success">Done</button>
+        </div>
+    </div>
+    <!-- Include Bootstrap bundle before your JS logic -->
+    
+    <script>
+        function toggleActionMenu(btn) {
+            let menu = btn.nextElementSibling;
+            menu.style.display = (menu.style.display === "none" || menu.style.display === "") 
+                ? "block" 
+                : "none";
+        }
+
+        function approveInvoice(InvoiceGroupKey,checker_approval) {
+            console.log(checker_approval);
+
+            // ---- Validation Step ----
+            for (const section in checker_approval) {
+                const sectionData = checker_approval[section];
+
+                for (const key in sectionData) {
+                    const item = sectionData[key];
+
+                    if (item && item.Checker_Approavl === "pending") {
+                        alert("❗ Some changes need approval under the Approval tab.\nPlease confirm all changes before approving the invoice.");
+                        return;  // ❌ STOP — do not approve
+                    }
+                }
+            }
+            
+            fetch("/approve-invoice/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Approved. Ready for template generation!");
+
+                    // 🔄 Reload the uploaded section
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+
+
+
+        function rejectInvoice() {
+
+            fetch("/reject-invoice/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Rejected. Can be visited under rejected tab!");
+
+                    // 🔄 Reload the uploaded section
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+
+        function holdInvoice() {
+
+            fetch("/hold-invoice/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Rejected. Can be visited under rejected tab!");
+
+                    // 🔄 Reload the uploaded section
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+
+        function editInvoice(rolematrix, groupKey) {
+            console.log("Fetching details for:", groupKey);
+
+            fetch("/get-invoice-details/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({ InvoiceGroupKey: groupKey })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Invoice Data:", data);
+                createAndOpenModal(data); // dynamically create popup form here
+            })
+            .catch(error => console.error("Error fetching invoice:", error));
+        }
+        // ⬇️ Dynamically create + open popup modal
+        function createAndOpenModal(invoice) {
+            window.currentInvoice = invoice; // save globally
+            const existing = document.getElementById("customEditModal");
+            if (existing) existing.remove();
+
+            const modalHTML = `
+            <div id="customEditModal" class="custom-modal">
+                <div class="custom-modal-content">
+                    <span class="close-btn" onclick="closeCustomModal()">&times;</span>
+                    <h2>Edit Invoice</h2>
+
+                    <form id="editInvoiceForm">
+                        <input type="hidden" id="invoiceGroupKeyInput" value="${invoice.InvoiceGroupKey || ''}">
+
+                        <!-- SECTION 1 -->
+                        <div class="section">
+                            <h3>Section 1 – Tax & Basic Info</h3>
+                            <div class="grid">
+                                <div>
+                                    <label>Invoice Date</label>
+                                    <input type="text" id="invoiceDateInput" value="${invoice.InvoiceDate || ''}">
+                                </div>
+                                <div>
+                                    <label>Tax Code</label>
+                                    <input type="text" id="taxCodeInput" value="${invoice.TaxCode || ''}">
+                                </div>
+                                <div>
+                                    <label>Withholding Tax Code</label>
+                                    <input type="text" id="withholdingTaxCodeInput" value="${invoice.WithholdingTaxCode || ''}">
+                                </div>
+                                <div>
+                                    <label>Narration</label>
+                                    <input type="text" id="narrationInput" value="${invoice.Narration || ''}">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-save" onclick="submitSection(1)">Save Section 1</button>
+                        </div>
+
+                        <!-- SECTION 2 -->
+                        <div class="section">
+                            <h3>Section 2 – Vendor Verification</h3>
+                            <div class="grid">
+                                <div>
+                                    <label>Vendor GST</label>
+                                    <input type="text" id="vendorGstVerifyInput" value="${invoice.VendorGst || ''}">
+                                </div>
+                                <div>
+                                    <label>Vendor Verification Result</label>
+                                    <input type="text" id="vendorVerifyResult" readonly value="Pending Verification">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-save" onclick="submitSection(2)">Save Section 2</button>
+                        </div>
+
+                        <!-- SECTION 3 -->
+                        <div class="section">
+                            <h3>Section 3 – Cost & GL</h3>
+                            <div class="grid">
+                                <div>
+                                    <label>Invoice Value</label>
+                                    <input type="text" id="invoiceValueInput" value="${invoice.InvoiceValue || ''}">
+                                </div>
+                                <div>
+                                    <label>Unplanned Cost</label>
+                                    <input type="text" id="unplannedCostInput" value="">
+                                </div>
+                                <div>
+                                    <label>GL Code</label>
+                                    <select id="glCodeSelect">
+                                        <option value="">Select GL Code</option>
+                                        <option value="1001">1001 – Office Supplies</option>
+                                        <option value="2002">2002 – Travel Expenses</option>
+                                        <option value="3003">3003 – IT Hardware</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-save" onclick="submitSection(3)">Save Section 3</button>
+                        </div>
+
+                        <!-- SECTION 4 -->
+                        <div class="section">
+                            <h3>Section 4 – Exchange Rate</h3>
+                            <div class="grid">
+                                <div>
+                                    <label>Exchange Rate (MIGO)</label>
+                                    <input type="text" id="exchangeRateMigoInput" value="${invoice.ExchangeRateMIGO || ''}" readonly>
+                                </div>
+                                <div>
+                                    <label>Exchange Rate (API)</label>
+                                    <input type="text" id="exchangeRateApiInput" value="${invoice.ExchangeRateAPI || ''}" readonly>
+                                </div>
+                                <div>
+                                    <label>Exchange Rate (User)</label>
+                                    <input type="text" id="exchangeRateUserInput" value="">
+                                </div>
+                            </div>
+                            <button type="button" class="btn-save" onclick="submitSection(4)">Save Section 4</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+            `;
+
+            document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+            const modal = document.getElementById("customEditModal");
+            setTimeout(() => modal.classList.add("show"), 10);
+        }
+
+        function closeCustomModal() {
+            const modal = document.getElementById("customEditModal");
+            if (!modal) return;
+            modal.classList.remove("show");
+            setTimeout(() => modal.remove(), 200);
+        }
+        //  save edited section of above form
+        function submitSection(sectionId) {
+            const original_invoice = window.currentInvoice;
+            const data = {
+                section: sectionId,
+                InvoiceGroupKey: document.getElementById("invoiceGroupKeyInput").value
+            };
+            const original_data = {};
+
+            if (sectionId === 1) {
+                data.InvoiceDate = document.getElementById("invoiceDateInput").value;
+                data.TaxCode = document.getElementById("taxCodeInput").value;
+                data.WithholdingTaxCode = document.getElementById("withholdingTaxCodeInput").value;
+                data.Narration = document.getElementById("narrationInput").value;
+
+                original_data.InvoiceDate = original_invoice.InvoiceDate;
+                original_data.TaxCode = original_invoice.TaxCode;
+                original_data.WithholdingTaxCode = original_invoice.WithholdingTaxCode; // FIXED
+                original_data.Narration = original_invoice.Narration;
+            }
+
+            if (sectionId === 2) {
+                data.VendorGst = document.getElementById("vendorGstVerifyInput").value;
+
+                original_data.VendorGst = original_invoice.VendorGst;
+            }
+
+            if (sectionId === 3) {
+                data.InvoiceValue = document.getElementById("invoiceValueInput").value;
+                data.UnplannedCost = document.getElementById("unplannedCostInput").value;
+                data.GLCode = document.getElementById("glCodeSelect").value;
+
+                original_data.InvoiceValue = original_invoice.InvoiceValue;
+                original_data.UnplannedCost = 0; // FIXED
+                original_data.GLCode = '';
+            }
+
+            if (sectionId === 4) {
+                data.ExchangeRateUser = document.getElementById("exchangeRateUserInput").value;
+
+                original_data.ExchangeRateUser = 0;
+            }
+
+            data.original_data = original_data
+
+            fetch("/update-invoice-details/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                alert(res.message || "Section updated successfully!");
+            })
+            .catch(err => {
+                alert("Error saving section");
+                console.log(err);
+            });
+        }
+
+        // Optional: close when clicking outside
+        window.addEventListener("click", (e) => {
+            const modal = document.getElementById("customEditModal");
+            if (modal && e.target === modal) closeCustomModal();
+        });
+        // gst validate and vendor code look up
+        document.addEventListener("input", function (e) {
+            if (e.target.id === "vendorGstVerifyInput") {
+                const gstInput = e.target.value.toUpperCase().trim();
+                e.target.value = gstInput;
+
+                validateGSTAndLookup(gstInput);
+            }
+        });
+
+        function validateGSTAndLookup(gst) {
+            const resultBox = document.getElementById("vendorVerifyResult");
+            const saveButton = document.querySelector('[onclick="submitSection(2)"]');
+
+            const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+            // GST Empty
+            if (gst.length === 0) {
+                resultBox.value = "Enter GST Number";
+                resultBox.style.color = "black";
+                saveButton.disabled = true;
+                return;
+            }
+
+            // Length check
+            if (gst.length < 15) {
+                resultBox.value = "GST Number must be 15 characters";
+                resultBox.style.color = "red";
+                saveButton.disabled = true;
+                return;
+            }
+
+            // Regex check
+            if (!gstRegex.test(gst)) {
+                resultBox.value = "Invalid GST Format";
+                resultBox.style.color = "red";
+                saveButton.disabled = true;
+                return;
+            }
+
+            // GST is valid — call backend
+            resultBox.value = "Valid GST — checking vendor...";
+            resultBox.style.color = "orange";
+            saveButton.disabled = true;
+
+            // Auto lookup
+            fetch("/lookup-vendor-by-gst/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify({ gst_number: gst })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.found) {
+                    resultBox.value = `Vendor Found: ${data.vendor_name} (${data.vendor_code})`;
+                    resultBox.style.color = "green";
+                    saveButton.disabled = false;
+                } else {
+                    resultBox.value = "No vendor found for this GST";
+                    resultBox.style.color = "red";
+                    saveButton.disabled = true;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                resultBox.value = "Error contacting server";
+                resultBox.style.color = "red";
+                saveButton.disabled = true;
+            });
+        }
+
+        const defaultContent = document.getElementById("contentArea").innerHTML;
+
+        function loadSection(section) {
+            const contentArea = document.getElementById("contentArea");
+
+            if (section === "uploaded") {
+                contentArea.innerHTML = defaultContent; // Restore original table
+                return;
+            }
+            else if (section === "no_data") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-nodata/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "waiting") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-waiting/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "hold") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-hold/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "rejected") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-rejected/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "ready") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-ready/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "generated") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>Vendor Name</th>
+                                <th>Invoice No.</th>
+                                <th>Invoice Date</th>
+                                <th>Invoice Value</th>
+                                <th>Invoice Status</th>
+                                <th>Response</th>
+                                <th>File</th>
+                                <th>Preview</th>
+                                <th>Check</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-generated/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    console.log("No-Data Table:", responseData);
+                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else{// For now just display section clicked
+                contentArea.innerHTML = `
+                    <div style="padding: 20px; text-align:center;">
+                        <h2>${section.toUpperCase()} is clicked</h2>
+                        <p>(Here you will display data related to ${section} later)</p>
+                    </div>
+                `;
+            }
+            
+        }
+        function populateInvoiceTable(rows) {
+            const tbody = document.querySelector("#invoiceTable tbody");
+            tbody.innerHTML = ""; // Clear old rows
+
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No Records Found</td></tr>`;
+                return;
+            }
+
+            rows.forEach(row => {
+                let statusHTML = "";
+
+                for (const key in row.InvoiceCheck) {
+                    const status = row.InvoiceCheck[key];
+                    statusHTML += `
+                        <span class="status-radio ${status.color}"
+                            title="${key}"
+                            data-tooltip="${status.message}"
+                            data-data='${JSON.stringify(status.data)}'
+                            onclick="showData(this.dataset.data, '${status.message}', '${status.color}', '${key}', '${row.InvoiceGroupKey}')">
+                        </span>
+                    `;
+                }
+
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
+
+                tr.innerHTML = `
+                    <td>${row.VendorName}</td>
+                    <td>${row.InvoiceNo}</td>
+                    <td>${row.InvoiceDate}</td>
+                    <td>${row.InvoiceValue}</td>
+                    <td>${statusHTML}</td>
+
+                    <td>
+                        <a href="/invoice-display/?response_file=${row.unique_name}.json" target="_blank">
+                            Show Response
+                        </a>
+                    </td>
+
+                    <td>
+                        <a href="/media/invoices/${row.company}/${row.unique_name}" target="_blank">
+                            📎 PDF
+                        </a>
+                    </td>
+
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="previewFunction('${row.InvoiceGroupKey}')">
+                            Preview
+                        </button>
+                    </td>
+
+                    <td class="checkbox-col">
+                        <input type="checkbox" class="row-check">
+                    </td>
+
+                    <td class="action-col" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleActionMenu(this)">
+                            Action
+                        </button>
+
+                        <div class="action-menu" style="
+                            display:none;
+                            position:absolute;
+                            background:white;
+                            border:1px solid #ccc;
+                            padding:5px;
+                            border-radius:4px;
+                            z-index:1000;
+                        ">
+
+                            <button class="btn btn-success btn-sm"
+                                    onclick="approveInvoice('${row.InvoiceGroupKey}')">
+                                Approve
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="rejectInvoice('${row.InvoiceGroupKey}')">
+                                Reject
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="editInvoice('${window.roleMatrix}', '${row.InvoiceGroupKey}')">
+                                Edit
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function approvalFunction(invoiceKey, approvalData) {
+            console.log("Invoice:", invoiceKey);
+            console.log("Approval Data:", approvalData);
+
+            const table = document.getElementById("approvalTable");
+
+            // Create table header
+            table.innerHTML = `
+                <tr>
+                    <th>Section</th>
+                    <th>Parameter</th>
+                    <th>Original</th>
+                    <th>Updated</th>
+                    <th>Status</th>
+                    <th>Approve?</th>
+                </tr>
+            `;
+            
+            // Helper: row printer
+            function addRow(section, param, sub, orig, updated, status, disableBtn) {
+                table.innerHTML += `
+                    <tr>
+                        <td>${section}</td>
+                        <td>${sub ? `${param} → <b>${sub}</b>` : param}</td>
+                        <td>${orig}</td>
+                        <td>${updated}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary"
+                                onclick="approveSingleParam('${invoiceKey}', '${section}', '${param}', '${sub}','single')"
+                                ${disableBtn ? "disabled style='background:gray;cursor:not-allowed;'" : ""}
+                            >
+                                ${disableBtn ? "Approved" : "Approve"}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // ------------------------------
+            // FIELD MATRIX (4 columns)
+            // ------------------------------
+            const field = approvalData.approval_req_field;
+
+            if (!field || Object.keys(field).length === 0) {
+                table.innerHTML += `
+                    <tr>
+                        <td>Field Matrix</td>
+                        <td colspan="5" style="text-align:center;color:gray">
+                            No changes found for Field Matrix
+                        </td>
+                    </tr>
+                `;
+            } else {
+                for (let param in field) {
+                    const row = field[param];
+                    const status = row.Checker_Approavl === "pending" ? "Pending" : "Approved";
+                    const disableBtn = row.Checker_Approavl !== "pending";
+
+                    addRow(
+                        "Field Matrix",
+                        param,
+                        null,   // no subsection
+                        row.Original_Value,
+                        row.Updated_Value,
+                        status,
+                        disableBtn
+                    );
+                }
+            }
+
+            // ------------------------------
+            // RADIO MATRIX (5 columns)
+            // ------------------------------
+            const radio = approvalData.approval_req_radio;
+
+            if (!radio || Object.keys(radio).length === 0) {
+                table.innerHTML += `
+                    <tr>
+                        <td>Radio Matrix</td>
+                        <td colspan="5" style="text-align:center;color:gray">
+                            No changes found for Radio Matrix
+                        </td>
+                    </tr>
+                `;
+            } else {
+                for (let param in radio) {
+                    const row = radio[param];
+                    const status = row.Checker_Approavl === "pending" ? "Pending" : "Approved";
+                    const disableBtn = row.Checker_Approavl !== "pending";
+
+                    addRow(
+                        "Radio Matrix",
+                        param,
+                        row.Param,   // sub-section name
+                        row.Original_Value,
+                        row.Updated_Value,
+                        status,
+                        disableBtn
+                    );
+                }
+            }
+
+            // ------------------------------
+            // APPROVE ALL BUTTON
+            // ------------------------------
+            table.innerHTML += `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding-top:10px;">
+                        <button class="btn btn-success"
+                            onclick="approveSingleParam('${invoiceKey}', 'all', 'all', 'all', 'all')">
+                            Approve All Changes
+                        </button>
+                    </td>
+                </tr>
+            `;
+
+            // Show popup
+            document.getElementById("approvePopup").style.display = "flex";
+        }
+
+        
+        // function approvalFunction(invoiceKey, checker_approval) {
+        //     console.log("Invoice:", invoiceKey);
+        //     console.log("checker_approval object:", checker_approval);
+            
+        //     // const jsonData = JSON.parse(checker_approval);
+
+        //     const table = document.getElementById("approvalTable");
+        //     table.innerHTML = `
+        //         <tr>
+        //             <th>Parameter</th>
+        //             <th>Original Value</th>
+        //             <th>Updated Value</th>
+        //             <th>Approve?</th>
+        //         </tr>
+        //     `;
+
+        //     Object.keys(checker_approval).forEach(paramKey => {
+        //         const row = checker_approval[paramKey];
+
+        //         // row.Checker_Approavl is "true" or "false"
+        //         const isApproved = row.Checker_Approavl === "true";
+
+        //         table.innerHTML += `
+        //             <tr>
+        //                 <td>${paramKey}</td>
+        //                 <td>${row.Original_Value}</td>
+        //                 <td>${row.Updated_Value}</td>
+        //                 <td>
+        //                     <button class="btn btn-sm btn-primary"
+        //                         onclick="approveSingleParam('${invoiceKey}','${paramKey}', 'single')"
+        //                         ${isApproved ? "disabled style='background:gray;cursor:not-allowed;'" : ""}
+        //                     >
+        //                         ${isApproved ? "Approved" : "Approve Change"}
+        //                     </button>
+        //                 </td>
+        //             </tr>
+        //         `;
+        //     });
+
+        //     // Show popup
+        //     document.getElementById("approvePopup").style.display = "flex";
+        // }
+
+        function approveSingleParam(invoiceKey, matrix, paramName, sub, type) {
+
+            fetch("/checker-edits-approve/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+                body: JSON.stringify({
+                    invoice_group_key: invoiceKey,
+                    matrix: matrix,
+                    parameter: paramName,
+                    sub: sub,
+                    type: type
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Approved: " + paramName);
+            })
+            .catch(err => console.log("Error:", err));
+        }
+
+        function closeApprovePopup() {
+            document.getElementById("approvePopup").style.display = "none";
+            window.location.reload();
+        }
+
+
+
+        function previewFunction(invoiceKey) {
+
+            fetch("/template_preview/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    invoice_keys: [invoiceKey]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== "success") {
+                    alert(data.message);
+                    return;
+                }
+                // console.log(data.template);
+                
+                const win = window.open("", "_blank");
+                let html = "<html><head><title>Preview</title>";
+                html += `<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">`;
+                html += "</head><body class='p-3'>";
+
+                const templates = data.template_html;
+
+                Object.keys(templates).forEach(key => {
+                    html += `<h4>${key}</h4>`;
+                    html += templates[key];
+                    html += "<hr>";
+                });
+
+                html += "</body></html>";
+
+                win.document.write(html);
+                win.document.close();
+            });
+        }
+
+        document.getElementById('checkAll').addEventListener('change', function() {
+            const checked = this.checked;
+            document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+        });
+
+        // ✅ New Script for "Generate Template"
+        document.getElementById("generateTemplateBtn").addEventListener("click", function() {
+            const selectedKeys = [];
+            document.querySelectorAll("#invoiceTable tbody tr").forEach(row => {
+                const checkbox = row.querySelector(".row-check");
+                if (checkbox && checkbox.checked) {
+                    selectedKeys.push(row.getAttribute("data-groupkey"));
+                }
+            });
+            console.log(selectedKeys);
+            
+
+            if (selectedKeys.length === 0) {
+                alert("Please select at least one invoice to generate template.");
+                return;
+            }
+
+            // Send to backend
+            fetch("/template-generate/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_keys: selectedKeys })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Response: " + JSON.stringify(data, null, 2));
+                console.log("Backend response:", data);
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Error sending data to backend.");
+            });
+        });
+
+        // Helper to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
+        function showData(rawData, message, color, key, uniqueKey) {
+            try {
+                const data = typeof rawData === "string" ? JSON.parse(rawData) : rawData;
+                // console.log("Parsed Data:", data);
+
+                const modal = document.getElementById("dataModal");
+                const modalTitle = document.getElementById("modalTitle");
+                const popupContent = document.getElementById("popupContent");
+
+                modalTitle.textContent = message;
+
+                if (!data || (Array.isArray(data) && data.length === 0) || (Object.keys(data).length === 0)) {
+                    popupContent.innerHTML = `<p style="text-align:center; color:gray;">No data available for this check.</p>`;
+                } else {
+                    // popupContent.innerHTML = generateTableHTML(data,color,key,uniqueKey);
+                    if (key === "r1" || key === "r2" || key === "r6") {
+                        // console.log("Processing r1...");
+                        // html += generateMultiTablesForR1(parsed, data.color, key);
+                        popupContent.innerHTML = generateMultiTablesForR1(data,color,key,uniqueKey);
+                    } 
+                    else {
+                        // console.log("Processing normal key:", key);
+
+                        popupContent.innerHTML = generateTableHTML(data,color,key,uniqueKey,message);
+                    }
+                }
+
+                modal.style.display = "block";
+            } catch (e) {
+                console.error("Error parsing data:", e, rawData);
+                alert("Unable to display data for this check.");
+            }
+        }
+
+       
+
+        function generateMultiTablesForR1(r1Data, color, key, uniqueKey) {
+            // console.log('generateMultiTablesForR1 called for r1');
+            
+            let html = "";
+
+            for (const [sectionKey, sectionVal] of Object.entries(r1Data)) {
+                
+                html += `<h3 style="margin-top:15px;">${sectionKey}</h3>`;
+                // const isTwoThreeWay = (sectionKey.toLowerCase() === "2/3way");
+                
+                html += generateTableHTML(
+                    sectionVal.data ? sectionVal.data : sectionVal,   // table data
+                    sectionVal.color || color,                        // color for this section
+                    key,                                              // "r1"
+                    uniqueKey,
+                    sectionKey,
+                );
+            }
+
+            return html;
+        }
+        function generateTableHTML(data, color, key, uniqueKey,sectionKey) {
+            // console.log("Generating table for:", { key, uniqueKey, data, sectionKey });
+
+            const inputPrefix = `remark_${key}_${uniqueKey}${sectionKey}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+            function escapeHtml(s) {
+                if (s === null || s === undefined) return "";
+                return String(s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+            }
+            function beautifyLabel(label) {
+                if (!label) return "";
+                return label
+                    .toString()
+                    .replace(/_/g, " ")          // replace underscores
+                    .replace(/\s+/g, " ")        // normalize spaces
+                    .trim()
+                    .split(" ")
+                    .map(w => {
+                        // ⭐ Exception: if token is grn (any case) → return "GRN"
+                        if (w.toLowerCase() === "grn") return "GRN";
+                        if (w.toLowerCase() === "ocr") return "OCR";
+                        if (w.toLowerCase() === "gst") return "GST";
+                        if (w.toLowerCase() === "gstr") return "GSTR";
+                        if (w.toLowerCase() === "3b") return "3B";
+                        if (w.toLowerCase() === "of") return "of";
+                        if (w.toLowerCase() === "gstn") return "GSTN";
+                        if (w.toLowerCase() === "per") return "per";
+                        if (w.toLowerCase() === "on") return "on";
+                        if (w.toLowerCase() === "to") return "to";
+                        if (w.toLowerCase() === "as") return "as";
+                        if (w.toLowerCase() === "gl") return "GL";
+                        if (w.toLowerCase() === "migo") return "MIGO";
+                        if (w.toLowerCase() === "pan") return "PAN";
+                        if (w.toLowerCase() === "206ab") return "206AB";
+                        if (w.toLowerCase() === "(month1)") return "(Month1)";
+                        if (w.toLowerCase() === "(month2)") return "(Month2)";
+                        if (w.toLowerCase() === "(month3)") return "(Month3)";
+
+                        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+                    })
+                    .join(" ");
+            }
+
+            function beautifyLabelR4(label) {
+                const beautified = beautifyLabel(label); // use your original logic
+
+                const clean = beautified.trim().toLowerCase();
+
+                if (
+                    clean === "vendor gstr 3b filing status".toLowerCase() ||
+                    clean === "vendor gstr 1 filing status".toLowerCase()
+                ) {
+                    return `<span style="font-size:20px; font-weight:bold;">${beautified}</span>`;
+                }
+
+                return beautified;
+            }
+
+            function formatIndianNumber(x) {
+                if (x === null || x === undefined) return "";
+
+                let num = x.toString().replace(/,/g, "");
+
+                if (isNaN(num)) return x; // Not numeric
+
+                // Convert to integer (drops decimals)
+                let integer = String(Math.floor(Number(num)));
+
+                // Indian format
+                let lastThree = integer.slice(-3);
+                let other = integer.slice(0, -3);
+
+                if (other !== "")
+                    lastThree = "," + lastThree;
+
+                return other.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+            }
+            function isNumeric(val) {
+                return !isNaN(val) && val !== null && val !== "";
+            }
+
+            function renderCell(rowId, field, val) {
+                // remark input unchanged
+                if (field === "checker_remark") {
+                    return `<input type="text" class="checker-remark"
+                                data-row="${escapeHtml(rowId)}"
+                                data-field="${escapeHtml(field)}"
+                                maxlength="50"
+                                style="width:95%;padding:4px;"
+                                value="${escapeHtml(val || "")}"
+                                placeholder="Enter remark...">`;
+                }
+
+                // 👉 NEW: auto-format numeric values Indian style
+                if (isNumeric(val)) {
+                    return formatIndianNumber(val);
+                }
+
+                return escapeHtml(val ?? "");
+            }
+
+            function renderCellr7(rowId, field, val) {
+                // remark input unchanged
+                if (field === "checker_remark") {
+                    return `<input type="text" class="checker-remark"
+                                data-row="${escapeHtml(rowId)}"
+                                data-field="${escapeHtml(field)}"
+                                maxlength="50"
+                                style="width:95%;padding:4px;"
+                                value="${escapeHtml(val || "")}"
+                                placeholder="Enter remark...">`;
+                }
+
+                
+
+                return escapeHtml(val ?? "");
+            }
+
+            
+
+
+            let table = "";
+            let hasRemark = false;
+            const skipColumns = ["color"]; // columns to hide
+            const filterHeaders = (hdrs) =>
+                hdrs.filter(h => !skipColumns.includes(h.toLowerCase()));
+
+            // ---------- Case 1: Array of objects ----------
+            if (Array.isArray(data)) {
+                // Collect unique headers from ALL inner objects
+                let rawHeaders = [];
+                for (const row of Object.values(data)) {
+                    rawHeaders = [...new Set([...rawHeaders, ...Object.keys(row)])];
+                }
+
+                let headers = filterHeaders(rawHeaders);
+                
+                if (headers.includes("checker_remark")) hasRemark = true;
+
+                table += `<div class="table-container"><table class="popup-table">
+                    <thead><tr>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr></thead><tbody>`;
+                        
+                data.forEach((row, idx) => {
+                    table += "<tr>";
+                    headers.forEach(h => {
+                        table += `<td>${renderCell(idx, h, row[h])}</td>`;
+                    });
+                    table += "</tr>";
+                });
+                
+
+                table += "</tbody></table></div>";
+            }
+
+            // ---------- Case 2: Nested object ----------
+            else if (typeof data === "object" && data !== null && typeof Object.values(data)[0] === "object") {
+                
+                let headerss = [];
+                for (const row of Object.values(data)) {
+                    headerss = [...new Set([...headerss, ...Object.keys(row)])];
+                }
+
+                headers = filterHeaders(headerss);
+                console.log(key,data);
+                if (headers.includes("checker_remark")) hasRemark = true;
+
+                table += `<div class="table-container"><table class="popup-table">
+                    <thead><tr><th>Parameter</th>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr></thead><tbody>`;
+                if(key == 'r6'){
+                    for (const [rowId, row] of Object.entries(data)) {
+                    table += `<tr><td><b>${beautifyLabel(rowId)}</b></td>`;
+                    headers.forEach(h => {
+                        table += `<td>${renderCellr7(rowId, h, row[h])}</td>`;
+                    });
+                    table += "</tr>";
+                }
+                }else if(key == 'r4'){
+                    for (const [rowId, row] of Object.entries(data)) {
+                    table += `<tr><td><b>${beautifyLabelR4(rowId)}</b></td>`;
+                    headers.forEach(h => {
+                        table += `<td>${renderCell(rowId, h, row[h])}</td>`;
+                    });
+                    table += "</tr>";
+                }
+                }
+                else{
+                    for (const [rowId, row] of Object.entries(data)) {
+                    table += `<tr><td><b>${beautifyLabel(rowId)}</b></td>`;
+                    headers.forEach(h => {
+                        table += `<td>${renderCell(rowId, h, row[h])}</td>`;
+                    });
+                    table += "</tr>";
+                }
+                }
+                
+
+                table += "</tbody></table></div>";
+            }
+
+            // ---------- Case 3: Flat object ----------
+            else if (typeof data === "object" && data !== null) {
+                let headerss = Object.keys(data);
+                headers = filterHeaders(headerss);
+                
+                
+                if (headers.includes("checker_remark")) hasRemark = true;
+
+                table += `<div class="table-container"><table class="popup-table">
+                    <thead><tr><th>Parameter</th><th>Status/Value</th></tr></thead><tbody>`;
+                
+                // headers.forEach(h => {
+                //     table += `<tr><td>${beautifyLabel(h)}</td><td>${renderCell("flat", h, data[h])}</td></tr>`;
+                // });
+                if (key == 'r4') {
+                    headers.forEach(h => {
+                        table += `<tr><td>${beautifyLabelR4(h)}</td><td>${renderCell("flat", h, data[h])}</td></tr>`;
+                    });
+                }
+                else if (key == 'r7') {
+                    headers.forEach(h => {
+                        table += `<tr><td>${beautifyLabelR4(h)}</td><td>${renderCellr7("flat", h, data[h])}</td></tr>`;
+                    });
+                } else if (key == 'r6') {
+                    headers.forEach(h => {
+                        table += `<tr><td>${beautifyLabelR(h)}</td><td>${renderCellr7("flat", h, data[h])}</td></tr>`;
+                    });
+                }else {
+                    headers.forEach(h => {
+                        table += `<tr><td>${beautifyLabel(h)}</td><td>${renderCell("flat", h, data[h])}</td></tr>`;
+                    });
+                }
+
+                table += "</tbody></table></div>";
+            }
+
+            else {
+                return `<p style="text-align:center;">Unsupported data format</p>`;
+            }
+
+            // ---------- Add Save Button ----------
+            if (hasRemark) {
+                table += `
+                    <div style="text-align:right;margin-top:8px;">
+                        <button id="${inputPrefix}_save" class="btn btn-primary">Save Remark</button>
+                    </div>
+                `;
+            }
+
+            // ---------- Safe event handler (no inline <script>) ----------
+            setTimeout(() => {
+                const btn = document.getElementById(`${inputPrefix}_save`);
+                // console.log('sectionKey-->',sectionKey);
+                
+                if (btn) {
+                    btn.addEventListener("click", () => {
+                        postRemarks(key, uniqueKey, data, sectionKey);
+                    });
+                }
+            }, 100);
+
+            return table;
+        }
+
+        // ---------- POST handler ----------
+        async function postRemarks(key, uniqueKey, originalData, sectionKey) {
+            console.log('postremark key is clicked', sectionKey);
+            
+            try {
+                const inputs = Array.from(document.querySelectorAll(".checker-remark"));
+                const updatedData = JSON.parse(JSON.stringify(originalData)); // deep copy
+
+                inputs.forEach(inp => {
+                    const rowId = inp.dataset.row;
+                    const field = inp.dataset.field;
+                    const value = inp.value.trim();
+
+                    if (Array.isArray(updatedData)) {
+                        if (updatedData[rowId]) updatedData[rowId][field] = value;
+                    } else if (typeof updatedData[rowId] === "object") {
+                        updatedData[rowId][field] = value;
+                    } else {
+                        updatedData[field] = value;
+                    }
+                });
+
+                const payload = {
+                    key: key,
+                    uniqueKey: uniqueKey,
+                    sectionKey: sectionKey,
+                    role: "processor",
+                    updated_data: updatedData
+                };
+                console.log('data sent to backend', payload);
+                
+
+                const csrfToken = getCookie("csrftoken");
+
+                const response = await fetch("/update-remark/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                alert(result.message || "✅ Remarks saved successfully!");
+                loadSection('uploaded')
+            } catch (err) {
+                console.error("Error saving remarks:", err);
+                alert("❌ Error saving remarks.");
+            }
+        }
+
+        // ---------- CSRF helper ----------
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.startsWith(name + "=")) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function closeModal() {
+            document.getElementById('dataModal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('dataModal');
+            if (event.target === modal) modal.style.display = "none";
+        };
+    </script>
+    
+</body>
+
+
+</html>

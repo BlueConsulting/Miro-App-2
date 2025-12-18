@@ -1,0 +1,68 @@
+from django.urls import path
+from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('', views.loginview, name='login'),
+    path('signup/', views.signup, name='signup'),
+    path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
+    path('password-reset-confirmation/', views.password_reset_confirmation, name='password_reset_confirmation'),
+    path('admin-dashboard/', views.admin_dashboard, name='superuser_dashboard'),
+    path('checker-dashboard/', views.checker_dashboard, name='checker_dashboard'),
+    path("users/", views.user_management_view, name="user_management"),
+    path("users/add/", views.add_user_ajax, name="add_user_ajax"),
+    path('home/', views.home, name='home'),
+    path('uploader_dashboard/', views.uploader_dashboard, name='uploader_dashboard'),
+    path('upload-data/', views.upload_data_view, name='upload_data'),
+    path("submit-pendinginvoice/", views.submit_pending_invoice, name="submit_pendinginvoice"),
+    path('upload-invoice/', views.upload_invoice, name='upload_invoice'),
+    path('gathered-data/', views.radiobuttontest, name='radiobuttontest'),
+    path('all-invoices/', views.invoices, name='invoices'),
+    path('update-remark/', views.update_remark, name='update_remark'),
+    path('template_preview/', views.template_preview, name='template_preview'),
+    path("unallocatedcost-gl/", views.unallocatedcost_gl_view, name="unallocatedcost_gl"),
+    path("delete-gl/<str:code>/", views.delete_gl_code, name="delete_gl_code"),
+    path("get-configuration/", views.get_configuration, name="get_configuration"),
+    path("get-vendor-code/", views.get_vendor_code, name="get_vendor_code"),
+    path("get-role-matrix/", views.get_role_matrix, name="get_role_matrix"),
+    path("save-role-matrix/", views.save_role_matrix, name="save_role_matrix"),
+    path('invoice-display/', views.invoice_display, name='invoice_display'),
+    path('show-invoice/', views.show_invoices, name='show_invoices'),
+    path('save-template/', views.save_template, name='save_template'),
+    path('invoicepdf-show/', views.pdf_show, name='pdf_show'),
+    path('template-setting/', views.template_setting_view, name='template_setting'),
+    path('upload-headers/', views.upload_headers, name='upload_headers'),
+    path('template-headermapping/', views.template_header_mapping, name='template_header_mapping'),
+    path('template-generate/', views.template_generate, name='template_generate'),
+    path("logout/", views.user_logout, name="logout"),
+    path("delete_rows/", views.delete_rows, name="delete_rows"),
+    path("save-config/", views.save_configuration, name="save_config"),
+    path("configurations/", views.configurations, name="configurations"),
+    path("mapping-config/", views.mapping_configuration_view, name="mapping_config"),
+    path("save-mappings/", views.save_mappings, name="save_mappings"),
+    path("upload-headerss/", views.upload_header, name="headers"),
+    path("mapping-addvariable/", views.additional_varaiables_view, name="additional_variables"),
+    path("get-invoice-details/", views.get_invoice_details, name="get_invoice_details"),
+    path("update-invoice-details/", views.update_invoice_details, name="update_invoice_details"),
+    path("lookup-vendor-by-gst/", views.lookup_vendor_by_gst, name="lookup_vendor_by_gst"),
+    path("get-nodata/", views.nodata_invoices, name="nodata_invoices"),
+    path("get-waiting/", views.waiting_invoices, name="waiting_invoices"),
+    path("get-pendingwithchecker/", views.pendingwithchecker, name="pendingwithchecker"),
+    path("get-ready/", views.ready_invoices, name="ready_invoices"),
+    path("get-hold/", views.hold_invoices, name="hold_invoices"),
+    path("get-rejected/", views.rejected_invoices, name="rejected_invoices"),
+    path("get-generated/", views.generated_invoices, name="generated_invoices"),
+    path("approve-invoice/", views.approve_invoice, name="approve_invoice"),
+    path("reject-invoice/", views.reject_invoice, name="reject_invoice"),
+    path("hold-invoice/", views.hold_invoice, name="hold_invoice"),
+    path("get-mapping-data/", views.get_mapping_data, name="get_mapping_data"),
+    path("checker-edits-approve/", views.checker_edits_approve, name="checker_edits_approve"),
+    path("save-additional-mappings/", views.save_additional_varaiables_view, name="save_additional_varaiables_view"),
+    path("resubmit-nodata-invoice/", views.resubmit_nodata_invoice, name="resubmit_nodata_invoice"),
+
+        
+]
+
+if settings.DEBUG:  # Only for development  pendingwithchecker
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

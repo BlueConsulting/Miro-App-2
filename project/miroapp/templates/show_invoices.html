@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Uploaded Invoices</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            color: red;
+            font-weight: bold;
+        }
+        form {
+            margin: 20px;
+        }
+        form input[type="date"] {
+            padding: 10px;
+            font-size: 16px;
+        }
+        form button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        .tooltip {
+        position: relative;
+        cursor: pointer; /* Shows a pointer to indicate the user can interact */
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip); /* Use the data-tooltip attribute value */
+            position: absolute;
+            top: -150%; /* Position below the element */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333; /* Dark background */
+            color: #fff; /* White text */
+            padding: 5px;
+            border-radius: 5px;
+            white-space: nowrap;
+            font-size: 12px;
+            visibility: hidden; /* Hidden by default */
+            opacity: 0; /* Fully transparent */
+            transition: opacity 0.2s ease-in-out;
+            z-index: 10; /* Make sure it appears above other elements */
+        }
+
+        .tooltip:hover::after {
+            visibility: visible; /* Show the tooltip on hover */
+            opacity: 1; /* Fully opaque */
+        }
+        /* Modal Overlay Style */
+        #statusModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+        }
+        .action-button-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000; /* Ensure the button is above other content */
+        }
+
+        #perform_action {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50; /* Green background */
+            color: black;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #perform_action:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/home/" style="text-decoration: none; color: inherit;">My App</a>
+        </h1>
+        <nav>
+            <button onclick="window.location.href='/upload-invoice/'">Upload Invoice</button>
+            <button onclick="window.location.href='/show-templates/'">Show Templates</button>
+            <button onclick="exportTemplates()">Export Templates</button>
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+    <!-- <form method="GET" action="/show-invoice/"> -->
+        <!-- <label for="date">Select Date:</label> -->
+        <!-- <input type="date" id="date" name="date" value="{{ selected_date }}"> -->
+        <!-- <button type="submit">Show Invoices</button> -->
+    <!-- </form> -->
+    <form method="GET" action="/show-invoice/" id="filterForm">
+        <label for="status">Filter by Status:</label>
+        <select id="status" name="status" onchange="this.form.submit()">
+            <option value="waiting" {% if selected_status == "waiting" %}selected{% endif %}>MIRO Pending</option>
+            <option value="confirmed" {% if selected_status == "confirmed" %}selected{% endif %}>Template Prepared</option>
+            <option value="all" {% if selected_status == "all" %}selected{% endif %}>All</option>
+        </select>
+    
+    </form>
+    {% if invoices %} 
+    <!-- <script>
+        // Store already displayed invoice names in a Set
+        let existingFiles = new Set([
+            {% for invoice in invoices %}"{{ invoice.file_name }}"{% if not forloop.last %},{% endif %}{% endfor %}
+        ]);
+    </script> -->
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice Name</th>
+                    <th>Upload Date</th>
+                    <th>
+                        <span class="filter-container">
+                            <label for="status_filter_">Filter by Status_:</label>
+                            <select id="status_filter_" name="status_filter">
+                                <option value="all">All</option>
+                                <option value="All Okay">All Okay</option>
+                                <option value="Not All Okay">Not All Okay</option>
+                                <option value="On Hold">On Hold</option>
+                            </select>
+                        </span>
+                    </th>
+                    <th>Response</th>
+                    <th>Action</th>
+                    <th>
+                        <span class="filter-container">
+                            <label for="select_all_checkbox">Select All</label>
+                            <input type="checkbox" id="select_all_checkbox">
+                        </span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="invoice-table-body">
+                {% for invoice in invoices %}
+                    <tr class="invoice-row" data-status="{{ invoice.okay_status }}">
+                        <td>
+                            <a href="/media/invoices/{{company}}/{{ invoice.file_name }}" target="_blank">
+                                {{ invoice.file_name }}
+                            </a>
+                        </td>
+                        <td>{{ invoice.upload_date }}</td>
+                        <td>
+                            <span class="tooltip" data-tooltip="{{ invoice.okay_message }}">
+                                {{ invoice.okay_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button onclick="window.location.href='/invoice-display/?response_file={{ invoice.file_name }}.json'">Show Response</button>
+                        </td>
+                        <td>
+                            <button onclick="changeStatus('{{ invoice.file_name }}')">Change Status</button>
+                        </td>
+                        <td>
+                            <input type="checkbox" class="invoice-checkbox" data-file="{{ invoice.file_name }}">
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="message">No invoices found for the selected filter</p>
+    {% endif %}
+
+
+    <!-- Form to send selected files to the view -->
+    <!-- Form to send selected files -->
+    <form id="action_form" method="POST">
+        {% csrf_token %}
+        <input type="hidden" id="selected_files" name="selected_files" value="">
+
+        <div class="action-button-container">
+            <!-- Delete Button -->
+            <button type="button" id="delete_selected" onclick="submitDeleteForm()">Delete Selected Invoices</button>
+
+            <!-- Save Template Button -->
+            <button type="button" id="perform_action" onclick="submitSaveForm()">Save Template for Selected Invoices</button>
+        </div>
+    </form>
+
+    <!-- Button to perform action on selected rows -->
+    <!-- <div class="action-button-container"> -->
+        <!-- <button id="perform_action" onclick="performAction()">Perform Action on Selected Rows</button> -->
+    <!-- </div> -->
+    <!-- Modal for Input -->
+    <div id="statusModal" style="display: none;">
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); width: 300px; margin: auto;">
+            <h3>Change Status</h3>
+            <form id="changeStatusForm">
+                <!-- Status Dropdown -->
+                <label for="status">Status:</label>
+                <select id="invoice_status" name="status" required>
+                    <option value="All Okay">All Okay</option>
+                    <option value="Not All Okay">Not All Okay</option>
+                    <option value="On Hold">On Hold</option>
+                </select>
+                <br><br>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <br><br>
+            
+                <!-- Reason Dropdown -->
+                <label for="reason">Reason:</label>
+                <select id="reason" name="reason" required onchange="toggleReasonInput(this)">
+                    <option value="Address not updated in GST portal">A.Address not updated in GST portal</option>
+                    <option value="Name not updated in GST portal">B.Name not updated in GST portal</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="Other">Other</option>
+                </select>
+                <br><br>
+            
+                <!-- Textarea for Other Reason (Initially Hidden) -->
+                <div id="otherReasonContainer" style="display: none;">
+                    <label for="otherReason">Enter Reason:</label>
+                    <textarea id="otherReason" name="otherReason"></textarea>
+                </div>
+                <br><br>
+            
+                <!-- Buttons -->
+                <button type="submit">Submit</button>
+                <button type="button" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        
+
+        function exportTemplates() {
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    fetch('/export-templates/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.blob(); // Convert the response to a binary blob
+                        } else {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Error exporting templates.');
+                            });
+                        }
+                    })
+                    .then(blob => {
+                        // Create a link to download the file
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'Aptemplate'; // Set a default file name
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        // Redirect to the home page after download
+                        window.location.href = '/'; // Replace '/' with your home page URL if different
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                    });
+                }
+
+            function getSelectedInvoices() {
+                var selectedCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+                var selectedFiles = [];
+                selectedCheckboxes.forEach(function (checkbox) {
+                    selectedFiles.push(checkbox.getAttribute('data-file'));
+                });
+                return JSON.stringify(selectedFiles);
+            }
+
+            function submitSaveForm() {
+                document.getElementById('selected_files').value = getSelectedInvoices();
+                document.getElementById('action_form').action = "{% url 'save_template' %}";
+                document.getElementById('action_form').submit();
+            }
+
+            function submitDeleteForm() {
+                let selectedFiles = getSelectedInvoices();
+                
+                if (selectedFiles.length === 0) {
+                    alert("Please select at least one invoice to delete.");
+                    return;
+                }
+
+                if (!confirm("Are you sure you want to delete the selected invoices?")) {
+                    return; // Stop execution if user cancels
+                }
+
+                fetch("{% url 'delete_rows' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: new URLSearchParams({ "selected_files": selectedFiles })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert(data.message);
+                        location.reload(); // Reload page after successful deletion
+                    } else {
+                        alert("Error: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert("Something went wrong. Please try again.");
+                    console.error("Error:", error);
+                });
+            }
+
+
+
+        // function submitForm() {
+        //     // Get all selected checkboxes
+        //     var selectedCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+
+        //     // Get the file names of the selected invoices
+        //     var selectedFiles = [];
+        //     selectedCheckboxes.forEach(function (checkbox) {
+        //         selectedFiles.push(checkbox.getAttribute('data-file'));
+        //     });
+
+        //     // Set the selected files in the hidden input field
+        //     document.getElementById('selected_files').value = JSON.stringify(selectedFiles);
+
+        //     // Submit the form
+        //     document.getElementById('action_form').submit();
+        // }
+
+        // JavaScript to filter table rows based on selected status filter
+        document.getElementById('status_filter_').addEventListener('change', function() {
+            var selectedStatus = this.value; // Get selected filter value
+            var rows = document.querySelectorAll('.invoice-row'); // Get all rows with class 'invoice-row'
+
+            rows.forEach(function(row) {
+                var rowStatus = row.getAttribute('data-status'); // Get the status of the current row
+
+                // Show the row if the selected status matches the row status, or if 'All' is selected
+                if (selectedStatus === 'all' || selectedStatus === rowStatus) {
+                    row.style.display = ''; // Display the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+            });
+        });
+
+        // Select All checkbox functionality
+        document.getElementById('select_all_checkbox').addEventListener('change', function() {
+            var isChecked = this.checked; // Get the current state of the "Select All" checkbox
+            var checkboxes = document.querySelectorAll('.invoice-checkbox'); // Get all row checkboxes
+
+            // Set all checkboxes to the state of the "Select All" checkbox
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = isChecked;
+            });
+        });
+
+        // Individual checkbox functionality
+        document.querySelectorAll('.invoice-checkbox').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                var allChecked = true;
+                document.querySelectorAll('.invoice-checkbox').forEach(function(checkbox) {
+                    if (!checkbox.checked) {
+                        allChecked = false;
+                    }
+                });
+
+                // Update the "Select All" checkbox based on the state of individual checkboxes
+                document.getElementById('select_all_checkbox').checked = allChecked;
+            });
+        });
+
+        // Function to get the selected rows when the "Perform Action" button is clicked
+        function performAction() {
+            // Get all selected checkboxes
+            var selectedCheckboxes = document.querySelectorAll('.invoice-checkbox:checked');
+
+            // Get the file names of the selected invoices
+            var selectedFiles = [];
+            selectedCheckboxes.forEach(function(checkbox) {
+                selectedFiles.push(checkbox.getAttribute('data-file'));
+            });
+
+            // For now, just log the selected file names to the console
+            console.log("Selected files:", selectedFiles);
+
+            // You can implement further actions here, such as sending the selected rows to the server or updating their status
+        }
+
+        // JavaScript to filter table rows based on selected status filter
+        document.getElementById('status_filter_').addEventListener('change', function() {
+            var selectedStatus = this.value; // Get selected filter value
+            var rows = document.querySelectorAll('.invoice-row'); // Get all rows with class 'invoice-row'
+
+            rows.forEach(function(row) {
+                var rowStatus = row.getAttribute('data-status'); // Get the status of the current row
+
+                // Show the row if the selected status matches the row status, or if 'All' is selected
+                if (selectedStatus === 'all' || selectedStatus === rowStatus) {
+                    row.style.display = ''; // Display the row
+                } else {
+                    row.style.display = 'none'; // Hide the row
+                }
+            });
+        });
+
+
+
+        function toggleReasonInput(selectElement) {
+            const otherReasonContainer = document.getElementById('otherReasonContainer');
+            const otherReasonInput = document.getElementById('otherReason');
+
+            if (selectElement.value === 'Other') {
+                otherReasonContainer.style.display = 'block';
+                otherReasonInput.setAttribute('required', 'required'); // Make it required
+            } else {
+                otherReasonContainer.style.display = 'none';
+                otherReasonInput.removeAttribute('required'); // Remove the required attribute
+                otherReasonInput.value = ''; // Clear the value
+            }
+        }
+        // Function to get the CSRF token from the cookie
+        function getCSRFToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue;
+        }
+
+
+        function changeStatus(invoiceName) {
+            // Open the modal
+            const modal = document.getElementById('statusModal');
+            modal.style.display = 'flex'; // Show the modal as a flex container for centering
+    
+            // Set up the form submission logic
+            const form = document.getElementById('changeStatusForm');
+            form.onsubmit = function(event) {
+                event.preventDefault(); // Prevent form default submission
+                
+                // Collect user inputs
+                const status = document.getElementById('invoice_status').value;
+                const name = document.getElementById('name').value;
+                const reason = document.getElementById('reason').value;
+                const otherReason = document.getElementById('otherReason').value || null;
+
+                // Construct the payload
+                const payload = {
+                    invoice_name: invoiceName,
+                    status: status,
+                    name: name,
+                    reason: reason === 'Other' ? otherReason : reason
+                };
+
+                console.log(payload); // Debug the payload
+                
+                // Send the payload via Fetch API or another method
+                fetch('/update-status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(`Status updated for ${invoiceName}`);
+                        location.reload(); // Refresh the page to reflect the updated data
+                    } else {
+                        alert('Failed to update status: ' + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the status.');
+                });
+    
+                // Close the modal
+                closeModal();
+            };
+        }
+    
+        function closeModal() {
+            const modal = document.getElementById('statusModal');
+            modal.style.display = 'none'; // Hide the modal
+        }
+    </script>
+    
+</body>
+</html>

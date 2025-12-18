@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            gap: 10px;
+        }
+        nav button {
+            background-color: white;
+            color: #007bff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        nav button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        main {
+            padding: 20px;
+            text-align: center;
+        }
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            font-size: 18px;
+        }
+        /* Full-screen overlay */
+        #editOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        /* Popup box */
+        #editFormModal {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 60%;
+            max-width: 700px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Grid layout (2 columns) */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 20px;
+        }
+
+        .form-grid input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+        }
+
+        /* Buttons row */
+        .modal-actions {
+            margin-top: 18px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .primary-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>
+            <a href="/uploader_dashboard/" style="text-decoration: none; color: inherit;">Miro App</a>
+        </h1>
+        <nav>
+            <button onclick="window.location.href='/upload-invoice/'">Upload Invoice</button>
+            <button onclick="window.location.href='/pending-invoices/'">Show Pending Invoices</button> 
+            <button onclick="window.location.href='/logout/'">Logout</button>
+        </nav>
+    </header>
+    <main>
+        <!-- Display messages -->
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li class="alert {{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h2>Pending Invoices</h2>
+
+        {% if data %}
+        <table border="1" cellspacing="0" cellpadding="8" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead style="background-color: #007bff; color: white;">
+                <tr>
+                    <th>Vendor GST</th>
+                    <th>Vendor Code</th>
+                    <th>Invoice No</th>
+                    <th>Customer GST</th>
+                    <th>Basic Amount</th>
+                    <th>Total Tax</th>
+                    <th>Total Amount</th>
+                    <th>CGST</th>
+                    <th>SGST</th>
+                    <th>IGST</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                    {% with tax=item.TaxType %}
+                    <tr>
+                        <td>{{ item.VendorGst }}</td>
+                        <td>{{ item.VendorCode }}</td>
+                        <td>{{ item.InvNo }}</td>
+                        <td>{{ item.CustomerGst }}</td>
+                        <td>{{ item.BasicAmount }}</td>
+                        <td>{{ item.TotalTax }}</td>
+                        <td>{{ item.TotalAmount }}</td>
+
+                        <!-- Tax Breakdown -->
+                        <td>{% if tax.CGST %}₹{{ tax.CGST.amount|floatformat:2 }}{% else %}0{% endif %}</td>
+                        <td>{% if tax.SGST %}₹{{ tax.SGST.amount|floatformat:2 }}{% else %}0{% endif %}</td>
+                        <td>{% if tax.IGST %}₹{{ tax.IGST.amount|floatformat:2 }}{% else %}0{% endif %}</td>
+
+                        <td>
+                            <button 
+                                onclick="openEditForm(
+                                    '{{ item.unique_name }}',
+                                    '{{ item.VendorGst }}',
+                                    '{{ item.VendorCode }}',
+                                    '{{ item.InvNo }}',
+                                    '{{ item.CustomerGst }}',
+                                    '{{ item.BasicAmount }}',
+                                    '{{ item.TotalTax }}',
+                                    '{{ item.TotalAmount }}'
+                                )">
+                                Edit
+                            </button>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>No pending invoices found.</p>
+        {% endif %}
+
+        <!-- Modal Overlay -->
+        <!-- Modal Overlay -->
+        <div id="editOverlay" style="display:none;">
+        <div id="editFormModal">
+            <h3>Edit Pending Invoice</h3>
+            <form id="editInvoiceForm" method="POST" action="/submit-pendinginvoice/">
+                {% csrf_token %}
+                <input type="hidden" name="unique_name" id="unique_name">
+
+                <div class="form-grid">
+                    <div>
+                        <label>Vendor GST:</label>
+                        <input type="text" name="VendorGst" id="VendorGst">
+                        <div style="color:red; font-size:12px;" id="gstMsg"></div>
+                    </div>
+
+                    <div>
+                        <label>Vendor Code:</label>
+                        <input type="text" name="VendorCode" id="VendorCode" readonly>
+                    </div>
+
+                    <div>
+                        <label>Invoice No:</label>
+                        <input type="text" name="InvNo" id="InvNo">
+                    </div>
+
+                    <div>
+                        <label>Customer GST:</label>
+                        <input type="text" name="CustomerGst" id="CustomerGst" readonly>
+                    </div>
+
+                    <div>
+                        <label>Basic Amount:</label>
+                        <input type="text" name="BasicAmount" id="BasicAmount" readonly>
+                    </div>
+
+                    <div>
+                        <label>Total Tax:</label>
+                        <input type="text" name="TotalTax" id="TotalTax" readonly>
+                    </div>
+
+                    <div>
+                        <label>Total Amount:</label>
+                        <input type="text" name="TotalAmount" id="TotalAmount" readonly>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" id="submitBtn" class="primary-btn" disabled>Submit</button>
+                    <button type="button" class="cancel-btn" onclick="closeEditForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+        </div>
+
+        <script>
+            function openEditForm(unique_name, VendorGst, VendorCode, InvNo, CustomerGst, BasicAmount, TotalTax, TotalAmount) {
+
+                document.getElementById("unique_name").value = unique_name;
+                document.getElementById("VendorGst").value = VendorGst;
+                document.getElementById("VendorCode").value = VendorCode;
+                document.getElementById("InvNo").value = InvNo;
+                document.getElementById("CustomerGst").value = CustomerGst;
+                document.getElementById("BasicAmount").value = BasicAmount;
+                document.getElementById("TotalTax").value = TotalTax;
+                document.getElementById("TotalAmount").value = TotalAmount;
+                document.getElementById("gstMsg").textContent = "";
+                document.getElementById("submitBtn").disabled = VendorCode ? false : true;
+                document.getElementById("editOverlay").style.display = "flex";
+            }
+
+            function closeEditForm() {
+                document.getElementById("editOverlay").style.display = "none";
+            }
+
+            const vendorGstInput = document.getElementById("VendorGst");
+            const vendorCodeInput = document.getElementById("VendorCode");
+            const submitBtn = document.getElementById("submitBtn");
+            const gstMsg = document.getElementById("gstMsg");
+
+            vendorGstInput.addEventListener("input", function() {
+                const gst = vendorGstInput.value.trim().toUpperCase();
+
+                gstMsg.textContent = "";
+                vendorCodeInput.value = "";
+                submitBtn.disabled = true;
+
+                // Case: User types NA
+                if (gst === "NA") {
+                    vendorCodeInput.value = "AB";
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                // Lookup when GST length is 15
+                if (gst.length === 15) {
+                    fetch(`/get-vendor-code/?gst=${gst}`, {
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === "found") {
+                            vendorCodeInput.value = data.vendor_code;
+                            gstMsg.textContent = "";
+                            submitBtn.disabled = false;
+                        } else {
+                            gstMsg.textContent = "❌ No vendor found for this GST number";
+                            vendorCodeInput.value = "";
+                            submitBtn.disabled = true;
+                        }
+                    });
+                }
+            });
+
+            document.getElementById("editInvoiceForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("✅ Invoice updated successfully");
+                        closeEditForm();
+                    } else {
+                        alert("❌ Failed: " + (data.message || "Unknown error"));
+                    }
+                })
+                .catch(error => {
+                    alert("Error: " + error);
+                });
+            });
+        </script>
+
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #c1c1c9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select, textarea {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 3px rgba(0, 123, 255, 0.5);
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Register Your Company</h2>
+        <form method="POST">
+            {% csrf_token %}
+            
+            {{ form.non_field_errors }}
+            
+            <label for="business_name">Business Name</label>
+            {{ form.business_name }}
+            {{ form.business_name.errors|safe }}
+
+            <label for="business_code">Business Code</label>
+            {{ form.business_code }}
+            {{ form.business_code.errors|safe }}
+
+            <label for="constitution">Constitution</label>
+            {{ form.constitution }}
+            {{ form.constitution.errors|safe }}
+
+            <label for="contact_person_name">Contact Person Name</label>
+            {{ form.contact_person_name }}
+            {{ form.contact_person_name.errors|safe }}
+
+            <label for="country_code">Country Code</label>
+            {{ form.country_code }}
+            {{ form.country_code.errors|safe }}
+
+            <label for="contact_person_number">Contact Person Number</label>
+            {{ form.contact_person_number }}
+            {{ form.contact_person_number.errors|safe }}
+
+            <label for="contact_person_email">Contact Person Email</label>
+            {{ form.contact_person_email }}
+            {{ form.contact_person_email.errors|safe }}
+
+            <label for="address_line1">Address Line 1</label>
+            {{ form.address_line1 }}
+            {{ form.address_line1.errors|safe }}
+
+            <label for="address_line2">Address Line 2 (Optional)</label>
+            {{ form.address_line2 }}
+            {{ form.address_line2.errors|safe }}
+
+            <button type="submit" class="btn">Register</button>
+        </form>
+        <div class="form-footer">
+            <p>Registered already, Login here? <a href='/login/'>Login</a></p>
+        </div>
+    </div>
+</body>
+</html>

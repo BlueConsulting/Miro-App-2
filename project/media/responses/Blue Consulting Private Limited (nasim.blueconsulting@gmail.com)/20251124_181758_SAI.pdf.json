@@ -1,0 +1,303 @@
+{
+    "result": {
+        "CHECKS": {
+            "Account_check": {
+                "Complete_Invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Customer_Adress": {
+                    "Gst_Portal": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
+                    "Invoice_data": "No.151, Hoodi\nVillage, KR Puram hobli Bangalore, -560066, karnataka, None, India",
+                    "status": "Not Matching"
+                },
+                "Customer_Name": {
+                    "Gst_Portal": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+                    "Invoice_data": "GLODESI TECHNOLOGIES PRIVATE\nLIMITED",
+                    "status": "Matching"
+                },
+                "Invoice_Blocked_Credit": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Invoice_Date": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "2025-05-30",
+                    "status": "Okay"
+                },
+                "Invoice_Number": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "FY25-26/36",
+                    "status": "Okay"
+                },
+                "Invoice_RCM-Services": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "Pre_year": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "gstnumber_gstcharged": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "valid_invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                }
+            },
+            "data_from_gst": {
+                "206AB_Compliance": {},
+                "Filing Frequency": "Invalid API Key",
+                "Filing Status": "Invalid API Key",
+                "Pan_Status": {},
+                "Vendor_Filing_status": "Invalid API Key",
+                "customer_gst_data": {
+                    "Address": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
+                    "Central tax Jurisdiction": "RANGE-BED7",
+                    "Central tax Jurisdiction Code": "YT0702",
+                    "Date of Registration": "01/07/2017",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "29AAGCG0335D2ZX",
+                    "Legal Name": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "KA119",
+                    "Trade Name": "GLODESI TECHNOLOGIES PRIVATE LIMITED"
+                },
+                "vendor_gst_data": {
+                    "Address": "20/2 , SAI FASTENERS , 14th E cross , Bengaluru Urban , Karnataka , 560044",
+                    "Central tax Jurisdiction": "RANGE-EWD2",
+                    "Central tax Jurisdiction Code": "YU0205",
+                    "Date of Registration": "01/07/2017",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "",
+                    "Gstin": "29BDRPK4890D1Z1",
+                    "Legal Name": "SHRIDHAR SHANKAREPPA KAGGOD",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "KA020",
+                    "Trade Name": "SAI INDUSTRIES"
+                }
+            },
+            "e-invoice_data": {
+                "reason": "Vendor is not liable to raise E-Invoice",
+                "status": "okay_"
+            },
+            "eway_bill_data": {
+                "reason": "Vendor is liable to raise E-Way Bill, but Eway bill Number not found or ocr is unable to capture it",
+                "status": "not okay"
+            },
+            "table_data": {
+                "Table_Check_data": "[{\"item_description\":\"FABRICATED Enclosure\",\"item_quantity\":3.0,\"unit\":\"Nos\",\"unit_price\":5000.0,\"tax\":\"\\u20b92700.0\",\"tax_rate\":18,\"amount\":17700.0,\"qty_unitprice\":15000.0,\"qty_unit+rate_qty_unit\":17700.0,\"qty_unit+2_rate_qty_unit\":20400.0,\"check1\":\"correct\"},{\"item_description\":\"FABRICATED LED COVER\",\"item_quantity\":3.0,\"unit\":\"Nos\",\"unit_price\":2100.0,\"tax\":\"\\u20b91134.0\",\"tax_rate\":18,\"amount\":7434.0,\"qty_unitprice\":6300.0,\"qty_unit+rate_qty_unit\":7434.0,\"qty_unit+2_rate_qty_unit\":8568.0,\"check1\":\"correct\"},{\"item_description\":\"MACHINED ODK 1.15\\nBOLT\",\"item_quantity\":3.0,\"unit\":\"Nos\",\"unit_price\":1000.0,\"tax\":\"\\u20b9540.0\",\"tax_rate\":18,\"amount\":3540.0,\"qty_unitprice\":3000.0,\"qty_unit+rate_qty_unit\":3540.0,\"qty_unit+2_rate_qty_unit\":4080.0,\"check1\":\"correct\"},{\"item_description\":\"MACHINED DRIVERS\\nPANEL MOUNTING\\nBLOCK\",\"item_quantity\":10.0,\"unit\":\"Nos\",\"unit_price\":1140.0,\"tax\":\"\\u20b92052.0\",\"tax_rate\":18,\"amount\":13452.0,\"qty_unitprice\":11400.0,\"qty_unit+rate_qty_unit\":13452.0,\"qty_unit+2_rate_qty_unit\":15504.0,\"check1\":\"correct\"},{\"item_description\":\"MACHINED PANEL BASIS\\nMOUNTING BLOCK -1\",\"item_quantity\":10.0,\"unit\":\"Nos\",\"unit_price\":1140.0,\"tax\":\"\\u20b92052.0\",\"tax_rate\":18,\"amount\":13452.0,\"qty_unitprice\":11400.0,\"qty_unit+rate_qty_unit\":13452.0,\"qty_unit+2_rate_qty_unit\":15504.0,\"check1\":\"correct\"},{\"item_description\":\"MACHINED PANEL BASIS\\nMOUNTING BLOCK -2\",\"item_quantity\":10.0,\"unit\":\"Nos\",\"unit_price\":1140.0,\"tax\":\"\\u20b92052.0\",\"tax_rate\":18,\"amount\":13452.0,\"qty_unitprice\":11400.0,\"qty_unit+rate_qty_unit\":13452.0,\"qty_unit+2_rate_qty_unit\":15504.0,\"check1\":\"correct\"},{\"item_description\":\"FABRICATED LOWER\\nBRACKET\",\"item_quantity\":10.0,\"unit\":\"Nos\",\"unit_price\":1000.0,\"tax\":\"\\u20b91800.0\",\"tax_rate\":18,\"amount\":11800.0,\"qty_unitprice\":10000.0,\"qty_unit+rate_qty_unit\":11800.0,\"qty_unit+2_rate_qty_unit\":13600.0,\"check1\":\"correct\"},{\"item_description\":\"FABRICATED UPPER\\nBRACKET\",\"item_quantity\":10.0,\"unit\":\"Nos\",\"unit_price\":800.0,\"tax\":\"\\u20b91440.0\",\"tax_rate\":18,\"amount\":9440.0,\"qty_unitprice\":8000.0,\"qty_unit+rate_qty_unit\":9440.0,\"qty_unit+2_rate_qty_unit\":10880.0,\"check1\":\"correct\"},{\"item_description\":\"MACHINED BLOCK\\nDRIVERS PANEL-IND\",\"item_quantity\":15.0,\"unit\":\"Nos\",\"unit_price\":900.0,\"tax\":\"\\u20b92430.0\",\"tax_rate\":18,\"amount\":15930.0,\"qty_unitprice\":13500.0,\"qty_unit+rate_qty_unit\":15930.0,\"qty_unit+2_rate_qty_unit\":18360.0,\"check1\":\"correct\"}]"
+            },
+            "tax_check": {
+                "Company_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Company_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Vendor_206AB": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Not Okay"
+                },
+                "Vendor_Filing_status": {
+                    "Gst_Portal": "Not fetched as no vendor Gst or Invalid Gst on Invoice",
+                    "Invoice_data": " ",
+                    "status": "Not fetched as no vendor Gst or Invalid Gst on Invoice"
+                },
+                "Vendor_Gst_Active": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "Active",
+                    "status": "YES"
+                },
+                "Vendor_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29BDRPK4890D1Z1",
+                    "status": "YES"
+                },
+                "Vendor_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29BDRPK4890D1Z1",
+                    "status": "YES"
+                },
+                "Vendor_Pan-Adhar_Linked": {
+                    "Gst_Portal": "Invalid Input Pan, does not match pan pattern",
+                    "Invoice_data": "",
+                    "status": "Not Okay"
+                },
+                "Vendor_Pan_Active": {
+                    "Gst_Portal": "Invalid Input Pan, does not match pan pattern",
+                    "Invoice_data": "",
+                    "status": "Not Okay"
+                },
+                "Vendor_TaxPayer_type": {
+                    "Gst_Portal": "Regular",
+                    "Invoice_data": "-",
+                    "status": "Regular"
+                },
+                "Vendor_Taxfiliging_Frequency": {
+                    "Gst_Portal": "Not fetched",
+                    "Invoice_data": " ",
+                    "status": "Not fetched"
+                },
+                "tax_type_on_invoice": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": " ",
+                    "status": "Okay"
+                }
+            }
+        },
+        "Invoice_data": {
+            "Ack_No": null,
+            "Bank_Details": {
+                "Account_holder_name": "INDUSTRIES",
+                "Bank_Account_No": "10080749937",
+                "Bank_Branch": "RAJAJINAGAR BRANCH",
+                "Bank_Name": "IDFC FIRST Bank",
+                "Email": null,
+                "IFSC_Code": "IDFB0080169",
+                "VendorAddress": "20/2, 14th E cross RAJAJINAGAR INDUSTRIAL TOWN,BANGALORE, None, None, None, None"
+            },
+            "BillingAddress": "No.151, Hoodi\nVillage, KR Puram hobli Bangalore, -560066, karnataka, None, India",
+            "BillingAddressRecipient": "GLODESI TECHNOLOGIES PRIVATE\nLIMITED",
+            "Currency": "INR",
+            "CustomerName": "GLODESI TECHNOLOGIES PRIVATE\nLIMITED",
+            "Cutomer Gst No.": "29AAGCG0335D2ZX",
+            "EwayBill_No": null,
+            "Invoice items:": {
+                "item#1": {
+                    "amount": "17700.0",
+                    "item_description": "FABRICATED Enclosure",
+                    "item_quantity": 3.0,
+                    "tax": "\u20b92700.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "5000.0"
+                },
+                "item#2": {
+                    "amount": "7434.0",
+                    "item_description": "FABRICATED LED COVER",
+                    "item_quantity": 3.0,
+                    "tax": "\u20b91134.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "2100.0"
+                },
+                "item#3": {
+                    "amount": "3540.0",
+                    "item_description": "MACHINED ODK 1.15\nBOLT",
+                    "item_quantity": 3.0,
+                    "tax": "\u20b9540.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "1000.0"
+                },
+                "item#4": {
+                    "amount": "13452.0",
+                    "item_description": "MACHINED DRIVERS\nPANEL MOUNTING\nBLOCK",
+                    "item_quantity": 10.0,
+                    "tax": "\u20b92052.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "1140.0"
+                },
+                "item#5": {
+                    "amount": "13452.0",
+                    "item_description": "MACHINED PANEL BASIS\nMOUNTING BLOCK -1",
+                    "item_quantity": 10.0,
+                    "tax": "\u20b92052.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "1140.0"
+                },
+                "item#6": {
+                    "amount": "13452.0",
+                    "item_description": "MACHINED PANEL BASIS\nMOUNTING BLOCK -2",
+                    "item_quantity": 10.0,
+                    "tax": "\u20b92052.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "1140.0"
+                },
+                "item#7": {
+                    "amount": "11800.0",
+                    "item_description": "FABRICATED LOWER\nBRACKET",
+                    "item_quantity": 10.0,
+                    "tax": "\u20b91800.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "1000.0"
+                },
+                "item#8": {
+                    "amount": "9440.0",
+                    "item_description": "FABRICATED UPPER\nBRACKET",
+                    "item_quantity": 10.0,
+                    "tax": "\u20b91440.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "800.0"
+                },
+                "item#9": {
+                    "amount": "15930.0",
+                    "item_description": "MACHINED BLOCK\nDRIVERS PANEL-IND",
+                    "item_quantity": 15.0,
+                    "tax": "\u20b92430.0",
+                    "tax_rate": "(18%)",
+                    "unit": "Nos",
+                    "unit_price": "900.0"
+                }
+            },
+            "InvoiceDate": "2025-05-30",
+            "InvoiceId": "FY25-26/36",
+            "InvoiceTotal": "106200.00",
+            "Irn_No": null,
+            "PurchaseOrder": "241000456",
+            "ShippingAddress": "survey No.\n151, Hoodi Village, KR Puram hobli\nBangalore, -560066, Karnataka, None, India",
+            "SubTotal": "90000.00",
+            "Tax Items": {
+                "CGST": {
+                    "amount": "8100.00"
+                },
+                "SGST": {
+                    "amount": "8100.00"
+                }
+            },
+            "Tax_Invoice": "Tax Invoice",
+            "TotalTax": 16200.0,
+            "Vendor Gst No.": "29BDRPK4890D1Z1",
+            "VendorAddress": "20/2, 14th E cross RAJAJINAGAR INDUSTRIAL TOWN,BANGALORE, None, None, None, None",
+            "VendorAddressRecipient": "SAI INDUSTRIES",
+            "VendorName": "INDUSTRIES",
+            "relevent_page": [
+                0
+            ]
+        },
+        "Okay_NotOkay": {
+            "status": "Not All Okay",
+            "message": [
+                "Customer_Adress Not Matched",
+                "Vendor_206AB",
+                "Vendor_Filing_status",
+                "Vendor_Pan-Adhar not Linked",
+                "Vendor_Pan not Active"
+            ]
+        }
+    }
+}
