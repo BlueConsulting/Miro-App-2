@@ -156,6 +156,37 @@
       width: 60px !important;   /* Perfect for 2 digits */
       display: inline-block;
     }
+    .rule-box {
+  margin-top: 12px;
+}
+
+.rule-box h4 {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 🔹 Horizontal layout */
+.rule-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 🔹 Compact inputs */
+.threshold-input.small {
+  width: 90px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+/* 🔹 Compact select */
+.threshold-select.small {
+  width: 70px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
     
 </style>
 </head>
@@ -227,53 +258,79 @@
               </div>
 
               <div id="ifYes" class="col" style="display:none">
-                <label>If Yes → Automatic on</label>
-                <input type="number" name="auto_on_date" min="1" max="28" placeholder="day of month (e.g. 1..28)" />
-                <div class="help">Or select Manual in the next field</div>
-                <label style="margin-top:8px">Automatic or Manual?</label>
-                <select name="auto_or_manual">
-                  <option value="automatic">Automatic</option>
-                  <option value="manual">Manual</option>
-                </select>
+                  <label style="margin-top:8px">Automatic or Manual?</label>
+                  <select name="auto_or_manual" id="autoOrManual">
+                      <option value="automatic">Automatic</option>
+                      <option value="manual">Manual</option>
+                  </select>
+
+                  <div class="help">Or select Manual in the above field</div>
+
+                  <!-- AUTOMATIC -->
+                  <div id="automaticBlock">
+                      <label>If Yes → Automatic on</label>
+                      <input type="number"
+                            name="auto_on_date"
+                            min="1"
+                            max="28"
+                            placeholder="day of month (e.g. 1..28)" />
+                  </div>
+
+                  <!-- MANUAL -->
+                  <div id="manualBlock" style="display:none">
+                      <label>If Yes → Manual selection</label>
+                      <label>Select Previous Year</label>
+                      <select id="PrfySelect"></select>
+                      <label>Select Previous Year Month</label>
+                      <select id="PrmonthSelect"></select>
+                      <label>Select Current Year Month</label>
+                      <select id="CrmonthSelect"></select>
+                  </div>
               </div>
             </div>
 
             <hr style="margin:12px 0" />
 
-            <div>
-              <label>Posting Scenarios (when Yes)</label>
-              <div class="help">Select how posting date is chosen in different invoice/book scenarios</div>
+            <div id="postingScenarios" style="display:none">
 
-              <div class="grid" style="margin-top:8px">
-                <div>
-                  <label>IF month(invoice) = month(entry)</label>
-                  <select name="scenario_same_month">
-                    <option value="system">System Date</option>
-                    <option value="invoice">Invoice Date</option>
-                    <option value="migo">MIGO Date</option>
-                  </select>
+              <div>
+                <label>Posting Scenarios (when Yes)</label>
+                <div class="help">Select how posting date is chosen in different invoice/book scenarios</div>
+
+                <div class="grid" style="margin-top:8px">
+                  <div>
+                    <label>IF month(invoice) = month(entry)</label>
+                    <select name="scenario_same_month">
+                      <option value="system">System Date</option>
+                      <option value="invoice">Invoice Date</option>
+                      <option value="migo">MIGO Date</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>IF month(invoice) ≠ month(entry) → books closed of month of invoice</label>
+                    <select name="scenario_books_closed">
+                      <option value="system">System Date</option>
+                      <option value="first_day">First Day of Month</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label>IF month(invoice) ≠ month(entry) → books not closed</label>
+                    <select name="scenario_books_not_closed">
+                      <option value="last_date">Last date of invoice month</option>
+                      <option value="system">System Date</option>
+                      <option value="invoice">Invoice Date</option>
+                      <option value="migo">MIGO Date</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label>IF month(invoice) ≠ month(entry) → books closed of month of invoice</label>
-                  <select name="scenario_books_closed">
-                    <option value="system">System Date</option>
-                    <option value="first_day">First Day of Month</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label>IF month(invoice) ≠ month(entry) → books not closed</label>
-                  <select name="scenario_books_not_closed">
-                    <option value="last_date">Last date of invoice month</option>
-                    <option value="system">System Date</option>
-                    <option value="invoice">Invoice Date</option>
-                    <option value="migo">MIGO Date</option>
-                  </select>
+                <div class="help" style="margin-top:8px">
+                  Note: MIRO Date can never be before MIGO date.
                 </div>
               </div>
 
-              <div class="help" style="margin-top:8px">Note: MIRO Date can never be before MIGO date.</div>
             </div>
           </div>
         </div>
@@ -585,6 +642,7 @@
             </div>
           </div>
         </div>
+        
         <!-- SECTION 8 - Unplanned Cost -->
         <div class="card">
           <div class="section-head" data-toggle="s8">
@@ -600,37 +658,76 @@
               <div class="col">
                 <label>Add unplanned cost to Material/Service?</label>
                 <div class="inline" style="align-items:center; gap:20px;">
-
                   <label>
-                    <input type="radio" name="add_to_material_service" value="Y" onchange="handleUnplannedCostChoice(this)"> Yes
+                    <input type="radio" name="add_to_material_service" value="Y"
+                          onchange="handleUnplannedCostChoice(this)"> Yes
                   </label>
-
                   <label>
-                    <input type="radio" name="add_to_material_service" value="N" onchange="handleUnplannedCostChoice(this)"> No
+                    <input type="radio" name="add_to_material_service" value="N"
+                          onchange="handleUnplannedCostChoice(this)"> No
                   </label>
-
-                  <!-- ⭐ Stylish Threshold Input -->
-                  <div class="threshold-box">
-                      <label>Threshold %</label>
-                      <input 
-                        type="number" 
-                        name="unplanned_threshold"
-                        min="0"
-                        max="99"
-                        maxlength="2"
-                        placeholder="0–99"
-                        class="threshold-input"
-                      />
-                  </div>
-
                 </div>
 
-                <!-- 🔥 Message appears here based on selection -->
-                <div id="unplanned_message" style="margin-top:10px; font-size:14px; font-weight:bold; color:#0066cc;"></div>
+                <!-- 🔹 Processor Rule -->
+                <div class="rule-box">
+                  <h4>Processor Rule</h4>
+
+                  <div class="rule-row">
+                    <label class="inline-label">Amount Limit</label>
+                    <input type="number"
+                          name="processor_threshold_amount"
+                          placeholder="Enter amount"
+                          class="threshold-input small" />
+
+                    <select name="processor_condition"
+                            class="threshold-select small">
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+
+                    <label class="inline-label">Percentage Limit</label>
+                    <input type="number"
+                          name="processor_threshold_percent"
+                          min="0" max="99"
+                          placeholder="Enter %"
+                          class="threshold-input small" />
+                  </div>
+                </div>
+
+                <!-- 🔹 Checker Rule -->
+                <div class="rule-box">
+                  <h4>Checker Rule</h4>
+
+                  <div class="rule-row">
+                    <label class="inline-label">Amount Limit</label>
+                    <input type="number"
+                          name="checker_threshold_amount"
+                          placeholder="Amount"
+                          class="threshold-input small" />
+
+                    <select name="checker_condition"
+                            class="threshold-select small">
+                      <option value="AND">AND</option>
+                      <option value="OR">OR</option>
+                    </select>
+                    <label class="inline-label">Percentage Limit</label>
+                    <input type="number"
+                          name="checker_threshold_percent"
+                          min="0" max="99"
+                          placeholder="%"
+                          class="threshold-input small" />
+                  </div>
+                </div>
+
+
+                <div id="unplanned_message"
+                    style="margin-top:10px; font-size:14px; font-weight:bold; color:#0066cc;">
+                </div>
               </div>
             </div>
           </div>
         </div>
+
 
         <!-- SECTION 9 - Threshold Check (u/s 194Q) -->
         <div class="card">
@@ -755,6 +852,35 @@
             </div>
           </div>
         </div>
+
+        <!-- SECTION 13 - COMPANY PAN -->
+        <div class="card">
+          <div class="section-head" data-toggle="s13">
+            <div>
+              <div class="section-title">13. Company PAN</div>
+            </div>
+            <div class="muted">Enter PAN number of company</div>
+          </div>
+
+          <div id="s13" class="section-body">
+            <div class="row">
+              <div class="col">
+                <label>Company PAN Number</label>
+                <input
+                  type="text"
+                  name="company_pan"
+                  placeholder="e.g. ABCDE1234F"
+                  pattern="^[A-Z]{5}[0-9]{4}[A-Z]$"
+                  title="Enter a valid PAN number"
+                  style="text-transform: uppercase;"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+
 
 
         <div style="display:flex;gap:10px;align-items:center">
@@ -1149,11 +1275,47 @@
       });
 
       // Show/hide posting-date blocks
-      function updatePostingUI(){
-        const monthly = document.querySelector('input[name="monthly_close"]:checked').value;
-        document.getElementById('ifNo').style.display = monthly === 'N' ? 'block' : 'none';
-        document.getElementById('ifYes').style.display = monthly === 'Y' ? 'block' : 'none';
+      function updatePostingUI() {
+        const monthlyRadio = document.querySelector('input[name="monthly_close"]:checked');
+        if (!monthlyRadio) return;
+
+        const monthly = monthlyRadio.value;
+
+        // EXISTING LOGIC — unchanged
+        document.getElementById('ifNo').style.display =
+            monthly === 'N' ? 'block' : 'none';
+
+        document.getElementById('ifYes').style.display =
+            monthly === 'Y' ? 'block' : 'none';
+
+        document.getElementById('postingScenarios').style.display =
+            monthly === 'Y' ? 'block' : 'none';
+
+        // 🔹 NEW: Only manage Automatic / Manual when YES
+        if (monthly === 'Y') {
+            updateAutoManualUI();
+        }
       }
+
+      function updateAutoManualUI() {
+        const modeSelect = document.getElementById("autoOrManual");
+        if (!modeSelect) return;
+
+        const automaticBlock = document.getElementById("automaticBlock");
+        const manualBlock = document.getElementById("manualBlock");
+
+        if (modeSelect.value === "manual") {
+            automaticBlock.style.display = "none";
+            manualBlock.style.display = "block";
+        } else {
+            automaticBlock.style.display = "block";
+            manualBlock.style.display = "none";
+        }
+      }
+
+      document.getElementById("autoOrManual")
+        ?.addEventListener("change", updateAutoManualUI);
+
       document.querySelectorAll('input[name="monthly_close"]').forEach(i=>i.addEventListener('change', updatePostingUI));
       updatePostingUI();
 
@@ -1179,11 +1341,16 @@
         const qVal = (name) => q(name)?.value || null;
 
         // SECTION 1: Monthly Close Config
+        const manual_close = {'PreviousYr':qVal('PrfySelect'),
+          'PreviousYrMonth':qVal('PrmonthSelect'),
+          'CurrentYrMonth':qVal('CrmonthSelect'),
+        }
         const monthly_close = {
           monthly_close: qVal('monthly_close') || 'N',
           date_of_entry: qVal('date_of_entry'),
           auto_on_date: qVal('auto_on_date'),
           auto_or_manual: qVal('auto_or_manual'),
+          manual_close: manual_close,
           scenario_same_month: qVal('scenario_same_month'),
           scenario_books_closed: qVal('scenario_books_closed'),
           scenario_books_not_closed: qVal('scenario_books_not_closed'),
@@ -1244,9 +1411,22 @@
 
         // SECTION 8: Unplanned Cost
         const unplanned_cost = {
-            add_to_material_service: form.querySelector('input[name="add_to_material_service"]:checked')?.value || 'N',
-            unplanned_threshold: qVal('unplanned_threshold') || "0"
+            add_to_material_service:
+                form.querySelector('input[name="add_to_material_service"]:checked')?.value || "N",
+
+            processor: {
+                threshold_amount: qVal("processor_threshold_amount") || "0",
+                threshold_percent: qVal("processor_threshold_percent") || "0",
+                condition: qVal("processor_condition") || "AND"
+            },
+
+            checker: {
+                threshold_amount: qVal("checker_threshold_amount") || "0",
+                threshold_percent: qVal("checker_threshold_percent") || "0",
+                condition: qVal("checker_condition") || "AND"
+            }
         };
+
 
         // SECTION 9: Threshold Check
         const threshold = {
@@ -1274,6 +1454,11 @@
             checker: form.querySelector('input[name="upload_checker"]').checked
         };
 
+        // ========================
+        // SECTION 13 - company_pan
+        // ========================
+        const companyPan = (qVal('company_pan') || '').trim().toUpperCase();
+
         // Combine into one structured payload
         return {
           monthly_close,
@@ -1287,7 +1472,9 @@
           threshold,
           service_entry_migo,
           matching_logic,
-          data_upload_rights
+          data_upload_rights,
+          companyPan
+
         };
       }
 
@@ -1382,7 +1569,7 @@
                 const el = form.querySelector(`[name="${name}"]`);
                 if (el) el.value = val;
             };
-
+            
             // 1️⃣ Monthly Close
             if (data.monthly_close) {
                 setRadio("monthly_close", data.monthly_close.monthly_close);
@@ -1392,6 +1579,13 @@
                 setValue("scenario_same_month", data.monthly_close.scenario_same_month);
                 setValue("scenario_books_closed", data.monthly_close.scenario_books_closed);
                 setValue("scenario_books_not_closed", data.monthly_close.scenario_books_not_closed);
+                if (data.monthly_close.auto_or_manual === "manual"){
+                    const mc = data.monthly_close;
+                    // THEN apply values
+                    setValue("PrfySelect", mc.manual_close.PreviousYr);
+                    setValue("PrmonthSelect", mc.manual_close.PreviousYrMonth);
+                    setValue("CrmonthSelect", mc.manual_close.CurrentYrMonth);
+                }
                 // Trigger UI update
                 document.querySelectorAll('input[name="monthly_close"]').forEach(i=>i.dispatchEvent(new Event('change')));
             }
@@ -1467,25 +1661,47 @@
             // 6️⃣ Duplicate Check
             if (data.duplicate_check) setRadio("dup_check", data.duplicate_check.dup_check);
 
-            // 7️⃣ Unplanned Cost
+            // 8️⃣ Unplanned Cost
             if (data.unplanned_cost) {
 
-              // --- 1) Load Radio Button (Y/N) ---
-              setRadio("add_to_material_service", data.unplanned_cost.add_to_material_service);
+                // 1️⃣ Load radio
+                setRadio(
+                    "add_to_material_service",
+                    data.unplanned_cost.add_to_material_service
+                );
 
-              // --- 2) Load Threshold Value (0–99) ---
-              if (data.unplanned_cost.unplanned_threshold !== undefined) {
-                  const thresholdInput = form.querySelector('input[name="unplanned_threshold"]');
-                  thresholdInput.value = data.unplanned_cost.unplanned_threshold;
-              }
+                // 2️⃣ Processor
+                if (data.unplanned_cost.processor) {
+                    form.querySelector('input[name="processor_threshold_amount"]').value =
+                        data.unplanned_cost.processor.threshold_amount || "";
 
-              // --- 3) Trigger UI behaviors ---
-              const selectedRadio = form.querySelector(`input[name="add_to_material_service"]:checked`);
-              
-              // Update display text/behavior
-              handleUnplannedCostChoice(selectedRadio);
+                    form.querySelector('input[name="processor_threshold_percent"]').value =
+                        data.unplanned_cost.processor.threshold_percent || "";
 
+                    form.querySelector('select[name="processor_condition"]').value =
+                        data.unplanned_cost.processor.condition || "AND";
+                }
+
+                // 3️⃣ Checker
+                if (data.unplanned_cost.checker) {
+                    form.querySelector('input[name="checker_threshold_amount"]').value =
+                        data.unplanned_cost.checker.threshold_amount || "";
+
+                    form.querySelector('input[name="checker_threshold_percent"]').value =
+                        data.unplanned_cost.checker.threshold_percent || "";
+
+                    form.querySelector('select[name="checker_condition"]').value =
+                        data.unplanned_cost.checker.condition || "AND";
+                }
+
+                // 4️⃣ Trigger dependent UI logic if needed
+                const selectedRadio =
+                    form.querySelector('input[name="add_to_material_service"]:checked');
+                if (selectedRadio) {
+                    handleUnplannedCostChoice(selectedRadio);
+                }
             }
+
 
             // 8️⃣ Threshold
             if (data.threshold) {
@@ -1520,6 +1736,12 @@
                 if (checker) checker.checked = rights.checker || false;
             }
 
+            // 13  company pan
+            console.log("pans",data.pans);
+            
+            if (typeof data.pans === "string") {
+                setValue("company_pan", data.pans.toUpperCase());
+            }
             console.log("%c✅ Configuration Loaded Successfully", "color:green;font-weight:bold;");
 
             
@@ -1529,6 +1751,110 @@
         }
     }
     document.addEventListener("DOMContentLoaded", loadConfiguration);
+
+    document.getElementById("autoOrManual").addEventListener("change", function () {
+      const isManual = this.value === "manual";
+
+      document.getElementById("automaticBlock").style.display = isManual ? "none" : "block";
+      document.getElementById("manualBlock").style.display = isManual ? "block" : "none";
+
+      if (!isManual) return;
+
+      const PrfySelect = document.getElementById("PrfySelect");
+      const monthSelect = document.getElementById("PrmonthSelect");
+      const crmonthSelect = document.getElementById("CrmonthSelect");
+
+      // Previous FY
+      PrfySelect.innerHTML = getFYOptions()
+          .map(o => `<option value="${o.value}">${o.label}</option>`)
+          .join("");
+
+      // Prevois FY Month
+      const selectedFY = parseInt(PrfySelect.value);
+      monthSelect.innerHTML = getMonthOptions(selectedFY)
+          .map(([name, idx]) => `<option value="${idx}">${name}</option>`)
+          .join("");
+
+      // Current FY Month
+      const year = selectedFY + (monthSelect.value < 3 ? 1 : 0);
+      crmonthSelect.innerHTML = getCurrentFYMonthOptions()
+        .map(m => `<option value="${m.index}">${m.name}</option>`)
+        .join("");
+    });
+
+    function getCurrentFYMonthOptions() {
+      const today = new Date();
+      const currentMonth = today.getMonth(); // 0–11
+
+      const months = [
+          { name: "April", index: 3 },
+          { name: "May", index: 4 },
+          { name: "June", index: 5 },
+          { name: "July", index: 6 },
+          { name: "August", index: 7 },
+          { name: "September", index: 8 },
+          { name: "October", index: 9 },
+          { name: "November", index: 10 },
+          { name: "December", index: 11 },
+          { name: "January", index: 0 },
+          { name: "February", index: 1 },
+          { name: "March", index: 2 }
+      ];
+
+      return months.filter(m => {
+          // If current FY is April–Dec
+          if (currentMonth >= 3) {
+              return m.index >= 3 && m.index <= currentMonth;
+          }
+          // If current FY is Jan–Mar
+          return m.index >= 3 || m.index <= currentMonth;
+      });
+    }
+
+    function getFYOptions() {
+      const currentFY = getCurrentFY();
+      return Array.from({ length: 10 }, (_, i) => {
+          const fy = currentFY - i;
+          return {
+              value: fy,
+              label: `FY ${fy}-${String(fy + 1).slice(-2)}`
+          };
+      });
+    }
+
+    function getCurrentFY() {
+      const today = new Date();
+      return today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
+    }
+
+    function getMonthOptions(selectedFY) {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentFY = getCurrentFY();
+
+      const months = [
+          ["April", 3], ["May", 4], ["June", 5], ["July", 6],
+          ["August", 7], ["September", 8], ["October", 9],
+          ["November", 10], ["December", 11],
+          ["January", 0], ["February", 1], ["March", 2]
+      ];
+
+      return months.filter(([_, idx]) => {
+          if (selectedFY !== currentFY) return true;
+
+          return currentMonth >= 3
+              ? idx <= currentMonth
+              : idx <= currentMonth || idx >= 3;
+      });
+    }
+
+    function getDayOptions(year, month) {
+      const days = new Date(year, month + 1, 0).getDate();
+      return Array.from({ length: days }, (_, i) => i + 1);
+    }
+
+
+
 
   </script>
 </body>

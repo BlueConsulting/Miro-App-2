@@ -5,63 +5,167 @@ import json
 from rapidfuzz import fuzz, process
 import traceback
 import requests
+from datetime import date
 from pprint import pprint
 
-def filingstatus(data):
+def is_before_13th():
+    today = date.today()
+    return today.day < 13
+
+def is_before_11th():
+    today = date.today()
+    return today.day < 11
+
+def _compute_status(df, is_before_cutoff, frequency="monthly"):
+    """
+    Computes filing status safely for monthly / quarterly frequencies.
+    - Handles insufficient rows gracefully
+    - Uses dynamic labels (month / quarter)
+    """
+
+    result = {}
+
+    if df.empty:
+        return {
+            'status': 'Not Filed',
+            'period0': None,
+            'period1': None,
+            'period2': None
+        }
+
+    df = df.copy()
+    df['dof'] = pd.to_datetime(df['dof'], format='%d-%m-%Y', errors='coerce')
+    df = df.sort_values(by='dof', ascending=False)
+
+    # Max 3 periods required
+    max_periods = 3
+
+    top_rows = df.iloc[:max_periods]
+    skip_first = df.iloc[1:1 + max_periods]
+
+    # Decide which rows to evaluate
+    if is_before_cutoff and len(top_rows) > 0:
+        if top_rows.iloc[0]['status'] == 'Filed':
+            selected = top_rows
+        else:
+            selected = skip_first
+    else:
+        selected = top_rows
+
+    # Final guard (in case skip_first is empty)
+    selected = selected.iloc[:max_periods]
+
+    # Overall status
+    result['status'] = (
+        'Filed' if not selected.empty and all(selected['status'] == 'Filed')
+        else 'Not Filed'
+    )
+
+    # Labeling logic
+    label_prefix = 'month' if frequency == 'Monthly' else 'quarter'
+
+    for idx in range(max_periods):
+        key = f"{label_prefix}{idx if idx > 0 else ''}"
+        result[key] = (
+            selected.iloc[idx]['status']
+            if idx < len(selected)
+            else None
+        )
+
+    return result
+
+
+def filingstatus(data, filing_freq=None):
     result = {}
     result1 = {}
     df_gstr1 = pd.DataFrame()
     df_3b = pd.DataFrame()
-    # print("data--->",data)
+    frequency = filing_freq
     try:
-        if type(data) == list:
-            df = pd.DataFrame(data)
-            df_3b = df[df['rtntype'] == 'GSTR3B']
-            df_gstr1 = df[df['rtntype'] == 'GSTR1']
-            # Convert 'dof' column to datetime format and # Sort by 'dof' in descending order
-            df_gstr1.loc[:, 'dof'] = pd.to_datetime(df_gstr1['dof'], format='%d-%m-%Y')
-            df_gstr1 = df_gstr1.sort_values(by='dof', ascending=False)
-            # Take the top 3 rows
-            top_3_rows_df_gstr1 = df_gstr1.head(3)
-            if all(top_3_rows_df_gstr1['status'] == 'Filed'):
-                result1['status'] = 'Filed'
-                result1['month'] = top_3_rows_df_gstr1.iloc[0]['status']
-                result1['month1'] = top_3_rows_df_gstr1.iloc[1]['status']
-                result1['month2'] = top_3_rows_df_gstr1.iloc[2]['status']
-            else:
-                result1['status'] = 'Not Filed'
-                result1['month'] = top_3_rows_df_gstr1.iloc[0]['status']
-                result1['month1'] = top_3_rows_df_gstr1.iloc[1]['status']
-                result1['month2'] = top_3_rows_df_gstr1.iloc[2]['status']
-            # Convert 'dof' column to datetime format and # Sort by 'dof' in descending order
-            df_3b.loc[:, 'dof'] = pd.to_datetime(df_3b['dof'], format='%d-%m-%Y')
-            df_3b = df_3b.sort_values(by='dof', ascending=False)
-            # Take the top 3 rows
-            top_3_rows_df_gstr3b = df_3b.head(3)
-            
-            if all(top_3_rows_df_gstr1['status'] == 'Filed'):
-                result['status'] = 'Filed'
-                result['month'] = top_3_rows_df_gstr3b.iloc[0]['status']
-                result['month1'] = top_3_rows_df_gstr3b.iloc[1]['status']
-                result['month2'] = top_3_rows_df_gstr3b.iloc[2]['status']
-            else:
-                result['status'] = 'Not Filed'
-                result['month'] = top_3_rows_df_gstr3b.iloc[0]['status']
-                result['month1'] = top_3_rows_df_gstr3b.iloc[1]['status']
-                result['month2'] = top_3_rows_df_gstr3b.iloc[2]['status']
-        else:
-            result1['status'] = 'Not Filed'
-            result1['month'] = data
-            result1['month1'] = data
-            result1['month2'] = data
-            result['status'] = 'Not Filed'
-            result['month'] = data
-            result['month1'] = data
-            result['month2'] = data
+        if not isinstance(data, list):
+            # fallback for invalid data
+            default = {
+                'status': 'Not Filed',
+                'month': data,
+                'month1': data,
+                'month2': data
+            }
+            return default, default, df_gstr1, df_3b
+
+        df = pd.DataFrame(data)
+
+        df_gstr1 = df[df['rtntype'] == 'GSTR1']
+        df_3b = df[df['rtntype'] == 'GSTR3B']
+
+        before_13 = is_before_13th()
+        before_11 = is_before_11th()
+
+        # Compute results
+        result1 = _compute_status(df_gstr1, before_11, frequency)
+        result = _compute_status(df_3b, before_13, frequency)
+
     except Exception as e:
         print("An error occurred:", str(e))
         traceback.print_exc()
+
     return result, result1, df_gstr1, df_3b
+
+# def filingstatus(data):
+#     result = {}
+#     result1 = {}
+#     df_gstr1 = pd.DataFrame()
+#     df_3b = pd.DataFrame()
+#     # print("data--->",data)
+#     try:
+#         if type(data) == list:
+#             df = pd.DataFrame(data)
+#             df_3b = df[df['rtntype'] == 'GSTR3B']
+#             df_gstr1 = df[df['rtntype'] == 'GSTR1']
+#             # Convert 'dof' column to datetime format and # Sort by 'dof' in descending order
+#             df_gstr1.loc[:, 'dof'] = pd.to_datetime(df_gstr1['dof'], format='%d-%m-%Y')
+#             df_gstr1 = df_gstr1.sort_values(by='dof', ascending=False)
+#             # Take the top 3 rows
+#             top_3_rows_df_gstr1 = df_gstr1.head(3)
+#             if is_before_13th() and top_3_rows_df_gstr1.iloc[0]['status']=='Filed':
+#                 if all(top_3_rows_df_gstr1['status'] == 'Filed'):
+#                     result1['status'] = 'Filed'
+#                     result1['month'] = top_3_rows_df_gstr1.iloc[0]['status']
+#                     result1['month1'] = top_3_rows_df_gstr1.iloc[1]['status']
+#                     result1['month2'] = top_3_rows_df_gstr1.iloc[2]['status']
+#             else:
+#                 result1['status'] = 'Not Filed'
+#                 result1['month'] = top_3_rows_df_gstr1.iloc[0]['status']
+#                 result1['month1'] = top_3_rows_df_gstr1.iloc[1]['status']
+#                 result1['month2'] = top_3_rows_df_gstr1.iloc[2]['status']
+#             # Convert 'dof' column to datetime format and # Sort by 'dof' in descending order
+#             df_3b.loc[:, 'dof'] = pd.to_datetime(df_3b['dof'], format='%d-%m-%Y')
+#             df_3b = df_3b.sort_values(by='dof', ascending=False)
+#             # Take the top 3 rows
+#             top_3_rows_df_gstr3b = df_3b.head(3)
+            
+#             if all(top_3_rows_df_gstr1['status'] == 'Filed'):
+#                 result['status'] = 'Filed'
+#                 result['month'] = top_3_rows_df_gstr3b.iloc[0]['status']
+#                 result['month1'] = top_3_rows_df_gstr3b.iloc[1]['status']
+#                 result['month2'] = top_3_rows_df_gstr3b.iloc[2]['status']
+#             else:
+#                 result['status'] = 'Not Filed'
+#                 result['month'] = top_3_rows_df_gstr3b.iloc[0]['status']
+#                 result['month1'] = top_3_rows_df_gstr3b.iloc[1]['status']
+#                 result['month2'] = top_3_rows_df_gstr3b.iloc[2]['status']
+#         else:
+#             result1['status'] = 'Not Filed'
+#             result1['month'] = data
+#             result1['month1'] = data
+#             result1['month2'] = data
+#             result['status'] = 'Not Filed'
+#             result['month'] = data
+#             result['month1'] = data
+#             result['month2'] = data
+#     except Exception as e:
+#         print("An error occurred:", str(e))
+#         traceback.print_exc()
+#     return result, result1, df_gstr1, df_3b
 
 def Table_data(table,invoice_data):
     

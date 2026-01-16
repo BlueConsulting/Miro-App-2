@@ -148,7 +148,8 @@ class POData(models.Model):
     company = models.ForeignKey(CompanyDetails, on_delete=models.CASCADE)
 
     vendor_code = models.CharField(max_length=16)
-    document_number = models.CharField(max_length=20)   
+    document_number = models.CharField(max_length=20) 
+    inv_no = models.CharField(max_length=40)  
     row_data = models.JSONField()                   # stores entire row as JSON
     status = models.CharField(max_length=16)
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -379,7 +380,7 @@ class VendorsTotals(models.Model):
 
     Vendor_code = models.CharField(max_length=11, blank=True, null=True)
     inv_num = models.CharField(max_length=20, blank=True, null=True)
-    inv_date = models.CharField(max_length=11, blank=True, null=True)
+    inv_date = models.DateField(blank=True, null=True)
     inv_value = models.FloatField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -405,6 +406,7 @@ class Configurations(models.Model):
     service_entry_migo = models.JSONField(default=dict)
     matching_logic_ratio = models.JSONField(default=dict)
     data_upload_rights = models.JSONField(default=dict)
+    pans = models.CharField(max_length=10, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -441,12 +443,13 @@ class InvoiceDetails(models.Model):
     company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
     invoice_key = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)  # 🔑 unique per invoice
 
+    InvoiceId = models.PositiveIntegerField(db_index=True)
     CompanyCode = models.CharField(max_length=10)
     DocumentNumber = models.CharField(max_length=15)
     DocType = models.CharField(max_length=5)
     InvoiceDate = models.CharField(max_length=11)
     PostingDate = models.CharField(max_length=11)
-    AP_Inv_doc_num = models.CharField(max_length=15)
+    AP_Inv_doc_num = models.CharField(max_length=50)
     Currency = models.CharField(max_length=5)
     ExchangeRate = models.CharField(max_length=3)
     VendorCode = models.CharField(max_length=15)
@@ -481,16 +484,19 @@ class InvoiceDetails(models.Model):
     
 class InvoiceSummary(models.Model):
     company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
-    InvoiceGroupKey = models.UUIDField(db_index=True)  # links to InvoiceDetails.InvoiceGroupKey 
+    InvoiceGroupKey = models.UUIDField(db_index=True)  # links to InvoiceDetails.InvoiceGroupKey
+
+    InvoiceId = models.PositiveIntegerField(db_index=True)
     path = models.TextField()
     unique_name = models.CharField(max_length=100, blank=True, null=True)
     VendorCode = models.CharField(max_length=15, blank=True, null=True)
     VendorName = models.CharField(max_length=100, blank=True, null=True)
-    InvoiceNo = models.CharField(max_length=30, blank=True, null=True)
+    InvoiceNo = models.CharField(max_length=50, blank=True, null=True)
     InvoiceDate = models.DateField(blank=True, null=True)
     VendorGst = models.CharField(max_length=15, blank=True, null=True)
-    InvoiceValue = models.DecimalField(max_digits=20, decimal_places=2, blank=True, null=True)
-    ExchangeRate = models.CharField(max_length=30, blank=True, null=True)
+    InvoiceValue = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    InvoiceValueMigo = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    ExchangeRate = models.CharField(max_length=3, blank=True, null=True)
     TaxCode = models.CharField(max_length=30, blank=True, null=True)
     WithholdingTaxCode = models.CharField(max_length=30, blank=True, null=True)
     Narration = models.CharField(max_length=50, blank=True, null=True)
@@ -507,6 +513,7 @@ class InvoiceSummary(models.Model):
     account_indicator = models.CharField(max_length=3, blank=True, null=True)
     withholdtax = models.CharField(max_length=10, blank=True, null=True)
     CreatedAt = models.DateTimeField(auto_now_add=True)
+    unplanned_cost = models.JSONField(default=dict)
     UpdatedAt = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -530,7 +537,7 @@ class PendingInvoices(models.Model):
     company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
     InvoiceGroupKey = models.UUIDField(db_index=True)  # links to InvoiceDetails.InvoiceGroupKey
 
-
+    InvoiceId = models.PositiveIntegerField(db_index=True)
     VendorGst = models.CharField(max_length=16)
     VendorCode = models.CharField(max_length=16)
     InvNo = models.CharField(max_length=16)
@@ -554,10 +561,12 @@ class MissingDataInvoices(models.Model):
     company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
     InvoiceGroupKey = models.UUIDField(db_index=True)  # links to InvoiceDetails.InvoiceGroupKey
 
+    InvoiceId = models.PositiveIntegerField(db_index=True)
     VendorGst = models.CharField(max_length=16)
     VendorCode = models.CharField(max_length=16, blank=True, null=True)
-    InvNo = models.CharField(max_length=16, blank=True, null=True)
+    InvNo = models.CharField(max_length=30, blank=True, null=True)
     InvDate = models.CharField(max_length=16)
+    InvoiceCheck = models.JSONField(default=dict)
     VendorName = models.CharField(max_length=50)
     CustomerGst = models.CharField(max_length=16)
     TotalAmount = models.CharField(max_length=16)
@@ -568,6 +577,30 @@ class MissingDataInvoices(models.Model):
     unique_name = models.CharField(max_length=100, blank=True, null=True)
     message = models.CharField(max_length=150, blank=True, null=True)
     api_response = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, default='Pending')
+    checker_approval = models.JSONField(default=dict)
+    checker_approval_req = models.CharField(max_length=4, default='No')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Template Mapping for {self.company}"
+
+class CheckerApprovalsInvoices(models.Model):
+    company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
+    InvoiceGroupKey = models.UUIDField(db_index=True)  # links to InvoiceDetails.InvoiceGroupKey
+
+    InvoiceId = models.PositiveIntegerField(db_index=True)
+    VendorCode=models.CharField(max_length=16, blank=True, null=True)
+    VendorName=models.CharField(max_length=50)
+    InvoiceNo=models.CharField(max_length=30, blank=True, null=True)
+    path = models.TextField()
+    unique_name = models.CharField(max_length=100, blank=True, null=True)
+    api_response = models.JSONField(default=dict)
+    message = models.CharField(max_length=150, blank=True, null=True)
+    exception_type = models.CharField(max_length=30, blank=True, null=True)
+    exception_data = models.JSONField(default=dict)
+    status = models.CharField(max_length=16, default='Pending')
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -584,5 +617,32 @@ class RoleMatrix(models.Model):
 
     def __str__(self):
         return f"Role Matrix for {self.company}"
+    
+class GLCodes(models.Model):
+    company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
+
+    gl_code = models.CharField(max_length=16) 
+    code_description = models.CharField(max_length=50)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"GL code for {self.company}"
+    
+class InvoiceId(models.Model):
+    company = models.ForeignKey('CompanyDetails', on_delete=models.CASCADE)
+    
+    path = models.TextField()
+    unique_name = models.CharField(max_length=100, blank=True, null=True)
+    VendorName = models.CharField(max_length=100, blank=True, null=True)
+    InvoiceNo = models.CharField(max_length=50, blank=True, null=True)
+    InvoiceDate = models.DateField(blank=True, null=True)
+    VendorGst = models.CharField(max_length=15, blank=True, null=True)
+    
+    
+    UpdatedAt = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.VendorName} | {self.InvoiceNo} | {self.InvoiceValue}"
     
 

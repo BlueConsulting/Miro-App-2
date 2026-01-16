@@ -1,0 +1,489 @@
+{
+    "result": {
+        "CHECKS": {
+            "Account_check": {
+                "Complete_Invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Customer_Adress": {
+                    "Gst_Portal": "Plot No. 748 , Subhash Nagar , IDA Jeedimetla , Medchal Malkajgiri , Telangana , 500055",
+                    "Invoice_data": "311, KR Puram, Hobli\nBengalore -560048, None, None, None, None",
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Customer_Name": {
+                    "Gst_Portal": "SUDERSHAN  VAANKAR",
+                    "Invoice_data": "Avirata Defence Systems Limited (Bangaluru)",
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Invoice_Blocked_Credit": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Invoice_Date": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "2025-12-18",
+                    "status": "Okay"
+                },
+                "Invoice_Number": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "2717/25-26",
+                    "status": "Okay"
+                },
+                "Invoice_RCM-Services": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "Pre_year": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "gstnumber_gstcharged": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "valid_invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                }
+            },
+            "data_from_gst": {
+                "206AB_Compliance": {
+                    "fin_year": "2024-25",
+                    "pan": "ABDCS9593B",
+                    "pan_allotment_date": "2020-07-14",
+                    "pan_name": "AXXXXXA DXXXXXE SXXXXXS LXXXXXD",
+                    "pan_operative_status": "operative",
+                    "specified_person": "N"
+                },
+                "Filing Frequency": [
+                    {
+                        "preference": "M",
+                        "quarter": "Q1"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q2"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q3"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q4"
+                    }
+                ],
+                "Filing Status": [
+                    {
+                        "arn": "AB291025271595X",
+                        "dof": "20-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2908252233433",
+                        "dof": "20-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2907253420908",
+                        "dof": "20-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290525312739S",
+                        "dof": "20-06-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "052025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290425375768E",
+                        "dof": "20-05-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "042025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB291125240908X",
+                        "dof": "19-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290925171648E",
+                        "dof": "18-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290625218209Y",
+                        "dof": "18-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291125595701Z",
+                        "dof": "11-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2910254888100",
+                        "dof": "11-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290725501487W",
+                        "dof": "11-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290625573644O",
+                        "dof": "11-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290525510024J",
+                        "dof": "11-06-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "052025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290825416681W",
+                        "dof": "10-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290425491847H",
+                        "dof": "10-05-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "042025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291225597470W",
+                        "dof": "10-01-2026",
+                        "mof": "ONLINE",
+                        "ret_prd": "122025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290925324279O",
+                        "dof": "09-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    }
+                ],
+                "Pan_Status": {
+                    "aadhaar_linked": null,
+                    "aadhaar_number": "",
+                    "aadhaar_seeding_status": "NA",
+                    "address": {
+                        "building_name": "G FLOOR, NPR COMPLEX SURVEY NO 197, HOODY VILLAGE ",
+                        "city": "Bangalore North",
+                        "country": "India",
+                        "locality": "Hoodi B.O",
+                        "pincode": "560048",
+                        "state": "Karnataka",
+                        "street_name": "K R PURAM BANGALORE "
+                    },
+                    "dob": "14/07/2020",
+                    "email": "",
+                    "first_name": "",
+                    "fullname": "AVIRATA DEFENCE SYSTEMS LIMITED",
+                    "gender": null,
+                    "last_name": "AVIRATA DEFENCE SYSTEMS LIMITED",
+                    "middle_name": "",
+                    "mobile": "",
+                    "pan": "ABDCS9593B",
+                    "pan_status": "Active",
+                    "pan_type": "Company"
+                },
+                "customer_gst_data": {
+                    "Address": "Plot No. 748 , Subhash Nagar , IDA Jeedimetla , Medchal Malkajgiri , Telangana , 500055",
+                    "Central tax Jurisdiction": "QUTBULLAPUR-I",
+                    "Central tax Jurisdiction Code": "YP0202",
+                    "Date of Registration": "01/07/2017",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "36AECPV7591M3ZK",
+                    "Legal Name": "SUDERSHAN  VAANKAR",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "TG126",
+                    "Trade Name": "M/S VIJAYA SAI DIP MOULDING"
+                },
+                "vendor_gst_data": {
+                    "Address": "No 311 , NPR COMPLEX      SURVEY NO 197 , HOODY VILLAGE , Bengaluru Urban , Karnataka , 560048",
+                    "Central tax Jurisdiction": "RANGE-EED8",
+                    "Central tax Jurisdiction Code": "YT0805",
+                    "Date of Registration": "08/09/2020",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "29ABDCS9593B1ZX",
+                    "Legal Name": "AVIRATA DEFENCE SYSTEMS LIMITED",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing",
+                        "Warehouse / Depot"
+                    ],
+                    "State Jurisdiction Code": "KA119",
+                    "Trade Name": "AVIRATA DEFENCE SYSTEMS LIMITED"
+                }
+            },
+            "e-invoice_data": {
+                "einvoice_liability": "Yes",
+                "reason": "Internal error at server Please check manually",
+                "status": "not okay"
+            },
+            "eway_bill_data": {
+                "Invoice_No": {
+                    "e-waybill": "Vendor is not liable to raise E-Way Bill",
+                    "invoice": "2717/25-26",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Total_Amount": {
+                    "e-waybill": "Vendor is not liable to raise E-Way Bill",
+                    "invoice": "7062.30",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Vendor_Gst": {
+                    "e-waybill": "Vendor is not liable to raise E-Way Bill",
+                    "invoice": "29ABDCS9593B1ZX",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "reason": "Vendor is not liable to raise E-Way Bill",
+                "status": "okay_"
+            },
+            "table_data": {
+                "Table_Check_data": "[{\"item_description\":\"SPRC -09 (S003-2722-00000) Black \\/,\",\"item_quantity\":null,\"unit\":\"Nos\",\"unit_price\":27.5,\"product_code\":\"85469090\",\"amount\":2475.0,\"qty_unitprice\":0.0,\"check1\":\"unchecked\"},{\"item_description\":\"Rc-09(S003-2723-00000)Red\",\"item_quantity\":null,\"unit\":\"Nos\",\"unit_price\":7.5,\"product_code\":\"85469090\\/180\",\"amount\":1350.0,\"qty_unitprice\":0.0,\"check1\":\"unchecked\"},{\"item_description\":\"SPRC -41(S003-2725-00000) Black \\/\",\"item_quantity\":60.0,\"unit\":\"Nos\",\"unit_price\":10.0,\"product_code\":\"85469090\",\"amount\":600.0,\"qty_unitprice\":600.0,\"check1\":\"correct\"},{\"item_description\":\"SPRC -06(S003-2732-00000) Red\",\"item_quantity\":90.0,\"unit\":\"Nos\",\"unit_price\":6.0,\"product_code\":\"854690902\",\"amount\":540.0,\"qty_unitprice\":540.0,\"check1\":\"correct\"},{\"item_description\":\"Rc-04(S003-2733-00000)Red\",\"item_quantity\":null,\"unit\":\"Nos\",\"unit_price\":4.0,\"product_code\":\"85469090\\/180\",\"amount\":720.0,\"qty_unitprice\":0.0,\"check1\":\"unchecked\"}]"
+            },
+            "tax_check": {
+                "Company_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Company_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Vendor_206AB": {
+                    "Gst_Portal": "N",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Filing_status": {
+                    "Gst_Portal": "",
+                    "Invoice_data": " ",
+                    "status": "Filled"
+                },
+                "Vendor_Gst_Active": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "Active",
+                    "status": "YES"
+                },
+                "Vendor_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29ABDCS9593B1ZX",
+                    "status": "YES"
+                },
+                "Vendor_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29ABDCS9593B1ZX",
+                    "status": "YES"
+                },
+                "Vendor_Pan-Adhar_Linked": {
+                    "Gst_Portal": null,
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Pan_Active": {
+                    "Gst_Portal": "Active",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_TaxPayer_type": {
+                    "Gst_Portal": "Regular",
+                    "Invoice_data": "-",
+                    "status": "Regular"
+                },
+                "Vendor_Taxfiliging_Frequency": {
+                    "Gst_Portal": "Monthly",
+                    "Invoice_data": " ",
+                    "status": "Monthly"
+                },
+                "tax_type_on_invoice": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": " ",
+                    "status": "Okay"
+                }
+            }
+        },
+        "Invoice_data": {
+            "Ack_No": "112528149169319",
+            "Bank_Details": {
+                "Account_holder_name": "VIJAYA SAI DIP MOULDING - (2025-26)",
+                "Bank_Account_No": null,
+                "Email": null,
+                "VendorAddress": "Plot No. 748, Subhash Nagar, IDA, Jeedimetla, TELANGANA, Hyderabad-500055, INDIA"
+            },
+            "BillingAddress": "311, KR Puram, Hobli\nBengalore -560048, None, None, None, None",
+            "BillingAddressRecipient": "Avirata Defence Systems Limited (Bangaluru)",
+            "Currency": "INR",
+            "CustomerName": "Avirata Defence Systems Limited (Bangaluru)",
+            "Cutomer Gst No.": "29ABDCS9593B1ZX",
+            "EwayBill_No": null,
+            "Invoice items:": {
+                "item#1": {
+                    "amount": "2475.0",
+                    "item_description": "SPRC -09 (S003-2722-00000) Black /,",
+                    "item_quantity": null,
+                    "product_code": "85469090",
+                    "unit": "Nos",
+                    "unit_price": "27.5"
+                },
+                "item#2": {
+                    "amount": "1350.0",
+                    "item_description": "Rc-09(S003-2723-00000)Red",
+                    "item_quantity": null,
+                    "product_code": "85469090/180",
+                    "unit": "Nos",
+                    "unit_price": "7.5"
+                },
+                "item#3": {
+                    "amount": "600.0",
+                    "item_description": "SPRC -41(S003-2725-00000) Black /",
+                    "item_quantity": 60.0,
+                    "product_code": "85469090",
+                    "unit": "Nos",
+                    "unit_price": "10.0"
+                },
+                "item#4": {
+                    "amount": "540.0",
+                    "item_description": "SPRC -06(S003-2732-00000) Red",
+                    "item_quantity": 90.0,
+                    "product_code": "854690902",
+                    "unit": "Nos",
+                    "unit_price": "6.0"
+                },
+                "item#5": {
+                    "amount": "720.0",
+                    "item_description": "Rc-04(S003-2733-00000)Red",
+                    "item_quantity": null,
+                    "product_code": "85469090/180",
+                    "unit": "Nos",
+                    "unit_price": "4.0"
+                }
+            },
+            "InvoiceDate": "2025-12-18",
+            "InvoiceId": "2717/25-26",
+            "InvoiceTotal": "7062.30",
+            "Irn_No": "",
+            "Payment_Term": "30 Days",
+            "PurchaseOrder": "9500009903",
+            "ShippingAddress": "311, KR Puram, Hobli\nBengalore -560048, None, None, None, None",
+            "ShippingAddressRecipient": "Avirata Defence Systems Limited (Bangaluru)",
+            "SubTotal": "5985.00",
+            "Tax Items": {
+                "IGST": {
+                    "amount": "1077.30",
+                    "rate": 0
+                }
+            },
+            "Tax_Invoice": "Tax Invoice",
+            "TotalTax": "1077.30",
+            "Vendor Gst No.": "36AECPV7591M3ZK",
+            "VendorAddress": "Plot No. 748, Subhash Nagar, IDA, Jeedimetla, TELANGANA, Hyderabad-500055, INDIA",
+            "VendorAddressRecipient": "VIJAYA SAI DIP MOULDING - (2025-26)",
+            "VendorName": "VIJAYA SAI DIP MOULDING - (2025-26)",
+            "relevent_page": [
+                0
+            ]
+        },
+        "Okay_NotOkay": {
+            "status": "Not All Okay",
+            "message": [
+                "Customer_Adress Not Matched",
+                "Customer_Name Not Matched",
+                "Vendor_Filing_status",
+                "Table_check1 not okay",
+                "Table_Check2 not okay"
+            ]
+        }
+    }
+}

@@ -20,6 +20,7 @@ from django.shortcuts import get_object_or_404
 from django.db import IntegrityError, connection, transaction
 from decimal import Decimal
 from django.db.utils import ProgrammingError
+from django.views.decorators.http import require_GET
 import json
 import pandas as pd
 import threading, requests
@@ -38,7 +39,7 @@ from django.core.cache import cache
 from .diffrent_functions import filingstatus,Table_data,InvoiceTable_vs_GrnTable,all_okay,Invoicetable_vs_Grntable_compare,get_exchange_rate
 from .constants import SYSTEM_VARIABLES, DOCTYPE
 from .data_gathering import api_response_test
-from .table_matching import map_rows
+from .table_matching import map_rows, validate_row, validate_row_2way
 
  
 
@@ -209,7 +210,8 @@ def user_logout(request):
 
 @login_required
 def checker_dashboard(request):
-    return render(request, 'checker_home.html', {'message': 'This is Checker home Page'})
+    company = request.user.company_code
+    return render(request, 'checker_home.html', {'message': 'This is Checker home Page','company':company})
 
 @login_required
 def uploader_dashboard(request):
@@ -251,19 +253,7 @@ def save_configuration(request):
                 except:
                     return value
             return value
-        # def ensure_json_dict(value):
-        #     # Already a dict → OK
-        #     if isinstance(value, dict):
-        #         return value
-
-        #     # String that might contain JSON → try decode
-        #     if isinstance(value, str):
-        #         try:
-        #             return json.loads(value)
-        #         except:
-        #             return value  # leave normal string unchanged
-
-        #     return value
+       
 
         for key in list(payload.keys()):
             payload[key] = ensure_dict(payload[key])
@@ -273,16 +263,7 @@ def save_configuration(request):
         # print(matching)
         matching_type = matching.get("matching_type", "").lower()  # 2way or 3way
 
-        # ✅  Mapping Validation Based on Matching Type
-        # success, message = validate_mapping(company,matching_type)
-        
-        # if not success:
-        #     return JsonResponse({
-        #         "status": "error",
-        #         "message": (
-        #             f"Configuration cannot be saved. Mapping incomplete: {message}"
-        #         )
-        #     }, status=400)
+       
 
         # Debug print 
         print("Received payload:", payload)
@@ -303,6 +284,7 @@ def save_configuration(request):
                 "service_entry_migo": payload.get("service_entry_migo", {}),
                 "matching_logic_ratio": payload.get("matching_logic", {}),
                 "data_upload_rights": payload.get("data_upload_rights", {}),
+                "pans": payload.get("companyPans", {}),
             }
         )
 
@@ -311,11 +293,13 @@ def save_configuration(request):
         return JsonResponse({"status": "success", "message": message})
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 def get_configuration(request):
     company = request.user.company_code  # same company reference you are using
 
     try:
         config = Configurations.objects.get(company=company)
+        print(config.pans)
         return JsonResponse({
             "status": "success",
             "data": {
@@ -331,6 +315,7 @@ def get_configuration(request):
                 "service_entry_migo": config.service_entry_migo,
                 "matching_logic_ratio": config.matching_logic_ratio,
                 "data_upload_rights": config.data_upload_rights,
+                "pans": config.pans,
             }
         })
     except Configurations.DoesNotExist:
@@ -1290,33 +1275,35 @@ def get_vendor_code(request):
     else:
         return JsonResponse({"status": "not_found"})
     
-def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=None):
+def process_incoming_file(api_response,company,invoice_path,unique_name,invoice_id,invoice_key=None):
     try:
-        api_response = response.json()
+        print("processing incomiing invoice")
+        # api_response = api_response_test
         # generate unique key once per invoice
+        
         if not invoice_key:
             invoice_key = uuid.uuid4() 
         # concept to park invoices if any field is missing
         invoice_data = api_response.get("result", {}).get('Invoice_data', {})
         # print(invoice_data)
-
+        InvNo=str(invoice_data.get('InvoiceId', '')),
         vendor_gst = invoice_data.get('Vendor Gst No.')
         inv_number = invoice_data.get('InvoiceId')
         vendor_code = None  # ✅ Initialize first
 
         vendor_master_data = VendorMastersData.objects.filter(company_id=company, GSTNo=vendor_gst).first()
 
-        if vendor_master_data:
-            
+        if vendor_master_data:    
             vendor_code = vendor_master_data.VendorCode
             print("Incoming invoice is for vendor-->",vendor_code)
             inv_number_already_exist = InvoiceSummary.objects.filter(company_id=company, VendorCode=vendor_code, InvoiceNo=inv_number).first()
             if inv_number_already_exist:
-                message = f"This is Duplicate Invoice as Invoice Number {inv_number} for vendor {vendor_code} is already submitted"
+                message = f"This is Duplicate Invoice as Invoice Number {inv_number} for vendor {vendor_code} is duplicate with ID No.{inv_number_already_exist.InvoiceId}"
                 print(message)
                 MissingDataInvoices.objects.update_or_create(
                 company=company,
-                InvNo=str(invoice_data.get('InvoiceId', '')),
+                
+                InvoiceId = invoice_id,
                 defaults={
                     "VendorGst": invoice_data.get('Vendor Gst No.', ''),
                     "InvDate": invoice_data.get('InvoiceDate', ''),
@@ -1335,14 +1322,18 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                     }
                 )
             else:
+                # required_fields = [
+                # 'Cutomer Gst No.',
+                # 'Vendor Gst No.',
+                # 'SubTotal',
+                # 'InvoiceId',
+                # 'TotalTax',
+                # 'InvoiceTotal',
+                # 'Tax Items'
+                # ]
                 required_fields = [
-                'Cutomer Gst No.',
                 'Vendor Gst No.',
-                'SubTotal',
                 'InvoiceId',
-                'TotalTax',
-                'InvoiceTotal',
-                'Tax Items'
                 ]
                 for field in required_fields:
                     print(field, invoice_data.get(field))
@@ -1360,6 +1351,7 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                     PendingInvoices.objects.update_or_create(
                         company=company,
                         InvNo=str(invoice_data.get('InvoiceId', '')),
+                        InvoiceId = invoice_id,
                         defaults={
                             "VendorGst": invoice_data.get('Vendor Gst No.', ''),
                             "InvDate": invoice_data.get('InvoiceDate', ''),
@@ -1377,16 +1369,13 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                         }
                     )
                 else:
-                    save_processed_invoice(api_response, invoice_path, unique_name, company, invoice_key)
+                    print('entring into data gathering section')
+                    save_processed_invoice(api_response, invoice_path, unique_name, company, invoice_key, invoice_id)
         else:
             required_fields = [
-                'Cutomer Gst No.',
+                
                 'Vendor Gst No.',
-                'SubTotal',
                 'InvoiceId',
-                'TotalTax',
-                'InvoiceTotal',
-                'Tax Items'
             ]
             for field in required_fields:
                 print(field, invoice_data.get(field))
@@ -1404,6 +1393,7 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                 PendingInvoices.objects.update_or_create(
                     company=company,
                     InvNo=str(invoice_data.get('InvoiceId', '')),
+                    InvoiceId = invoice_id,
                     defaults={
                         "VendorGst": invoice_data.get('Vendor Gst No.', ''),
                         "InvDate": invoice_data.get('InvoiceDate', ''),
@@ -1419,13 +1409,14 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                         "unique_name": unique_name,                     # ✅ corrected field name
                         "api_response": api_response
                     }
-                )
+                ) 
             else:
-                message = f"This is Invoice has Vendor GSt but not found any Vendor code against captured GST Number {invoice_data.get('Vendor Gst No.', '')}"
+                message = f"This Invoice has Vendor GST but not found any Vendor code against captured GST Number {invoice_data.get('Vendor Gst No.', '')}"
                 print(message)
                 MissingDataInvoices.objects.update_or_create(
                 company=company,
                 InvNo=str(invoice_data.get('InvoiceId', '')),
+                InvoiceId = invoice_id,
                 defaults={
                     "VendorGst": invoice_data.get('Vendor Gst No.', ''),
                     "InvDate": invoice_data.get('InvoiceDate', ''),
@@ -1436,15 +1427,16 @@ def process_incoming_file(response,company,invoice_path,unique_name,invoice_key=
                     "TotalTax": str(invoice_data.get('TotalTax', '')),
                     "BasicAmount": str(invoice_data.get('SubTotal', '')),
                     "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-                    "path": invoice_path,                          # ✅ corrected field name
+                    "path": invoice_path,                          # ✅ corrected field name 
                     "InvoiceGroupKey": invoice_key,
                     "unique_name": unique_name,                     # ✅ corrected field name
                     "message": message,
                     "api_response": api_response
                     }
                 )
-    except:
-        pass
+    except Exception as e:
+        print("An error occurred:", str(e))
+        traceback.print_exc()
             
 ##          
 def process_invoice(invoice_path, unique_name, company):
@@ -1458,189 +1450,66 @@ def process_invoice(invoice_path, unique_name, company):
 
         response = requests.post(url, files=files, data=data)
         files['pdf_file'].close()  # Close file after request
+        
 
+    
+        
         if response.status_code == 200:
-            process_incoming_file(response,company,invoice_path,unique_name)
+            api_response = response.json()
+            print('data fecthed from ocr api')
+            pans = Configurations.objects.get(company=company).pans
+            
+            invoice_data = api_response.get("result", {}).get('Invoice_data', {})
+            vendor_gst = invoice_data.get('Vendor Gst No.')
+            customer_gst = invoice_data.get('Cutomer Gst No.')
+            if pans:
+                # Check if any PAN is in the customer GST
+                pan_in_customer = any(pan in customer_gst for pan in pans)
+
+                if pan_in_customer:
+                    # No changes needed if PAN is in customer GST
+                    pass
+                else:
+                    # Check if any PAN is in the vendor GST
+                    pan_in_vendor = any(pan in vendor_gst for pan in pans)
+
+                    if pan_in_vendor:
+                        # Swap the values
+                        vendor_gst, customer_gst = customer_gst, vendor_gst
+
+                        # Update the invoice_data with the swapped values
+                        invoice_data['Vendor Gst No.'] = vendor_gst
+                        invoice_data['Cutomer Gst No.'] = customer_gst
+                        api_response['result']['Invoice_data']= invoice_data
+
+            
+            
+            inv_number = invoice_data.get('InvoiceId')
+            vendor_name = invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName')
+            inv_date = invoice_data.get('InvoiceDate')
+            invoice_obj = InvoiceId.objects.create(
+                company=company,
+                path=invoice_path,
+                unique_name=unique_name,
+                VendorName=vendor_name,
+                InvoiceNo=inv_number,
+                InvoiceDate=inv_date,
+                VendorGst=vendor_gst
+            )
+            invoice_id = invoice_obj.id
+            process_incoming_file(api_response,company,invoice_path,unique_name,invoice_id)
+            
         else:
             print(f"Error processing {unique_name}: {response.status_code} - {response.text}")
     
     except Exception as e:
         print(f"Exception: {str(e)}")        
 
-# def process_invoice(invoice_path, unique_name, company):
-#     """ Function to process each invoice asynchronously """
-#     try:
-#         url = "https://ngtechocr.azurewebsites.net/process-invoice-withchecks-updated-splitting"
-#         user_id = "BC_User1"
-#         password = "1234@India"
-#         files = {'pdf_file': open(invoice_path, 'rb')}
-#         data = {'user_id': user_id, 'password': password, 'App': 'WFS'}
 
-#         response = requests.post(url, files=files, data=data)
-#         files['pdf_file'].close()  # Close file after request
 
-#         if response.status_code == 200:
-#             api_response = response.json()
-#             # generate unique key once per invoice
-#             invoice_key = uuid.uuid4() 
-#             # concept to park invoices if any field is missing
-#             invoice_data = api_response.get("result", {}).get('Invoice_data', {})
-#             # print(invoice_data)
-
-#             vendor_gst = invoice_data.get('Vendor Gst No.')
-#             inv_number = invoice_data.get('InvoiceId')
-#             vendor_code = None  # ✅ Initialize first
-
-#             vendor_master_data = VendorMastersData.objects.filter(company_id=company, GSTNo=vendor_gst).first()
-
-#             if vendor_master_data:
-                
-#                 vendor_code = vendor_master_data.VendorCode
-#                 print("Incoming invoice is for vendor-->",vendor_code)
-#                 inv_number_already_exist = InvoiceSummary.objects.filter(company_id=company, VendorCode=vendor_code, InvoiceNo=inv_number).first()
-#                 if inv_number_already_exist:
-#                     message = f"This is Duplicate Invoice as Invoice Number {inv_number} for vendor {vendor_code} is already submitted"
-#                     print(message)
-#                     MissingDataInvoices.objects.update_or_create(
-#                     company=company,
-#                     InvNo=str(invoice_data.get('InvoiceId', '')),
-#                     defaults={
-#                         "VendorGst": invoice_data.get('Vendor Gst No.', ''),
-#                         "InvDate": invoice_data.get('InvoiceDate', ''),
-#                         "VendorName": invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName'),
-#                         "VendorCode": vendor_code,
-#                         "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
-#                         "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
-#                         "TotalTax": str(invoice_data.get('TotalTax', '')),
-#                         "BasicAmount": str(invoice_data.get('SubTotal', '')),
-#                         "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-#                         "path": invoice_path,                          # ✅ corrected field name
-#                         "InvoiceGroupKey": invoice_key,
-#                         "unique_name": unique_name,                     # ✅ corrected field name
-#                         "message": message,
-#                         "api_response": api_response
-#                         }
-#                     )
-#                 else:
-#                     required_fields = [
-#                     'Cutomer Gst No.',
-#                     'Vendor Gst No.',
-#                     'SubTotal',
-#                     'InvoiceId',
-#                     'TotalTax',
-#                     'InvoiceTotal',
-#                     'Tax Items'
-#                     ]
-#                     for field in required_fields:
-#                         print(field, invoice_data.get(field))
-
-#                     print(vendor_code)
-                
-#                     missing_values = any(
-#                         not invoice_data.get(field) or str(invoice_data.get(field)).lower() == 'none'
-#                         for field in required_fields
-#                     )
-#                     print(missing_values)
-
-#                     if missing_values:
-#                         print('some mandatory fields are missing')
-#                         PendingInvoices.objects.update_or_create(
-#                             company=company,
-#                             InvNo=str(invoice_data.get('InvoiceId', '')),
-#                             defaults={
-#                                 "VendorGst": invoice_data.get('Vendor Gst No.', ''),
-#                                 "InvDate": invoice_data.get('InvoiceDate', ''),
-#                                 "VendorName": invoice_data.get('VendorName') or invoice_data.get('VendorAddressRecipient'),
-#                                 "VendorCode": vendor_code or '',
-#                                 "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
-#                                 "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
-#                                 "TotalTax": str(invoice_data.get('TotalTax', '')),
-#                                 "BasicAmount": str(invoice_data.get('SubTotal', '')),
-#                                 "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-#                                 "path": invoice_path,
-#                                 "InvoiceGroupKey": invoice_key,                          # ✅ corrected field name
-#                                 "unique_name": unique_name,                     # ✅ corrected field name
-#                                 "api_response": api_response
-#                             }
-#                         )
-#                     else:
-#                         save_processed_invoice(api_response, invoice_path, unique_name, company, invoice_key)
-#             else:
-#                 required_fields = [
-#                     'Cutomer Gst No.',
-#                     'Vendor Gst No.',
-#                     'SubTotal',
-#                     'InvoiceId',
-#                     'TotalTax',
-#                     'InvoiceTotal',
-#                     'Tax Items'
-#                 ]
-#                 for field in required_fields:
-#                     print(field, invoice_data.get(field))
-
-#                 print(vendor_code)
-            
-#                 missing_values = any(
-#                     not invoice_data.get(field) or str(invoice_data.get(field)).lower() == 'none'
-#                     for field in required_fields
-#                 )
-#                 print(missing_values)
-
-#                 if missing_values:
-#                     print('some mandatory fields are missing')
-#                     PendingInvoices.objects.update_or_create(
-#                         company=company,
-#                         InvNo=str(invoice_data.get('InvoiceId', '')),
-#                         defaults={
-#                             "VendorGst": invoice_data.get('Vendor Gst No.', ''),
-#                             "InvDate": invoice_data.get('InvoiceDate', ''),
-#                             "VendorName": invoice_data.get('VendorName') or invoice_data.get('VendorAddressRecipient'),
-#                             "VendorCode": vendor_code or '',
-#                             "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
-#                             "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
-#                             "TotalTax": str(invoice_data.get('TotalTax', '')),
-#                             "BasicAmount": str(invoice_data.get('SubTotal', '')),
-#                             "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-#                             "path": invoice_path,                          # ✅ corrected field name
-#                             "InvoiceGroupKey": invoice_key,
-#                             "unique_name": unique_name,                     # ✅ corrected field name
-#                             "api_response": api_response
-#                         }
-#                     )
-#                 else:
-#                     message = f"This is Invoice has Vendor GSt but not found any Vendor code against captured GST Number {invoice_data.get('Vendor Gst No.', '')}"
-#                     print(message)
-#                     MissingDataInvoices.objects.update_or_create(
-#                     company=company,
-#                     InvNo=str(invoice_data.get('InvoiceId', '')),
-#                     defaults={
-#                         "VendorGst": invoice_data.get('Vendor Gst No.', ''),
-#                         "InvDate": invoice_data.get('InvoiceDate', ''),
-#                         "VendorName": invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName'),
-#                         "VendorCode": vendor_code,
-#                         "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
-#                         "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
-#                         "TotalTax": str(invoice_data.get('TotalTax', '')),
-#                         "BasicAmount": str(invoice_data.get('SubTotal', '')),
-#                         "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-#                         "path": invoice_path,                          # ✅ corrected field name
-#                         "InvoiceGroupKey": invoice_key,
-#                         "unique_name": unique_name,                     # ✅ corrected field name
-#                         "message": message,
-#                         "api_response": api_response
-#                         }
-#                     )
-            
-            
-#         else:
-#             print(f"Error processing {unique_name}: {response.status_code} - {response.text}")
-    
-#     except Exception as e:
-#         print(f"Exception: {str(e)}")
-
-def save_processed_invoice(api_response,invoice_path, unique_name, company, invoice_key):
+def save_processed_invoice(api_response,invoice_path, unique_name, company, invoice_key, invoice_id):
     try:
-        data_gathering(api_response, company, unique_name, invoice_path, invoice_key)
+        data_gathering(api_response, company, unique_name, invoice_path, invoice_key, invoice_id)
         all_okay_,api_response_ = all_okay(api_response)
         # Save API response in a JSON file
         okay_notokay = all_okay_['status']
@@ -1661,19 +1530,21 @@ def save_processed_invoice(api_response,invoice_path, unique_name, company, invo
         with open(response_file, 'w') as f:
             json.dump(api_response, f, indent=4)
 
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Save invoice details to DB
+        save_invoice_detail(
+            company=company,
+            file_name=unique_name,
+            upload_date=timestamp,
+            path=invoice_path,
+            okay_status=okay_notokay,
+            okay_message=okay_message,
+            status='waiting'
+        )
+
     except Exception as e:
         print("An error occurred at top level:", e)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # Save invoice details to DB
-    save_invoice_detail(
-        company=company,
-        file_name=unique_name,
-        upload_date=timestamp,
-        path=invoice_path,
-        okay_status=okay_notokay,
-        okay_message=okay_message,
-        status='waiting'
-    )
+    
     return True
 
 def save_invoice_detail(company, file_name, upload_date, path, okay_status=None, okay_message=None, status='waiting'):
@@ -1711,6 +1582,7 @@ def save_invoice_detail(company, file_name, upload_date, path, okay_status=None,
 
 @login_required
 def upload_invoice(request):
+    print('invoice upload initiated')
     """ Upload invoices and process them in the background using threading """
     if request.method == 'POST' and request.FILES.getlist('files'):
         
@@ -1730,8 +1602,9 @@ def upload_invoice(request):
             with default_storage.open(invoice_path, 'wb+') as destination:
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
-
+            time.sleep(5)
             # **Start a new thread for processing**
+            print("Invoice Submit for processing")
             threading.Thread(target=process_invoice, args=(invoice_path, unique_name, company)).start()
 
         # Redirect immediately to avoid waiting
@@ -1887,9 +1760,195 @@ def pdf_show(request):
 
     return render(request, 'invoice_pdf_show.html', {'pdf_name': pdf_url})
 
+@login_required
+def run_matching(api_response, company, unique_name, invoice_path, invoice_key, invoice_id):
+    print('data gathering called')
+    
+    invoice_data = api_response.get('result').get('Invoice_data')
+    
+    vendor_gst = invoice_data.get('Vendor Gst No.')
+    inv_curr = invoice_data.get('Currency')
+    invoice_num_ = invoice_data.get('InvoiceId')
+    invoice_value_basic = invoice_data.get('SubTotal')
+    invoice_value_total = invoice_data.get('InvoiceTotal')
+    invoice_num = re.sub(r'[^A-Za-z0-9]', '', invoice_num_)
+    system_mapping = SystemVariableMapping.objects.filter(company_id=company)
+    vendor_master_data = VendorMastersData.objects.filter(company_id=company,GSTNo=vendor_gst).first()
+    vendorcode = None
+    if vendor_master_data:
+        vendorcode = vendor_master_data.VendorCode
+    else:
+        vendorcode = invoice_data.get('VendorCode')
+        vendor_master_data = VendorMastersData.objects.filter(company_id=company,VendorCode=vendorcode).first()
 
+    # print('vendorcode', vendorcode)
+    migo_data = OpenGRNData.objects.filter(company_id=company,vendor_code=vendorcode,inv_no=invoice_num)
+    
+    
+    try:
+        field_map = {m.system_var: m.miro_header for m in system_mapping if m.miro_header}
+    except:
+        pass
+    doctype = DOCTYPE['invoice']
+    # print('hello')
+    try:
+        configurations = configuration_setting(company,api_response)
+    except Exception as e:
+        print("Error:", e)
+        traceback.print_exc()   # ✅ This prints the exact line where error occurred
+    # print('hello1')
+    radio_checks = radio_checkss(company,configurations,api_response)
+    for key, value in radio_checks.items():
+        data_str = value.get("data", "{}")
+        color = value.get("color")
+        # print(data_str)
+        try:
+            data_str = json.loads(data_str)
+        except:
+            pass
 
+        # Only modify if color is 'r' or 'o'
+        if color in ("r", "o"):
+            if isinstance(data_str, list):
+                # Case 1: data is a list of dicts
+                for item in data_str:
+                    if isinstance(item, dict):
+                        item.setdefault("processor_remark", "")
+                        item.setdefault("checker_remark", "")
+            elif isinstance(data_str, dict):
+                # Case 2: data is a dict (may contain nested dicts)
+                for inner_key, inner_val in data_str.items():
+                    if isinstance(inner_val, dict):
+                        handle_nested_dict(inner_val)
+                    elif isinstance(inner_val, list):
+                        for item in inner_val:
+                            if isinstance(item, dict):
+                                handle_nested_dict(item)
 
+    # Re-serialize back to JSON string
+    # value["data"] = json.dumps(data_str)
+    for key, value in radio_checks.items():
+        value['data'] = json.dumps(value.get('data', {}))
+    
+    # print(radio_checks)
+    if invoice_data.get('Tax_Invoice') == 'Credit':
+        doctype = DOCTYPE['credit']
+    # print('hello2')
+    mapped_data_list = []
+    # print(field_map)
+    vendorcode = vendor_master_data.VendorCode
+    migovaluecolumn = field_map['InvoiceAmount']
+    print('Checking Invoice Value and Migo Value if Migo Value is higher')
+    MigoValue = migo_data[0].row_data.get(migovaluecolumn, "")
+    if float(MigoValue) > float(invoice_value_basic):
+        exception_data = {}
+        exception_data['MigoValue'] = MigoValue
+        exception_data['InvoiceValue'] = invoice_value_basic
+        CheckerApprovalsInvoices.objects.create(
+            company=company,
+            InvoiceGroupKey=invoice_key,
+            InvoiceId=invoice_id,
+            VendorCode=vendor_master_data.VendorCode,
+            VendorName=vendor_master_data.VendorName,
+            InvoiceNo=invoice_num_,
+            path=invoice_path,
+            unique_name=unique_name,
+            api_response=api_response,
+            message="Migo Value is higher than Invoice Value captured by OCR, need Approval/Edit",
+            exception_type="Migo>Invoice",
+            exception_data = exception_data,
+            status="Pending"
+        )
+    else:
+        print('Entering to normal invoice block')
+        for record in migo_data:
+            row_data = record.row_data  # JSONField → usually a dict or list of dicts
+            data_dict = {}
+            for sys_field, excel_key in field_map.items():
+                value = row_data.get(excel_key, "")
+                data_dict[sys_field] = str(value).strip()
+
+            data_dict["VendorCode"] = record.vendor_code
+            data_dict["InvoiceId"] = invoice_id
+            data_dict["VendorName"] = vendor_master_data.VendorName
+            data_dict["DocumentNumber"] = record.document_number
+            data_dict["DocType"] = doctype
+            data_dict["Narration"] = configurations.get('narration')
+            data_dict["WBS_Element"] = ''
+            data_dict["UnplannedDeliveryCost"] = ''
+            data_dict["BaselineDate"] = configurations.get('BaselineDate') or ''
+            data_dict["PaymentBlock"] = configurations.get('block_pay', {}).get('action')
+            data_dict["PostingDate"] = configurations.get('posting_date')
+            # data_dict["PostingDate"] = configurations.get('WithHolding Tax Details', {}).get('WithHolding Tax value')
+            
+
+            # attach the same unique key
+            data_dict["invoice_key"] = invoice_key
+            # print(data_dict)
+            # Save record
+            InvoiceDetails.objects.create(
+                company=company,
+                **data_dict
+            )
+            mapped_data_list.append(data_dict)
+        # print(mapped_data_list)
+        Gst_taxrate = data_dict.get('TaxCode')
+        Whold_taxrate = data_dict.get('WithholdingTaxCode')
+        raw_date = data_dict.get("InvoiceDate")
+        payment_block = data_dict.get("PaymentBlock")
+        if raw_date:
+            # handle "2025-04-07 00:00:00" → "2025-04-07"
+            try:
+                parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").date()
+            except:
+                # If already "YYYY-MM-DD", just split
+                parsed_date = raw_date.split(" ")[0]
+        else:
+            parsed_date = None
+
+        print('pay block indicator--->',configurations.get('block_pay', {}).get('action'))
+        # create 1 summary record (you can use another model, e.g. InvoiceSummary) 
+        InvoiceSummary.objects.create(
+            company=company,
+            InvoiceGroupKey=invoice_key,
+            InvoiceId=invoice_id,
+            unique_name = unique_name,
+            path = invoice_path,
+            VendorCode=vendorcode,
+            Narration=configurations.get('narration'),
+            TaxCode=Gst_taxrate,
+            VendorGst=vendor_gst,
+            WithholdingTaxCode=Whold_taxrate,
+            VendorName=data_dict["VendorName"],  
+            InvoiceNo=data_dict["SuppInv_no"],
+            Currency=data_dict["Currency"],
+            InvCurrency = inv_curr,
+            ExchangeRate=data_dict["ExchangeRate"],
+            InvoiceDate=parsed_date,
+            InvoiceCheck = radio_checks,
+            payment_indicator = configurations.get('block_pay', {}).get('action'),
+            account_indicator = configurations.get('block_acc', {}).get('action'),
+            InvoiceValue=invoice_value_basic,
+            InvoiceValueMigo=data_dict["InvoiceAmount"],
+            Pending_with = 'Processor',
+            Status="Pending"  # or whatever your initial state is
+        )
+        try:
+            VendorsTotals.objects.create(
+                company=company,
+                Vendor_code=vendorcode,
+                inv_num=data_dict["SuppInv_no"],
+                inv_date=parsed_date,
+                inv_value=invoice_value_total
+            )
+        except:
+            pass
+        print('Saved into Normal Mode and standing in queue for approval')
+        
+        
+    
+
+@login_required
 def upload_data_view(request):
     context = {}
 
@@ -1897,7 +1956,7 @@ def upload_data_view(request):
         data_type = request.POST.get('data_type')
         uploaded_file = request.FILES.get('excel_file')
         company = getattr(request.user, 'company_code', None)
-        # print(data_type)
+        print(company)
         if not company:
             context['error'] = "User not linked to any company."
             return render(request, 'upload_data.html', context)
@@ -1907,14 +1966,144 @@ def upload_data_view(request):
             return render(request, 'upload_data.html', context)
 
         try:
-            df = pd.read_excel(uploaded_file)
-            df.columns = df.columns.str.strip()
-            context['file_content'] = df.head().to_html(classes="table table-bordered", index=False)
-            context['data_type'] = data_type
+            try:
+                df = pd.read_excel(uploaded_file)
+                df.columns = df.columns.str.strip()
+                context['file_content'] = df.head().to_html(classes="table table-bordered", index=False)
+                context['data_type'] = data_type
+            except:
+                pass
 
             # Only process saving if type is MIGO
             
             if data_type.lower() == 'migo':
+                try:
+                    # Fetch required system mappings
+                    try:
+                        vendorcode_header = SystemVariableMapping.objects.get(
+                            company=company, system_var='VendorCode'
+                        ).miro_header
+
+                        document_header = SystemVariableMapping.objects.get(
+                            company=company, system_var='DocumentNumber'
+                        ).miro_header
+
+                        inv_num_header = SystemVariableMapping.objects.get(
+                            company=company, system_var='SuppInv_no'
+                        ).miro_header
+
+                    except SystemVariableMapping.DoesNotExist:
+                        context['error'] = "System variable mappings for MIGO not found."
+                        return render(request, 'upload_data.html', context)
+
+                    # Validate required columns
+                    missing_cols = [
+                        col for col in [vendorcode_header, document_header, inv_num_header]
+                        if col not in df.columns
+                    ]
+                    if missing_cols:
+                        context['error'] = f"Excel file missing expected columns: {', '.join(missing_cols)}"
+                        return render(request, 'upload_data.html', context)
+
+                    # Group by document number
+                    grouped = df.groupby(document_header)
+
+                    with transaction.atomic():
+
+                        # 🔴 DELETE all existing MIGO data for company
+                        OpenGRNData.objects.filter(company=company).delete()
+
+                        bulk_records = []
+
+                        for doc_number, group_df in grouped:
+                            document_number = str(doc_number).strip()
+
+                            vendor_code = str(group_df.iloc[0][vendorcode_header]).strip()
+
+                            inv_num = str(group_df.iloc[0][inv_num_header]).strip()
+                            inv_num = re.sub(r'[^A-Za-z0-9]', '', inv_num)
+
+                            for _, row in group_df.iterrows():
+                                row_data = {
+                                    col: (str(val) if pd.notna(val) else None)
+                                    for col, val in row.items()
+                                }
+                                print(company)
+                                bulk_records.append(
+                                    OpenGRNData(
+                                        company=company,
+                                        vendor_code=vendor_code,
+                                        document_number=document_number,
+                                        inv_no=inv_num,
+                                        row_data=row_data,
+                                        status='pending'
+                                    )
+                                )
+
+                        # 🔵 BULK INSERT
+                        OpenGRNData.objects.bulk_create(bulk_records, batch_size=1000)
+
+                    records = MissingDataInvoices.objects.filter(company=company).iterator(chunk_size=200)
+
+                    for record in records:
+                        try:
+                            api_response = record.api_response or {}
+                            invoice_data = api_response.get('result', {}).get('Invoice_data', {})
+                            if not invoice_data:
+                                continue
+
+                            vendor_gst = invoice_data.get('Vendor Gst No.')
+                            invoice_num_raw = invoice_data.get('InvoiceId', '')
+                            invoice_num = re.sub(r'[^A-Za-z0-9]', '', invoice_num_raw)
+
+                            vendor_master_data = VendorMastersData.objects.filter(company_id=company,GSTNo=vendor_gst).first()
+                            vendorcode = None
+                            if vendor_master_data:
+                                vendorcode = vendor_master_data.VendorCode
+                            else:
+                                vendorcode = invoice_data.get('VendorCode')
+                                vendor_master_data = VendorMastersData.objects.filter(company_id=company,VendorCode=vendorcode).first()
+                            if not vendor_master_data:
+                                continue
+
+                            vendorcode = vendor_master_data.VendorCode
+
+                            if OpenGRNData.objects.filter(
+                                    company_id=company,
+                                    vendor_code=vendorcode,
+                                    inv_no=invoice_num
+                                ).exists():
+
+                                run_matching(
+                                    api_response,
+                                    company,
+                                    record.unique_name,
+                                    record.path,
+                                    record.InvoiceGroupKey,
+                                    record.InvoiceId
+                                )
+
+                                record.delete()
+
+                        except Exception as e:
+                            print(f"Error for InvoiceId {record.InvoiceId}: {e}")
+
+                            
+                        
+                    return JsonResponse({
+                        "status": "ok",
+                        "inserted": len(bulk_records)
+                    })
+
+                except Exception as e:
+                    traceback.print_exc()
+                    return JsonResponse({
+                        "status": "error",
+                        "message": f"Error processing file: {str(e)}"
+                    })
+
+
+            elif data_type.lower() == 'po':
                 try:
                     saved_count, skipped_count = 0, 0
 
@@ -1922,13 +2111,13 @@ def upload_data_view(request):
                     try:
                         vendorcode_header = SystemVariableMapping.objects.get(
                             company=company, system_var='VendorCode'
-                        ).miro_header
+                        ).po_header
                         document_header = SystemVariableMapping.objects.get(
                             company=company, system_var='DocumentNumber'
-                        ).miro_header
+                        ).po_header
                         inv_num_header = SystemVariableMapping.objects.get(
                             company=company, system_var='SuppInv_no'
-                        ).miro_header
+                        ).po_header
                     except SystemVariableMapping.DoesNotExist:
                         context['error'] = "System variable mappings for MIGO not found."
                         return render(request, 'upload_data.html', context)
@@ -1947,7 +2136,7 @@ def upload_data_view(request):
                             document_number = str(doc_number).strip()
                             # print(document_number)
                             # Skip entire group if already exists
-                            if OpenGRNData.objects.filter(company=company, document_number=document_number).exists():
+                            if POData.objects.filter(company=company, document_number=document_number).exists():
                                 skipped_count += len(group_df)
                                 continue
 
@@ -1961,7 +2150,7 @@ def upload_data_view(request):
                                 # Convert single row to serializable dict
                                 row_data = {col: (str(val) if pd.notna(val) else None) for col, val in row.items()}
 
-                                OpenGRNData.objects.create(
+                                POData.objects.create(
                                     company=company,
                                     vendor_code=vendor_code,
                                     document_number=document_number,
@@ -2222,6 +2411,75 @@ def upload_data_view(request):
                     print("Error occurred:", e)
                     traceback.print_exc()
                     return JsonResponse({"status": "ok", 'error': f"Error processing file: {str(e)}"})
+            elif data_type.lower() == 'einvoice':
+                try:
+                    API_URL = "http://20.40.43.125:5001/upload"
+                    # API_URL = "http://127.0.0.1:5000/upload"
+                    
+                    APP_NAME = "MiroApp"
+
+                    # Determine file type
+                    filename = uploaded_file.name.lower()
+
+                    if filename.endswith(".json"):
+                        file_type = "json"
+                    elif filename.endswith((".xls", ".xlsx")):
+                        file_type = "excel"
+                    else:
+                        return JsonResponse(
+                            {"status": "error", "message": "Unsupported file type"},
+                            status=400
+                        )
+
+                    # Prepare multipart request
+                    uploaded_file.seek(0)  # CRITICAL
+
+                    files = {
+                        "file": (
+                            uploaded_file.name,
+                            uploaded_file,              # <-- pass file object
+                            uploaded_file.content_type
+                        )
+                    }
+
+                    data = {
+                        "company_id": company,
+                        "app": APP_NAME
+                    }
+
+                    # Send to Invoice API
+                    response = requests.post(
+                        API_URL,
+                        files=files,
+                        data=data,
+                        timeout=120
+                    )
+
+                    # Handle API response
+                    if response.status_code not in (200, 201):
+                        return JsonResponse(
+                            {
+                                "status": "error",
+                                "message": "Invoice API failed",
+                                "api_status": response.status_code,
+                                "api_response": response.text,
+                            },
+                            status=502
+                        )
+
+                    return JsonResponse(
+                        {
+                            "status": "success",
+                            "source": "einvoice",
+                            "file_type": file_type,
+                            "api_response": response.json(),
+                        },
+                        status=201
+                    )
+                except Exception as e:
+                    print("Error occurred:", e)
+                    traceback.print_exc()
+                    return JsonResponse({"status": "ok", 'error': f"Error processing file: {str(e)}"})
             
             else:
                 return JsonResponse({"status": "ok", 'error': f"Error processing file: No headers mapping found for {data_type} file"})
@@ -2295,15 +2553,17 @@ def handle_nested_dict(d):
                     handle_nested_dict(item)
 
 
-def data_gathering(api_response, company, unique_name, invoice_path, invoice_key):
+def data_gathering(api_response, company, unique_name, invoice_path, invoice_key, invoice_id):
     print('data gathering called')
     
     invoice_data = api_response.get('result').get('Invoice_data')
     
     vendor_gst = invoice_data.get('Vendor Gst No.')
     inv_curr = invoice_data.get('Currency')
-    invoice_num = invoice_data.get('InvoiceId')
-    invoice_num = re.sub(r'[^A-Za-z0-9]', '', invoice_num)
+    invoice_num_ = invoice_data.get('InvoiceId')
+    invoice_value_basic = invoice_data.get('SubTotal')
+    invoice_value_total = invoice_data.get('InvoiceTotal')
+    invoice_num = re.sub(r'[^A-Za-z0-9]', '', invoice_num_)
     system_mapping = SystemVariableMapping.objects.filter(company_id=company)
     vendor_master_data = VendorMastersData.objects.filter(company_id=company,GSTNo=vendor_gst).first()
     vendorcode = None
@@ -2313,10 +2573,11 @@ def data_gathering(api_response, company, unique_name, invoice_path, invoice_key
         vendorcode = invoice_data.get('VendorCode')
         vendor_master_data = VendorMastersData.objects.filter(company_id=company,VendorCode=vendorcode).first()
 
-    # print('vendorcode', vendorcode)
+    # print('vendorcode', type(vendorcode))
+    # print('company_id', type(company))
+    # print('invoice_num', type(invoice_num))
     migo_data = OpenGRNData.objects.filter(company_id=company,vendor_code=vendorcode,inv_no=invoice_num)
-    # Build a dict of {system_var: miro_header}
-    # print(list(system_mapping.values()))
+    
     if migo_data:
         try:
             field_map = {m.system_var: m.miro_header for m in system_mapping if m.miro_header}
@@ -2368,110 +2629,147 @@ def data_gathering(api_response, company, unique_name, invoice_path, invoice_key
             doctype = DOCTYPE['credit']
         # print('hello2')
         mapped_data_list = []
-        if vendor_master_data:
-            # print('entered')
-            vendorcode = vendor_master_data.VendorCode
-
-             
-            if migo_data:
-                for record in migo_data:
-                    row_data = record.row_data  # JSONField → usually a dict or list of dicts
-                    data_dict = {}
-                    for sys_field, excel_key in field_map.items():
-                        value = row_data.get(excel_key, "")
-                        data_dict[sys_field] = str(value).strip()
-
-                    data_dict["VendorCode"] = record.vendor_code
-                    data_dict["VendorName"] = vendor_master_data.VendorName
-                    data_dict["DocumentNumber"] = record.document_number
-                    data_dict["DocType"] = doctype
-                    data_dict["Narration"] = configurations.get('narration')
-                    data_dict["WBS_Element"] = ''
-                    data_dict["UnplannedDeliveryCost"] = ''
-                    data_dict["BaselineDate"] = configurations.get('BaselineDate') or ''
-                    data_dict["PaymentBlock"] = configurations.get('block_pay', {}).get('action')
-                    data_dict["PostingDate"] = configurations.get('posting_date')
-                    # data_dict["PostingDate"] = configurations.get('WithHolding Tax Details', {}).get('WithHolding Tax value')
-                    
-
-                    # attach the same unique key
-                    data_dict["invoice_key"] = invoice_key
-
-                    # Save record
-                    InvoiceDetails.objects.create(
-                        company=company,
-                        **data_dict
-                    )
-                    mapped_data_list.append(data_dict)
-                Gst_taxrate = data_dict.get('TaxCode')
-                Whold_taxrate = data_dict.get('WithholdingTaxCode')
-                raw_date = data_dict.get("InvoiceDate")
-                payment_block = data_dict.get("PaymentBlock")
-                if raw_date:
-                    # handle "2025-04-07 00:00:00" → "2025-04-07"
-                    try:
-                        parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").date()
-                    except:
-                        # If already "YYYY-MM-DD", just split
-                        parsed_date = raw_date.split(" ")[0]
-                else:
-                    parsed_date = None
-
-                print('pay block indicator--->',configurations.get('block_pay', {}).get('action'))
-                # create 1 summary record (you can use another model, e.g. InvoiceSummary) 
-                InvoiceSummary.objects.create(
-                    company=company,
-                    InvoiceGroupKey=invoice_key,
-                    unique_name = unique_name,
-                    path = invoice_path,
-                    VendorCode=vendorcode,
-                    Narration=configurations.get('narration'),
-                    TaxCode=Gst_taxrate,
-                    VendorGst=vendor_gst,
-                    WithholdingTaxCode=Whold_taxrate,
-                    VendorName=data_dict["VendorName"],  
-                    InvoiceNo=data_dict["SuppInv_no"],
-                    Currency=data_dict["Currency"],
-                    InvCurrency = inv_curr,
-                    ExchangeRate=data_dict["ExchangeRate"],
-                    InvoiceDate=parsed_date,
-                    InvoiceCheck = radio_checks,
-                    payment_indicator = configurations.get('block_pay', {}).get('action'),
-                    account_indicator = configurations.get('block_acc', {}).get('action'),
-                    InvoiceValue=data_dict["InvoiceAmount"],
-                    Pending_with = 'Processor',
-                    Status="Pending"  # or whatever your initial state is
-                )
-            else:
-                # create 1 summary record (you can use another model, e.g. InvoiceSummary) 
-                InvNo=str(invoice_data.get('InvoiceId', '')),
-                message = f"No data found against Invoice Number {InvNo} for Vendor {vendorcode} in MIGO report"
-                MissingDataInvoices.objects.update_or_create(
-                    company=company,
-                    InvNo=str(invoice_data.get('InvoiceId', '')),
-                    defaults={
-                        "VendorGst": invoice_data.get('Vendor Gst No.', ''),
-                        "InvDate": invoice_data.get('InvoiceDate', ''),
-                        "VendorName": invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName'),
-                        "VendorCode": vendorcode,
-                        "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
-                        "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
-                        "TotalTax": str(invoice_data.get('TotalTax', '')),
-                        "BasicAmount": str(invoice_data.get('SubTotal', '')),
-                        "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
-                        "path": invoice_path,                          # ✅ corrected field name
-                        "unique_name": unique_name,                     # ✅ corrected field name
-                        "message": message,
-                        "api_response": api_response
-                    }
-                )
-                
-                
-        
+        # print(field_map)
+        vendorcode = vendor_master_data.VendorCode
+        migovaluecolumn = field_map['InvoiceAmount']
+        print('Checking Invoice Value and Migo Value if Migo Value is higher')
+        MigoValue = migo_data[0].row_data.get(migovaluecolumn, "")
+        if float(MigoValue) > float(invoice_value_basic):
+            exception_data = {}
+            exception_data['MigoValue'] = MigoValue
+            exception_data['InvoiceValue'] = invoice_value_basic
+            CheckerApprovalsInvoices.objects.create(
+                company=company,
+                InvoiceGroupKey=invoice_key,
+                InvoiceId=invoice_id,
+                VendorCode=vendor_master_data.VendorCode,
+                VendorName=vendor_master_data.VendorName,
+                InvoiceNo=invoice_num_,
+                path=invoice_path,
+                unique_name=unique_name,
+                api_response=api_response,
+                message="Migo Value is higher than Invoice Value captured by OCR, need Approval/Edit",
+                exception_type="Migo>Invoice",
+                exception_data = exception_data,
+                status="Pending"
+            )
         else:
-            print(f'No VendorCode in masters for this Gst Number {vendor_gst}')
+            print('Entering to normal invoice block')
+            for record in migo_data:
+                row_data = record.row_data  # JSONField → usually a dict or list of dicts
+                data_dict = {}
+                for sys_field, excel_key in field_map.items():
+                    value = row_data.get(excel_key, "")
+                    data_dict[sys_field] = str(value).strip()
+
+                data_dict["VendorCode"] = record.vendor_code
+                data_dict["InvoiceId"] = invoice_id
+                data_dict["VendorName"] = vendor_master_data.VendorName
+                data_dict["DocumentNumber"] = record.document_number
+                data_dict["DocType"] = doctype
+                data_dict["Narration"] = configurations.get('narration')
+                data_dict["WBS_Element"] = ''
+                data_dict["UnplannedDeliveryCost"] = ''
+                data_dict["BaselineDate"] = configurations.get('BaselineDate') or ''
+                data_dict["PaymentBlock"] = configurations.get('block_pay', {}).get('action')
+                data_dict["PostingDate"] = configurations.get('posting_date')
+                # data_dict["PostingDate"] = configurations.get('WithHolding Tax Details', {}).get('WithHolding Tax value')
+                
+
+                # attach the same unique key
+                data_dict["invoice_key"] = invoice_key
+                # print(data_dict)
+                # Save record
+                InvoiceDetails.objects.create(
+                    company=company,
+                    **data_dict
+                )
+                mapped_data_list.append(data_dict)
+            # print(mapped_data_list)
+            Gst_taxrate = data_dict.get('TaxCode')
+            Whold_taxrate = data_dict.get('WithholdingTaxCode')
+            raw_date = data_dict.get("InvoiceDate")
+            payment_block = data_dict.get("PaymentBlock")
+            if raw_date:
+                # handle "2025-04-07 00:00:00" → "2025-04-07"
+                try:
+                    parsed_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S").date()
+                except:
+                    # If already "YYYY-MM-DD", just split
+                    parsed_date = raw_date.split(" ")[0]
+            else:
+                parsed_date = None
+
+            print('pay block indicator--->',configurations.get('block_pay', {}).get('action'))
+            # create 1 summary record (you can use another model, e.g. InvoiceSummary) 
+            InvoiceSummary.objects.create(
+                company=company,
+                InvoiceGroupKey=invoice_key,
+                InvoiceId=invoice_id,
+                unique_name = unique_name,
+                path = invoice_path,
+                VendorCode=vendorcode,
+                Narration=configurations.get('narration'),
+                TaxCode=Gst_taxrate,
+                VendorGst=vendor_gst,
+                WithholdingTaxCode=Whold_taxrate,
+                VendorName=data_dict["VendorName"],  
+                InvoiceNo=data_dict["SuppInv_no"],
+                Currency=data_dict["Currency"],
+                InvCurrency = inv_curr,
+                ExchangeRate=data_dict.get("ExchangeRate",1),
+                InvoiceDate=parsed_date,
+                InvoiceCheck = radio_checks,
+                payment_indicator = configurations.get('block_pay', {}).get('action'),
+                account_indicator = configurations.get('block_acc', {}).get('action'),
+                InvoiceValue=invoice_value_basic,
+                InvoiceValueMigo=data_dict["InvoiceAmount"],
+                Pending_with = 'Processor',
+                Status="Pending"  # or whatever your initial state is
+            )
+            try:
+                VendorsTotals.objects.create(
+                    company=company,
+                    Vendor_code=vendorcode,
+                    inv_num=data_dict["SuppInv_no"],
+                    inv_date=parsed_date,
+                    inv_value=invoice_value_total
+                )
+            except:
+                pass
+            print('Saved into Normal Mode and standing in queue for approval')
+        
+        
     else:
-        pass
+        # create 1 summary record (you can use another model, e.g. InvoiceSummary) 
+        
+        message = f"Invoice not found in MIGO report (since vendor code not found against GST No. in vendor master/no matching line item in MIGO report."
+        if vendorcode:
+            message = f"No data found against Invoice Number {invoice_num_} for Vendor {vendorcode} in MIGO report"
+        print(f'No Migo data for this Invoice having gst number {vendor_gst}')
+        
+        
+        MissingDataInvoices.objects.update_or_create(
+            company=company,
+            InvoiceGroupKey=invoice_key,
+            InvNo=invoice_num_,
+            InvoiceId=invoice_id,
+            defaults={
+                "VendorGst": invoice_data.get('Vendor Gst No.', ''),
+                "InvDate": invoice_data.get('InvoiceDate', ''),
+                "VendorName": invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName'),
+                "VendorCode": vendorcode,
+                "CustomerGst": invoice_data.get('Cutomer Gst No.', ''),
+                "TotalAmount": str(invoice_data.get('InvoiceTotal', '')),
+                "TotalTax": str(invoice_data.get('TotalTax', '')),
+                "BasicAmount": str(invoice_data.get('SubTotal', '')),
+                "TaxType": invoice_data.get('Tax Items', {}),  # ✅ use dict, not str()
+                "path": invoice_path,                          # ✅ corrected field name
+                "unique_name": unique_name,                     # ✅ corrected field name
+                "message": message,
+                "api_response": api_response
+            }
+        )
     
     
     
@@ -2486,10 +2784,11 @@ def invoices(request):
     }
 
     unique_data_list = InvoiceSummary.objects.filter(company_id=company, Pending_with="Processor", Status='Pending')
-
+    
+    # print(configurations.unplanned_cost)
     # ✅ Only serialize rolematrix if needed for JS
     rolematrix_json = json.dumps(rolematrix)
-    print(rolematrix_json)
+    # print(rolematrix_json)
     return render(
         request,
         'submitted_invoices.html',
@@ -2497,7 +2796,7 @@ def invoices(request):
             'company': company,
             'data': unique_data_list,         # use directly in HTML loop
             'rolematrix': rolematrix_json,    # safe for JS
-            'role': role,
+            'role': role
         }
     )
 
@@ -2549,6 +2848,20 @@ def nodata_invoices(request):
         "rolematrix": rolematrix,
     }, safe=False)
 
+
+def get_exceptions_checker_approvals(request):
+    company = request.user.company_code  # adjust if you fetch company differently
+
+    unique_data_list = CheckerApprovalsInvoices.objects.filter(
+        company=company,
+        status="Pending"
+    ).order_by("-created_at").values()
+
+    # print(list(unique_data_list))
+    return JsonResponse({
+        "data": list(unique_data_list)
+    })
+
 def waiting_invoices(request):
     company = request.user.company_code
 
@@ -2564,9 +2877,9 @@ def waiting_invoices(request):
 
     # Correct filter — No Data only
     unique_data_list = MissingDataInvoices.objects.filter(
-        company_id=company
+        company_id=company,status='Pending',checker_approval_req='No'
     ).values()                       # ✅ convert to JSON-friendly dicts
-    print(unique_data_list)
+    # print(unique_data_list)
     return JsonResponse({
         
         "data": list(unique_data_list),   # ✅ serializable
@@ -2875,25 +3188,32 @@ def radio_checkss(company,configurations,api_response_):
             try:
                 inv_date_str = invoice_data.get("InvoiceDate")  # always YYYY-MM-DD
                 inv_date = datetime.strptime(inv_date_str, "%Y-%m-%d").date()
+                if migo_data:
+                    migo_raw = migo_data[0].row_data.get(field_map['InvoiceDate'])
 
-                migo_raw = migo_data[0].row_data.get(field_map['InvoiceDate'])
+                    # Get all possible interpretations
+                    migo_date_candidates = normalize_date(migo_raw)
 
-                # Get all possible interpretations
-                migo_date_candidates = normalize_date(migo_raw)
+                    matched = False
 
-                matched = False
-
-                for d in migo_date_candidates:
-                    if d == inv_date:
-                        matched = True
-                        break
-                date_check['Invoice/OCR'] = inv_date_str
-                date_check['Migo'] = migo_raw
+                    for d in migo_date_candidates:
+                        if d == inv_date:
+                            matched = True
+                            break
                 
-                if matched:
-                    date_check['color'] = 'g'
-                    date_check['Difference'] = 'No'
+                    date_check['Invoice/OCR'] = inv_date_str
+                    date_check['Migo'] = migo_raw
+                    
+                    if matched:
+                        date_check['color'] = 'g'
+                        date_check['Difference'] = 'No'
+                    else:
+                        date_check['color'] = 'r'
+                        date_check['Difference'] = 'Yes'
+                        color_r1 = 'r'
                 else:
+                    date_check['Invoice/OCR'] = inv_date_str
+                    date_check['Migo'] = 'No Migo Data Found'
                     date_check['color'] = 'r'
                     date_check['Difference'] = 'Yes'
                     color_r1 = 'r'    
@@ -3061,140 +3381,166 @@ def radio_checkss(company,configurations,api_response_):
     duplicate_check['message'] = 'Duplicate Invoice Check'
 
 
-    ### valid vendor check----> radio button4
+    ### valid vendor check ----> radio button4
+
     valid_vendor = {}
-    filing_status_data = api_response_.get('result',{}).get('CHECKS',{}).get('data_from_gst',{}).get("Filing Status")
     data_r4 = {}
     color_r4 = 'g'
-    data_r4['GST No. of Vendor Valid as per GSTN'] = {}
-    data_r4['GST No. of Vendor active on GSTN'] = {}
-    data_r4['Vendor Tax Payer Type'] = {}
-    data_r4['Vendor Tax Payer- Filing Frequency'] = {}
-    data_r4['Vendor GSTR 3B Filing Status'] = {}
-    data_r4['Previous Period (Period1) GSTR 3B'] = {}
-    data_r4['Period Prior To Period1 (Period2) GSTR 3B'] = {}
-    data_r4['Period Prior To Period2 (Period3) GSTR 3B'] = {}
-    data_r4['Vendor GSTR 1 Filing Status'] = {}
-    data_r4['Previous Period (Period1) GSTR 1'] = {}
-    data_r4['Period Prior To Period1 (Period2) GSTR 1'] = {}
-    data_r4['Period Prior To Period2 (Period3) GSTR 1'] = {}
+
+    def set_status(data, key, value, color):
+        data[key]['Status/Value'] = value
+        data[key]['color'] = color
+
+
+    def mark_periods(data, keys, value, color):
+        for k in keys:
+            data[k]['Status/Value'] = value
+            data[k]['color'] = color
+
+    FIELDS = [
+        'GST No. of Vendor Valid as per GSTN',
+        'GST No. of Vendor active on GSTN',
+        'Vendor Tax Payer Type',
+        'Vendor Tax Payer- Filing Frequency',
+        'Vendor GSTR 3B Filing Status',
+        'Previous Period (Period1) GSTR 3B',
+        'Period Prior To Period1 (Period2) GSTR 3B',
+        'Period Prior To Period2 (Period3) GSTR 3B',
+        'Vendor GSTR 1 Filing Status',
+        'Previous Period (Period1) GSTR 1',
+        'Period Prior To Period1 (Period2) GSTR 1',
+        'Period Prior To Period2 (Period3) GSTR 1'
+    ]
+
+    for f in FIELDS:
+        data_r4[f] = {}
+
+    filing_status_data = (
+        api_response_.get('result', {})
+        .get('CHECKS', {})
+        .get('data_from_gst', {})
+        .get("Filing Status")
+    )
 
     try:
-        data_r4['GST No. of Vendor Valid as per GSTN']['Status/Value'] = 'Yes'
-        data_r4['GST No. of Vendor Valid as per GSTN']['color'] = 'g'
-        if tax_check.get('Vendor_Gst_Valid',{}).get('status') != 'YES':
-            data_r4['GST No. of Vendor Valid as per GSTN']['Status/Value'] = 'No'
-            data_r4['GST No. of Vendor Valid as per GSTN']['color'] = 'r'
+        # ---- GST VALID ----
+        set_status(
+            data_r4,
+            'GST No. of Vendor Valid as per GSTN',
+            'Yes',
+            'g'
+        )
+        if tax_check.get('Vendor_Gst_Valid', {}).get('status') != 'YES':
+            set_status(data_r4, 'GST No. of Vendor Valid as per GSTN', 'No', 'r')
             color_r4 = 'r'
-        data_r4['GST No. of Vendor active on GSTN']['Status/Value'] = 'Yes'
-        data_r4['GST No. of Vendor active on GSTN']['color'] = 'g'
-        if tax_check.get('Vendor_Gst_Active',{}).get('status') != 'YES':
-            data_r4['GST No. of Vendor active on GSTN']['Status/Value'] = 'No'
-            data_r4['GST No. of Vendor active on GSTN']['color'] = 'r'
-            color_r4 = 'r'
-        data_r4['Vendor Tax Payer Type']['Status/Value'] = 'Not Regular'
-        data_r4['Vendor Tax Payer Type']['color'] = 'r'
-        if tax_check.get('Vendor_TaxPayer_type',{}).get('status') == 'Regular':
-            data_r4['Vendor Tax Payer Type']['Status/Value'] = 'Regular'
-            data_r4['Vendor Tax Payer Type']['color'] = 'g'
-        data_r4['Vendor Tax Payer- Filing Frequency']['Status/Value'] = 'Monthly'
-        data_r4['Vendor Tax Payer- Filing Frequency']['color'] = 'g'
-        if tax_check.get('Vendor_Taxfiliging_Frequency',{}).get('status') != 'Monthly':
-            data_r4['Vendor Tax Payer- Filing Frequency']['Status/Value'] = 'Quaterly'
-            data_r4['Vendor Tax Payer- Filing Frequency']['color'] = 'g'
 
-        
-        
-        try:
-            result_gstr3,result_gstr1,df1,df2 = filingstatus(filing_status_data)
-            try:
-                data_r4['Vendor GSTR 3B Filing Status'] = ''
-                if result_gstr3:
-                    data_r4['Previous Period (Period1) GSTR 3B']['Status/Value'] = result_gstr3['month']
-                    data_r4['Period Prior To Period1 (Period2) GSTR 3B']['Status/Value'] = result_gstr3['month1']
-                    data_r4['Period Prior To Period2 (Period3) GSTR 3B']['Status/Value'] = result_gstr3['month2']
-                    if result_gstr3['status'] != 'Filed':
-                        data_r4['Previous Period (Period1) GSTR 3B']['color'] = 'r'
-                        data_r4['Period Prior To Period1 (Period2) GSTR 3B']['color'] = 'r'
-                        data_r4['Period Prior To Period2 (Period3) GSTR 3B']['color'] = 'r'
-                        color_r4 = 'r'
-                    else:
-                        data_r4['Previous Period (Period1) GSTR 3B']['color'] = 'g'
-                        data_r4['Period Prior To Period1 (Period2) GSTR 3B']['color'] = 'g'
-                        data_r4['Period Prior To Period2 (Period3) GSTR 3B']['color'] = 'g'
-                else:  ###only for now
-                    data_r4['Previous Period (Period1) GSTR 3B'] = 'Not Filed'
-                    data_r4['Period Prior To Period1 (Period2) GSTR 3B'] = 'Filed'
-                    data_r4['Period Prior To Period2 (Period3) GSTR 3B'] = 'Filed'
-                    data_r4['Previous Period (Period1) GSTR 3B']['color'] = 'r'
-                    data_r4['Period Prior To Period1 (Period2) GSTR 3B']['color'] = 'r'
-                    data_r4['Period Prior To Period2 (Period3) GSTR 3B']['color'] = 'r'
+        # ---- GST ACTIVE ----
+        set_status(
+            data_r4,
+            'GST No. of Vendor active on GSTN',
+            'Yes',
+            'g'
+        )
+        if tax_check.get('Vendor_Gst_Active', {}).get('status') != 'YES':
+            set_status(data_r4, 'GST No. of Vendor active on GSTN', 'No', 'r')
+            color_r4 = 'r'
+
+        # ---- TAX PAYER TYPE ----
+        if tax_check.get('Vendor_TaxPayer_type', {}).get('status') == 'Regular':
+            set_status(data_r4, 'Vendor Tax Payer Type', 'Regular', 'g')
+        else:
+            set_status(data_r4, 'Vendor Tax Payer Type', 'Not Regular', 'r')
+
+        # ---- FILING FREQUENCY ----
+        freq = tax_check.get('Vendor_Taxfiliging_Frequency', {}).get('status')
+        if freq in ('Monthly', 'Quaterly'):
+            set_status(data_r4, 'Vendor Tax Payer- Filing Frequency', freq, 'g')
+        else:
+            set_status(
+                data_r4,
+                'Vendor Tax Payer- Filing Frequency',
+                'Invalid GST, Data not fetched from GST Portal',
+                'r'
+            )
+            freq = None
+
+        # ---- GST RETURNS ----
+        if freq:
+            result_gstr3, result_gstr1, _, _ = filingstatus(filing_status_data, freq)
+            print(result_gstr3)
+            # ---- GSTR 3B ----
+            if result_gstr3:
+                periods = (
+                    ['month', 'month1', 'month2']
+                    if freq == 'Monthly'
+                    else ['quarter', 'quarter1', 'quarter2']
+                )
+                keys_3b = [
+                    'Previous Period (Period1) GSTR 3B',
+                    'Period Prior To Period1 (Period2) GSTR 3B',
+                    'Period Prior To Period2 (Period3) GSTR 3B'
+                ]
+                for k, p in zip(keys_3b, periods):
+                    data_r4[k]['Status/Value'] = result_gstr3[p]
+
+                col = 'g' if result_gstr3['status'] == 'Filed' else 'r'
+                for k in keys_3b:
+                    data_r4[k]['color'] = col
+                if col == 'r':
                     color_r4 = 'r'
-            except Exception as e:
-                print(f"Error {e}")
-                traceback.print_exc()
-        
-            
-            try:
-                data_r4['Vendor GSTR 1 Filing Status'] = ''           
-                if result_gstr1:
-                    data_r4['Previous Period (Period1) GSTR 1']['Status/Value'] = result_gstr1['month']
-                    data_r4['Period Prior To Period1 (Period2) GSTR 1']['Status/Value'] = result_gstr1['month1']
-                    data_r4['Period Prior To Period2 (Period3) GSTR 1']['Status/Value'] = result_gstr1['month2']
-                    if result_gstr1['status'] != 'Filed':
-                        data_r4['Previous Period (Period1) GSTR 1']['color'] = 'r'
-                        data_r4['Period Prior To Period1 (Period2) GSTR 1']['color'] = 'r'
-                        data_r4['Period Prior To Period2 (Period3) GSTR 1']['color'] = 'r'
-                    else:
-                        data_r4['Previous Period (Period1) GSTR 1']['color'] = 'g'
-                        data_r4['Period Prior To Period1 (Period2) GSTR 1']['color'] = 'g'
-                        data_r4['Period Prior To Period2 (Period3) GSTR 1']['color'] = 'g'
-                else:
-                    data_r4['Previous Period (Period1) GSTR 1']['Status/Value'] = 'No data Recieved from GST Portal'
-                    data_r4['Period Prior To Period1 (Period2) GSTR 1']['Status/Value'] = 'No data Recieved from GST Portal'
-                    data_r4['Period Prior To Period2 (Period3) GSTR 1']['Status/Value'] = 'No data Recieved from GST Portal'
-                    data_r4['Previous Period (Period1) GSTR 1']['color'] = 'r'
-                    data_r4['Period Prior To Period1 (Period2) GSTR 1']['color'] = 'r'
-                    data_r4['Period Prior To Period2 (Period3) GSTR 1']['color'] = 'r'
-                    if result_gstr1['status'] != 'Filed':
-                        color_r4 = 'r'
-            except Exception as e:
-                print(f"Error {e}")
-                traceback.print_exc()
-        except Exception as e:
-            print(f"Error {e}")
-            traceback.print_exc()
-            print('entering into except block')
-            # SAFE fallback values
-            
-            data_r4['Vendor GSTR 3B Filing Status']['Status/Value'] = ''
-            data_r4['Vendor GSTR 3B Filing Status']['color'] = 'g'
-            data_r4['Previous Period (Period1) GSTR 3B']['Status/Value']  = 'Not Filed'
-            data_r4['Period Prior To Period1 (Period2) GSTR 3B']['Status/Value']  = 'Filed'
-            data_r4['Period Prior To Period2 (Period3) GSTR 3B']['Status/Value']  = 'Filed'
+
+            # ---- GSTR 1 ----
+            if result_gstr1:
+                periods = (
+                    ['month', 'month1', 'month2']
+                    if freq == 'Monthly'
+                    else ['quarter', 'quarter1', 'quarter2']
+                )
+                keys_1 = [
+                    'Previous Period (Period1) GSTR 1',
+                    'Period Prior To Period1 (Period2) GSTR 1',
+                    'Period Prior To Period2 (Period3) GSTR 1'
+                ]
+                for k, p in zip(keys_1, periods):
+                    data_r4[k]['Status/Value'] = result_gstr1[p]
+
+                col = 'g' if result_gstr1['status'] == 'Filed' else 'r'
+                for k in keys_1:
+                    data_r4[k]['color'] = col
+                if col == 'r':
+                    color_r4 = 'r'
+        else:
+            # ---- Invalid GST fallback (exact behavior preserved) ----
+            data_r4['Previous Period (Period1) GSTR 3B']['Status/Value'] = 'Invalid GST'
+            data_r4['Period Prior To Period1 (Period2) GSTR 3B']['Status/Value'] = 'Invalid GST'
+            data_r4['Period Prior To Period2 (Period3) GSTR 3B']['Status/Value'] = 'Invalid GST'
             data_r4['Previous Period (Period1) GSTR 3B']['color'] = 'r'
             data_r4['Period Prior To Period1 (Period2) GSTR 3B']['color'] = 'r'
             data_r4['Period Prior To Period2 (Period3) GSTR 3B']['color'] = 'r'
+
+            data_r4['Previous Period (Period1) GSTR 1']['Status/Value'] = 'Invalid GST'
+            data_r4['Period Prior To Period1 (Period2) GSTR 1']['Status/Value'] = 'Invalid GST'
+            data_r4['Period Prior To Period2 (Period3) GSTR 1']['Status/Value'] = 'Invalid GST'
+            data_r4['Previous Period (Period1) GSTR 1']['color'] = 'r'
+            data_r4['Period Prior To Period1 (Period2) GSTR 1']['color'] = 'r'
+            data_r4['Period Prior To Period2 (Period3) GSTR 1']['color'] = 'r'
+
             color_r4 = 'r'
-            
-            data_r4['Vendor GSTR 1 Filing Status']['Status/Value'] = ''
-            data_r4['Vendor GSTR 1 Filing Status']['color'] = 'g'
-            data_r4['Previous Period (Period1) GSTR 1']['Status/Value'] = 'Filed'
-            data_r4['Period Prior To Period1 (Period2) GSTR 1']['Status/Value'] = 'Filed'
-            data_r4['Period Prior To Period2 (Period3) GSTR 1']['Status/Value'] = 'Filed'
-            data_r4['Previous Period (Period1) GSTR 1']['color'] = 'g'
-            data_r4['Period Prior To Period1 (Period2) GSTR 1']['color'] = 'g'
-            data_r4['Period Prior To Period2 (Period3) GSTR 1']['color'] = 'g'
-            
-            
-            
-    
-    except Exception as e:
-        print(f"Error {e}")
+
+    except Exception:
         traceback.print_exc()
-        
-    print(data_r4)  
-        
+        color_r4 = 'r'
+        mark_periods(
+            data_r4,
+            [
+                'Previous Period (Period1) GSTR 3B',
+                'Period Prior To Period1 (Period2) GSTR 3B',
+                'Period Prior To Period2 (Period3) GSTR 3B'
+            ],
+            'Not Filed',
+            'r'
+        )
+
     valid_vendor['color'] = color_r4
     valid_vendor['data'] = data_r4
     valid_vendor['message'] = "Valid Vendor Check"
@@ -3213,6 +3559,7 @@ def radio_checkss(company,configurations,api_response_):
         migo_invoice_bc_check = {}
         migo_invoice_rcm_check = {}
         eway_bill_check = {}
+        e_invoice_check = {}
         data_r5 = {}
         migo_taxcode = migo_data[0].row_data.get(field_map['TaxCode'])
         ### Eway bill data
@@ -3245,6 +3592,36 @@ def radio_checkss(company,configurations,api_response_):
         except Exception as e:
             print(f"Error {e}")
             traceback.print_exc()
+
+        ### E Invoice data
+        try:
+            vendor_gst_eway = {}
+            invoice_number_eway = {}
+            total_amount_eway = {}
+            ewaybill_response = api_response_.get('result',{}).get('CHECKS').get('eway_bill_data')
+            print(ewaybill_response)
+            invoice_number_eway = ewaybill_response.get('Invoice_No')
+            invoice_number_eway['color'] = 'g'
+            if invoice_number_eway['invoice'] != invoice_number_eway['e-waybill']:
+                invoice_number_eway['color'] = 'r'
+            vendor_gst_eway = ewaybill_response.get('Vendor_Gst')
+            vendor_gst_eway['color'] = 'g'
+            if vendor_gst_eway['invoice'] != vendor_gst_eway['e-waybill']:
+                vendor_gst_eway['color'] = 'r'
+            total_amount_eway = ewaybill_response.get('Total_Amount')
+            total_amount_eway['color'] = 'g'
+            if total_amount_eway['invoice'] != total_amount_eway['e-waybill']:
+                total_amount_eway['color'] = 'r'
+            
+            
+            eway_bill_check['vendor_gst'] = vendor_gst_eway
+            eway_bill_check['invoice_number'] = invoice_number_eway
+            eway_bill_check['total_amount'] = total_amount_eway
+                
+        except Exception as e:
+            print(f"Error {e}")
+            traceback.print_exc()
+
         if migo_taxcode:
             # print('tax code found in migo data', migo_taxcode)
             master_taxcode = gsttaxMastersData.objects.filter(company_id=company,gsttaxcode=migo_taxcode).first()
@@ -3483,6 +3860,7 @@ def radio_checkss(company,configurations,api_response_):
             
             tds_rate = {}
             tds_section = {}
+            tds_value = {}
             tds_rate['Invoice Data'] = whold_tax_rate_inv
             tds_rate['Master Data'] = whold_tax_rate_master
             tds_rate['Status'] = 'Matched'
@@ -3500,9 +3878,17 @@ def radio_checkss(company,configurations,api_response_):
             if whold_tax_section_inv != whold_tax_section_master:
                 tds_section['Status'] = 'Not Matched'
                 color_6 = 'r'
+
+            tdsValue = configurations.get('WithHolding Tax Details',{}).get('WithHolding Tax value',0)
+            tds_value['Invoice Data'] = tdsValue
+            tds_value['Master Data'] = '-'
+            tds_value['Status'] = 'Matched'
+            if whold_tax_section_inv != whold_tax_section_master:
+                tds_section['Status'] = 'Not Matched'
             
             withholdtax_code['tds_rate'] = tds_rate
             withholdtax_code['tds_section'] = tds_section
+            withholdtax_code['tds_value'] = tds_value
         except Exception as e:
             print(f"Error {e}")
             traceback.print_exc()
@@ -3515,10 +3901,15 @@ def radio_checkss(company,configurations,api_response_):
                 count = count - 1
             adhar_pan_link['Status'] = 'Okay'
             adhar_pan_link['reason'] = ''
-            if tax_check.get('Vendor_Pan-Adhar_Linked',{}).get('status')!='Okay':
+            pan = vendor_gst[2:12]
+            pan_type = pan[3]
+            if pan_type.upper() == 'P':
+                adhar_pan_link['reason'] = 'Individual Pan'
                 adhar_pan_link['Status'] = tax_check.get('Vendor_Pan-Adhar_Linked',{}).get('status')
-                adhar_pan_link['reason'] = tax_check.get('Vendor_Pan-Adhar_Linked',{}).get('Gst_Portal')
-                count = count - 1
+            else:        
+                if tax_check.get('Vendor_Pan-Adhar_Linked',{}).get('status')!='Okay':
+                    adhar_pan_link['reason'] = "Not apploacble"
+                    count = count - 1
             _206Ab['Status'] = 'Okay'
             _206Ab['reason'] = ''
             if tax_check.get('Vendor_206AB',{}).get('status')!='active':
@@ -3731,6 +4122,7 @@ def configuration_setting(company,api_response_):
         matching_result = {}
         if matching_config:
             typ = matching_config.get('matching_type')
+            print('matching_type--->',typ)
             if typ == '2way':
                 df1,result = _2way_match(company,migo_data,invoice_data)
                 matching_result['matching type'] = '2way'
@@ -3763,9 +4155,26 @@ def configuration_setting(company,api_response_):
             applicable = wtaxcode_config.get('turnover_above_threshold')
             try:
                 if applicable == 'Y':
+                    today = date.today()
+
+                    if today.month >= 4:
+                        fy_start = date(today.year, 4, 1)
+                        fy_end   = date(today.year + 1, 3, 31)
+                    else:
+                        fy_start = date(today.year - 1, 4, 1)
+                        fy_end   = date(today.year, 3, 31)
                     current_inv_value = invoice_data.get('SubTotal')
                     normal_record = withholdingtaxMastersData.objects.filter(company_id=company, wtaxcode=wtax_code, ldc='N').first()
-                    all_inv_total= VendorsTotals.objects.filter(company=company,Vendor_code=vendorcode).aggregate(total=Sum('inv_value'))['total'] or 0
+                    all_inv_total = (
+                        VendorsTotals.objects
+                        .filter(
+                            company=company,
+                            Vendor_code=vendorcode,
+                            inv_date__range=(fy_start, fy_end)
+                        )
+                        .aggregate(total=Sum('inv_value'))
+                        .get('total') or 0
+                    )
                     normal_withholding_tax_rate = wtaxcode_config.get('wt_rate')
                     if float(all_inv_total) + float(current_inv_value) > float(wtaxcode_config.get('threshold_amount')):
                         if vendor_master_data.LDCNo:
@@ -3844,9 +4253,9 @@ def configuration_setting(company,api_response_):
                                         
                         else:
                             ldc_withholding_tax_rate = 0
-                            normal_withholding_tax_rate = 0
+                            normal_withholding_tax_rate = wtaxcode_config.get('wt_rate')
                             # print(current_inv_value,current_inv_value)
-                            tds_val = 0
+                            tds_val = float(current_inv_value)*float(normal_withholding_tax_rate)
             except Exception as e:
                 print(f"Error calculating TDS: {e}")
                 traceback.print_exc()
@@ -3891,6 +4300,24 @@ def _3way_match(company,migo_data,po_data,invoice_data):
             result['status'] = 'Not Okay'
             result['reason'] = "Required columns not mapped in Migo Data or not found"
             return '',result
+        
+        try:
+            po_description = SystemVariableMapping.objects.get(
+                company=company, system_var='item_descritption'
+            ).po_header
+            po_qty = SystemVariableMapping.objects.get(
+                company=company, system_var='Qty_Invoiced'
+            ).po_header
+            po_rate = SystemVariableMapping.objects.get(
+                company=company, system_var='item_rate'
+            ).po_header
+            # inv_num_header = SystemVariableMapping.objects.get(
+            #     company=company, system_var='SuppInv_no'
+            # ).miro_header
+        except SystemVariableMapping.DoesNotExist:
+            result['status'] = 'Not Okay'
+            result['reason'] = "Required columns not mapped in PO Data or not found"
+            return '',result
 
         
         table_data = invoice_data.get('Invoice items:')
@@ -3924,41 +4351,40 @@ def _3way_match(company,migo_data,po_data,invoice_data):
             result['reason'] = "Data not found in open grn records"
             return '',result
         
-        invoice_grn_df,d2 = map_rows(df1,df2,'invoice_migo')
-
-        try:
-            po_description = SystemVariableMapping.objects.get(
-                company=company, system_var='item_descritption'
-            ).po_header
-            po_qty = SystemVariableMapping.objects.get(
-                company=company, system_var='Qty_Invoiced'
-            ).po_header
-            po_rate = SystemVariableMapping.objects.get(
-                company=company, system_var='item_rate'
-            ).po_header
-            # inv_num_header = SystemVariableMapping.objects.get(
-            #     company=company, system_var='SuppInv_no'
-            # ).miro_header
-        except SystemVariableMapping.DoesNotExist:
-            result['status'] = 'Not Okay'
-            result['reason'] = "Required columns not mapped in PO Data or not found"
-            return '',result
         po_table_data = []
         for record in po_data:
             po_data_ ={}
             row = record.row_data
-            po_data_['grn_description'] = row.get(po_description)
-            po_data_['grn_qty'] = row.get(po_qty)
-            po_data_['grn_rate'] = row.get(po_rate)
+            po_data_['po_description'] = row.get(po_description)
+            po_data_['po_qty'] = row.get(po_qty)
+            po_data_['po_rate'] = row.get(po_rate)
             po_table_data.append(po_data_)
-        if grn_table_data:
+        if po_table_data:
             df3 = pd.DataFrame(po_table_data)
+        else:
+            result['status'] = 'Not Okay'
+            result['reason'] = "Data not found in PO records"
+            return '',result
+        
+        # Merge PO into GRN
+        df2 = df2.merge(
+            df3,
+            how="left",
+            left_on="grn_description",
+            right_on="po_description"
+        )
 
-        invoice_grn_po_df,d2 = map_rows(invoice_grn_df,df3,'invoice_migo_po')
-        # print(d1.columns)
+        df2.drop(columns=["po_description"], inplace=True)
+        
+        invoice_grn_po_df,d2 = map_rows(df1,df2,'3way')
         cols_to_move = ['matching%', 'color', 'status']
         invoice_grn_po_df = invoice_grn_po_df[[c for c in invoice_grn_po_df.columns if c not in cols_to_move] + cols_to_move]
-        # print(df1)
+        invoice_grn_po_df["Reason"] = ""
+        invoice_grn_po_df[["status", "Reason"]] = invoice_grn_po_df.apply(
+            lambda row: validate_row(row),
+            axis=1,
+            result_type="expand"
+        )
         if (invoice_grn_po_df['status'] == 'matched').all():
             result['status'] = 'Okay'
             result['reason'] = " "
@@ -4024,11 +4450,16 @@ def _2way_match(company,migo_data,invoice_data):
             result['reason'] = "Data not found in open grn records"
             return '',result
         
-        invoice_grn_df,d2 = map_rows(df1,df2,'invoice_migo')
-        # print(d1.columns)
+        invoice_grn_df,d2 = map_rows(df1,df2,'2way')
+        print(invoice_grn_df)
         cols_to_move = ['matching%', 'color', 'status']
         invoice_grn_df = invoice_grn_df[[c for c in invoice_grn_df.columns if c not in cols_to_move] + cols_to_move]
-        # print(df1)
+        invoice_grn_df["Reason"] = ""
+        invoice_grn_df[["status", "Reason"]] = invoice_grn_df.apply(
+            lambda row: validate_row_2way(row),
+            axis=1,
+            result_type="expand"
+        )
         if (invoice_grn_df['status'] == 'matched').all():
             result['status'] = 'Okay'
             result['reason'] = " "
@@ -4460,50 +4891,89 @@ def submit_pending_invoice(request):
             return JsonResponse({"status": "error", "message": "Invoice not found"})
     return JsonResponse({"status": "error", "message": "Invalid request method"})
 
+def unallocatedcost_gl_list(request):
+    company = request.user.company_code
+
+    if request.method == "GET":
+        gl_list = GLCodes.objects.filter(company=company).order_by("-created_at")
+
+        data = [
+            {
+                "code": gl.gl_code,
+                "description": gl.code_description
+            }
+            for gl in gl_list
+        ]
+
+        return JsonResponse({
+            "success": True,
+            "data": data
+        })
+
 def unallocatedcost_gl_view(request):
     company = request.user.company_code
-    header_obj, created = Header.objects.get_or_create(company_id=company)
 
-    # GET → Show page
+    # ---------------- GET ----------------
     if request.method == "GET":
-        gl_list = header_obj.unalloacatedcost_gl or []
-        return render(request, "unallocatedcost_gl.html", {"gl_list": gl_list})
+        gl_list = GLCodes.objects.filter(company=company).order_by("-created_at")
+        return render(
+            request,
+            "unallocatedcost_gl.html",
+            {"gl_list": gl_list}
+        )
 
-    # POST → Add GL codes
+    # ---------------- POST ----------------
     if request.method == "POST":
-        new_gl = request.POST.get("new_gl", "")
+        gl_code = request.POST.get("gl_code")
+        description = request.POST.get("description")
         file = request.FILES.get("gl_file")
 
-        existing_gl = set(header_obj.unalloacatedcost_gl or [])
-
-        # Upload via Excel
+        # ---------- Excel Upload ----------
         if file:
             try:
                 df = pd.read_excel(file)
-                if 'GL' not in df.columns:
-                    return JsonResponse({"status": "error", "message": "Excel must contain 'GL' column"})
-                new_codes = set(df['GL'].astype(str).str.strip().tolist())
-                existing_gl.update(new_codes)
+
+                required_cols = {"GL Code", "Description"}
+                if not required_cols.issubset(df.columns):
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "Excel must contain columns: GL Code, Description"
+                    })
+
+                for _, row in df.iterrows():
+                    code = str(row["GL Code"]).strip()
+                    desc = str(row["Description"]).strip()
+
+                    if code:
+                        GLCodes.objects.get_or_create(
+                            company=company,
+                            gl_code=code,
+                            defaults={"code_description": desc}
+                        )
+
             except Exception as e:
                 return JsonResponse({"status": "error", "message": str(e)})
 
-        # Add comma-separated input
-        if new_gl:
-            new_codes = set([x.strip() for x in new_gl.split(",") if x.strip()])
-            existing_gl.update(new_codes)
+        # ---------- Manual Entry ----------
+        elif gl_code and description:
+            GLCodes.objects.get_or_create(
+                company=company,
+                gl_code=gl_code.strip(),
+                defaults={"code_description": description.strip()}
+            )
 
-        header_obj.unalloacatedcost_gl = list(existing_gl)
-        header_obj.save()
         return redirect("/unallocatedcost-gl/")
 
 def delete_gl_code(request, code):
     company = request.user.company_code
-    header_obj = Header.objects.filter(company_id=company).first()
-    if header_obj:
-        codes = set(header_obj.unalloacatedcost_gl or [])
-        codes.discard(code)
-        header_obj.unalloacatedcost_gl = list(codes)
-        header_obj.save()
+
+    gl_obj = get_object_or_404(
+        GLCodes,
+        company=company,
+        gl_code=code
+    )
+    gl_obj.delete()
+
     return redirect("/unallocatedcost-gl/")
 
 
@@ -4633,7 +5103,7 @@ def update_remark(request):
         key = data.get("key")
         sectionKey = data.get("sectionKey")
         updated_data = data.get("updated_data")
-        print('data-->',data)
+        # print('data-->',data)
         print('key-->',key)
         print('unique_key-->',unique_key)
         print('sectionKey-->',sectionKey)
@@ -4648,6 +5118,63 @@ def update_remark(request):
         # 3️⃣ Update only the relevant key (e.g. "r6")
         if role == 'processor':
             if key in invoice_check:
+                if key == 'r1' and sectionKey == '2/3 Way Match':
+
+                    # Build lookup for Unmatched_df2 rows
+                    df2_index_map = {}
+                    for row in updated_data:
+                        if row.get('status') == 'Unmatched_df2':
+                            try:
+                                idx = int(row.get('index_matching'))
+                                df2_index_map[idx] = row
+                            except (TypeError, ValueError):
+                                continue
+
+                    COPY_KEYS = [
+                        'index_matching',
+                        'GRN_description',
+                        'GRN_qty',
+                        'GRN_rate',
+                        'po_qty',
+                        'po_rate',
+                        'matching%',
+                        'color'
+                    ]
+
+                    used_df2_indices = set()   # 👈 track consumed df2 rows
+
+                    for row in updated_data:
+                        remark = row.get('processor_remark')
+
+                        try:
+                            remark_index = int(remark)
+                        except (TypeError, ValueError):
+                            continue
+
+                        df2_row = df2_index_map.get(remark_index)
+                        if not df2_row:
+                            continue
+
+                        # Copy values
+                        for k in COPY_KEYS:
+                            row[k] = df2_row.get(k)
+
+                        # Update invoice row
+                        row['status'] = 'Manually Matched'
+                        row['processor_remark'] = 'Manually Matched'
+                        row['Reason'] = 'Manually matched'
+
+                        # Mark this df2 row as used
+                        used_df2_indices.add(remark_index)
+
+                    # 🔥 Remove consumed Unmatched_df2 rows
+                    updated_data = [
+                        row for row in updated_data
+                        if not (
+                            row.get('status') == 'Unmatched_df2'
+                            and row.get('index_matching') in used_df2_indices
+                        )
+                    ]
                 change_dict = {}
                 # Step A: Parse the JSON string into dict
                 current_data = invoice_check[key]['data']
@@ -4673,12 +5200,12 @@ def update_remark(request):
         else:
             invoice_check[key]['data'] = json.dumps(updated_data)
         
-        print("updated invoice check -->",invoice_check[key])
+        print("updated_data -->",updated_data)
         # 4️⃣ Save changes back
         obj.InvoiceCheck = invoice_check
         obj.radio_matrix_change = radio_field_changes
-        obj.save()
-        obj.save(update_fields=["InvoiceCheck", "radio_matrix_change"])
+        # obj.save()
+        # obj.save(update_fields=["InvoiceCheck", "radio_matrix_change"])
 
         print("✅ InvoiceCheck updated successfully")
 
@@ -4703,6 +5230,8 @@ def get_invoice_details(request):
                     "InvoiceNo": invoice.InvNo,
                     "VendorGst": invoice.VendorGst,
                     "VendorCode": invoice.VendorCode,
+                    "ExchangeRate": invoice.ExchangeRate,
+                    "InvoiceGroupKey":group_key,
                     # add other fields you need in your popup form 
                 }
                 return JsonResponse(invoice_data, safe=False)
@@ -4719,6 +5248,7 @@ def get_invoice_details(request):
             except InvoiceSummary.DoesNotExist:
                 return JsonResponse({"error": "Invoice not found"}, status=404)
         config = Configurations.objects.get(company=company)
+        unalloacated_cost_config = config.unplanned_cost
         currency_config = config.currency
         reporting_curr = currency_config.get('reporting_currency_code')
         exchange_tolerance = currency_config.get('exchange_rate_tolerance')
@@ -4729,7 +5259,7 @@ def get_invoice_details(request):
         if reporting_curr != inv_curr:
             current_exch = get_exchange_rate(inv_curr, reporting_curr)
             tolerance = ((abs(float(current_exch)-float(invoice.ExchangeRate)))/float(invoice.ExchangeRate))*100
-            if tolerance > exchange_tolerance:
+            if tolerance > float(exchange_tolerance):
                 ex_tolerance_message = "Current Exchange Rate is out of tolerance level from Migo Exchange rate"
             exchange_edit = 'true'
         print(inv_curr,reporting_curr,current_exch)
@@ -4739,6 +5269,7 @@ def get_invoice_details(request):
             "InvoiceNo": invoice.InvoiceNo,
             "InvoiceDate": str(invoice.InvoiceDate),
             "InvoiceValue": str(invoice.InvoiceValue),
+            "InvoiceValueMigo": str(invoice.InvoiceValueMigo),
             "InvoiceGroupKey": invoice.InvoiceGroupKey,
             "ExchangeRate": invoice.ExchangeRate,
             "CurrentExchangeRate": current_exch,
@@ -4746,9 +5277,11 @@ def get_invoice_details(request):
             "ex_tolerance_message": ex_tolerance_message,
             "TaxCode": invoice.TaxCode,
             "VendorGst": invoice.VendorGst,
+            "VendorCode": invoice.VendorCode,
             "WithholdingTaxCode": invoice.WithholdingTaxCode,
             "Narration": invoice.Narration,
             "Updated_Data": invoice.original_data,
+            "unplanned_cost": unalloacated_cost_config
             # add other fields you need in your popup form
         }
 
@@ -4763,57 +5296,73 @@ def update_invoice_details(request):
             invoice = InvoiceSummary.objects.get(InvoiceGroupKey=group_key)
         except InvoiceSummary.DoesNotExist:
             return JsonResponse({"error": "Invoice not found"}, status=404)
-
-        # Already stored original values
-        original_data = invoice.original_data or {}
-
-        # New original_data sent from frontend
-        original_data_from = data.get("original_data", {})
-
-        # Merge new original keys only if not already present
-        for key, value in original_data_from.items():
-            dict_ = {}
-            if key not in original_data:
-                dict_['original'] = value
-                original_data[key] = dict_
-
         
-        # print(data)
-        # print('data from front end', original_data_from)
-        # print('original data from db',original_data)
         
-        skip_keys = ['section','InvoiceGroupKey','original_data']
-        changed_keys = invoice.field_matrix_change or []
-        for key, new_value in data.items():
-            dict_ = {}
-            if key not in skip_keys:
-                old_value = original_data.get(key,{}).get('original')
+        try:
+            # Already stored original values
+            original_data = invoice.original_data or {}
 
-                # Case 1: Key did not exist OR old value is None → treat as changed if user entered something
-                if old_value is None:
-                    if new_value not in (None, "", [], {}):
+            # New original_data sent from frontend
+            original_data_from = data.get("original_data", {})
+
+            # Merge new original keys only if not already present
+            for key, value in original_data_from.items():
+                dict_ = {}
+                if key not in original_data:
+                    dict_['original'] = value
+                    original_data[key] = dict_
+
+            
+            print(data)
+            print('data from front end', original_data_from)
+            print('original data from db',original_data)
+            
+            skip_keys = ['section','InvoiceGroupKey','original_data']
+            changed_keys = invoice.field_matrix_change or []
+            for key, new_value in data.items():
+                dict_ = {}
+                if key not in skip_keys:
+                    old_value = original_data.get(key,{}).get('original')
+
+                    # Case 1: Key did not exist OR old value is None → treat as changed if user entered something
+                    if old_value is None:
+                        if new_value not in (None, "", [], {}):
+                            dict_['original'] = original_data_from.get(key)
+                            dict_['updated'] = new_value
+                            original_data[key] = dict_
+                            if key not in changed_keys:
+                                changed_keys.append(key)
+                        
+                        continue
+
+                    # Case 2: Key exists → compare normally
+                    if old_value != new_value:
                         dict_['original'] = original_data_from.get(key)
                         dict_['updated'] = new_value
                         original_data[key] = dict_
                         if key not in changed_keys:
                             changed_keys.append(key)
-                    
-                    continue
 
-                # Case 2: Key exists → compare normally
-                if old_value != new_value:
-                    dict_['original'] = original_data_from.get(key)
-                    dict_['updated'] = new_value
-                    original_data[key] = dict_
-                    if key not in changed_keys:
-                        changed_keys.append(key)
+            # print(changed_keys)
+            # Save updated JSON field
+            invoice.original_data = original_data
+            invoice.field_matrix_change = changed_keys
+            
+            if data.get("section") == 3:
+                try:
+                    if 'original_data' in data:
+                        del data["original_data"]
 
-        # print(changed_keys)
-        # Save updated JSON field
-        invoice.original_data = original_data
-        invoice.field_matrix_change = changed_keys
-        invoice.save(update_fields=["original_data", "field_matrix_change"]) 
-        return JsonResponse({"message": f"Fields updated successfully for {group_key}."})
+                    print(data)
+                    invoice.unplanned_cost = data
+                except Exception as e:
+                    print(traceback.format_exc())
+                    return JsonResponse({"message": f"Unplanned Cost not updated, Please Try Later"})
+            # invoice.save(update_fields=["original_data", "field_matrix_change", "unplanned_cost"]) 
+            return JsonResponse({"message": f"Fields updated successfully for {group_key}."})
+        except Exception as e:
+            print(traceback.format_exc())
+            return JsonResponse({"message": f"Fields not Updated, server error Please Try Later"})
     
 @csrf_exempt
 def lookup_vendor_by_gst(request):
@@ -5004,6 +5553,94 @@ def reject_invoice(request):
         "InvoiceGroupKey": invoice_key
     })
 
+def approve_invoicenum_change(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    invoice_key = data.get("invoice_group_key")
+
+    print("Received InvoiceGroupKey:", invoice_key)
+
+    print("approve num change is called")
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Invoice Rejected and moved to Reejected status",
+        "InvoiceGroupKey": invoice_key
+    })
+
+def reject_invoicenum_change(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    invoice_key = data.get("invoice_group_key")
+
+    print("Received InvoiceGroupKey:", invoice_key)
+    print("rject is called")
+    # try:
+    #     invoice = InvoiceSummary.objects.get(InvoiceGroupKey=invoice_key)
+    # except InvoiceSummary.DoesNotExist:
+    #     return JsonResponse({
+    #         "status": "error",
+    #         "message": "Invoice not found"
+    #     }, status=404)
+
+    # # ✅ Update fields
+    # invoice.Status = "rejected"
+    # invoice.save()
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Invoice Rejected and moved to Reejected status",
+        "InvoiceGroupKey": invoice_key
+    })
+
+def approve_exception(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    invoice_key = data.get("invoice_group_key")
+
+    print("Received InvoiceGroupKey:", invoice_key)
+
+    print("approve num change is called")
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Invoice Rejected and moved to Reejected status",
+        "InvoiceGroupKey": invoice_key
+    })
+
+def reject_exception(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    invoice_key = data.get("invoice_group_key")
+
+    print("Received InvoiceGroupKey:", invoice_key)
+    print("rject is called")
+    # try:
+    #     invoice = InvoiceSummary.objects.get(InvoiceGroupKey=invoice_key)
+    # except InvoiceSummary.DoesNotExist:
+    #     return JsonResponse({
+    #         "status": "error",
+    #         "message": "Invoice not found"
+    #     }, status=404)
+
+    # # ✅ Update fields
+    # invoice.Status = "rejected"
+    # invoice.save()
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Invoice Rejected and moved to Reejected status",
+        "InvoiceGroupKey": invoice_key
+    })
+
 def hold_invoice(request):
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
@@ -5088,25 +5725,40 @@ def resubmit_nodata_invoice(request):
         updated_gst = data.get("updatedGSTNo")
         tab = data.get("tab")
 
-        # 🔍 Debug output
-        print("----- Resubmit No-Data Invoice -----")
-        print("Invoice Group Key:", invoice_group_key)
-        print("Invoice No:", invoice_no)
-        print("Vendor Code:", vendor_code)
-        print("Updated GST:", updated_gst)
-        print("Tab:", tab)
-        print("----------------------------------")
         unique_record = MissingDataInvoices.objects.get(InvoiceGroupKey=invoice_group_key)
+
         unique_name = unique_record.unique_name
         invoice_path = unique_record.path
         api_response = unique_record.api_response
+
+        api_response['result']['Invoice_data']['InvoiceId'] = invoice_no
+        api_response['result']['Invoice_data']['VendorCode'] = vendor_code
+        grn_data_exist = OpenGRNData.objects.filter(vendor_code=vendor_code,inv_no=invoice_no).exists()
+        if not grn_data_exist:
+            return JsonResponse({
+                "success": False,
+                "message": "No Data Found in GRN , Update GRN Data Then TRY AGAIN",
+                })
         if unique_record.VendorGst == updated_gst:
             save_processed_invoice(api_response,invoice_path, unique_name, company, invoice_group_key)
+
+            unique_record.VendorCode = vendor_code
+            unique_record.InvNo = invoice_no
+            unique_record.VendorGst = updated_gst
+            unique_record.status = "Submitted"
+
+            unique_record.save(update_fields=[
+                "VendorCode",
+                "InvNo",
+                "VendorGst",
+                "status"
+            ])
         else:
             try:
                 url = "https://ngtechocr.azurewebsites.net/process-invoice-withchecks-updated-splitting"
                 App = 'WFS'
                 invoice_data = api_response.get('result', {}).get('Invoice_data', {})
+                invoice_data['Vendor Gst No.'] = updated_gst
                 data = {
                     'user_id': 'miroapp',
                     'password': '0000@Maa',
@@ -5116,7 +5768,20 @@ def resubmit_nodata_invoice(request):
                 }
                 response = requests.post(url, data=data)
                 if response.status_code == 200:
-                    process_incoming_file(api_response,company,invoice_path,unique_name,invoice_group_key)
+                    response_1 = merge_checks(api_response, response)
+                    process_incoming_file(response_1,company,invoice_path,unique_name,invoice_group_key)
+
+                    unique_record.VendorCode = vendor_code
+                    unique_record.InvNo = invoice_no
+                    unique_record.VendorGst = updated_gst
+                    unique_record.status = "Submitted"
+
+                    unique_record.save(update_fields=[
+                        "VendorCode",
+                        "InvNo",
+                        "VendorGst",
+                        "status"
+                    ])
             except Exception as e:
                 print("Error :",e, traceback.format_exc())
         return JsonResponse({
@@ -5126,9 +5791,161 @@ def resubmit_nodata_invoice(request):
         })
 
     except Exception as e:
+        print("Error occurred:", e)
+        traceback.print_exc()
+        
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        })
+    
+def merge_checks(response, response1):
+    checks_base = response.get("result", {}).get("checks", {})
+    checks_new = response1.get("result", {}).get("checks", {})
+
+    for key in checks_new:
+        if key in checks_base:
+            checks_base[key] = checks_new[key]
+    return response
+
+def submit_for_InvoiceNumberChange(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "Invalid request method"})
+    try:
+        data = json.loads(request.body)
+        invoice_group_key = data.get('invoice_group_key')
+        company = request.user.company_code  # already available in your session
+        print("payload recieved at backend for invoicenumber change",data)
+        unique_record = MissingDataInvoices.objects.get(InvoiceGroupKey=invoice_group_key)
+        vendor = VendorMastersData.objects.filter(
+                company=company,
+                GSTNo=data.get('updatedGSTNo')
+            ).first()
+        vendorcode = vendor.VendorCode
+        change_indicator = False
+        approval = {}
+        approval['OCR InvNumber'] = data.get('original_invoice_no')
+        approval['Updated InvNumber'] = '-'
+        approval['OCR VendorGST'] = data.get('original_gst_no')
+        approval['Updated VendorGST'] = '-'
+        approval['Status'] = 'Pending'
+        if data.get('invoice_no') != data.get('original_invoice_no'):
+            approval['Updated InvNumber'] = data.get('original_invoice_no')
+            change_indicator = True
+        if data.get('updatedGSTNo') != data.get('original_gst_no'):
+            approval['OCR VendorGST'] = data.get('original_gst_no')
+            change_indicator = True
+        if change_indicator:
+            unique_record.VendorCode = vendorcode
+            unique_record.VendorGst = data.get('updatedGSTNo')
+            unique_record.checker_approval = approval
+            unique_record.checker_approval_req = 'Yes'
+            unique_record.save(update_fields=[
+                        "VendorCode",
+                        "VendorGst",
+                        "checker_approval",
+                        "checker_approval_req"
+                    ])    
+            return JsonResponse({
+                "success": True,
+                "message": "Submitted Successfully",
+                "payload": data
+            })
+        else:
+            return JsonResponse({
+                "success": False,
+                "message": "No Change detected",
+                "payload": data
+            })
+    except Exception as e:
+        print("Error occurred:", e)
+        traceback.print_exc()
+        return JsonResponse({
+            "success": False,
+            "message": str(e)
+        })
+    
+def get_InvoiceNumberChange_pending(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "Invalid request method"})
+    try:
+        
+        company = request.user.company_code  # already available in your session
+        print('heelo')
+        unique_data_list = MissingDataInvoices.objects.filter(
+                            company_id=company,status='Pending',checker_approval_req='Yes'
+                        ).values()
+        # print(unique_data_list)
+        return JsonResponse({
+            
+            "success": True,
+            "data": list(unique_data_list)
+        })
+    except Exception as e:
+        print("Error occurred:", e)
+        traceback.print_exc()
         return JsonResponse({
             "success": False,
             "message": str(e)
         })
 
+def approveInvoicenNumChange(request):
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Invalid method"}, status=400)
+    company = request.user.company_code  # already available in your session
+    data = json.loads(request.body)
+    invoice_key = data.get("invoice_group_key")
 
+    print("Received InvoiceGroupKey:", invoice_key)
+
+    try:
+        unique_record = MissingDataInvoices.objects.get(InvoiceGroupKey=invoice_key)
+    except MissingDataInvoices.DoesNotExist:
+        return JsonResponse({
+            "status": "error",
+            "message": "Invoice not found"
+        }, status=404)
+    unique_name = unique_record.unique_name
+    invoice_path = unique_record.path
+    api_response = unique_record.api_response
+    Updated_InvNum = unique_name.checker_approval.get('Updated InvNumber')
+    api_response['result']['Invoice_data']['InvoiceId'] = Updated_InvNum
+    try:
+        save_processed_invoice(api_response,invoice_path, unique_name, company, invoice_key)
+        
+        
+        unique_record.status = 'Submitted'
+        unique_record.checker_approval['status'] = 'Approved'
+        unique_record.InvNo = Updated_InvNum
+        unique_record.save(update_fields=[
+                    "status",
+                    "checker_approval",
+                    "InvNo"
+                ]) 
+        return JsonResponse({
+        "status": "success",
+        "message": "Invoice Number Change Approved Successfully",
+        "InvoiceGroupKey": invoice_key
+    })  
+    except Exception as e:
+        print("Error occurred:", e)
+        traceback.print_exc()
+        return JsonResponse({
+                "status": "false",
+                "message": "some error occured"
+            }, status=404)
+
+@login_required
+def fetch_withholding_tax(request):
+    company = request.user.company_code  # or request.user.company
+    vendor_code = request.GET.get("vendor_code")  # optional, kept for future use
+
+    codes_qs = (
+        withholdingtaxMastersData.objects
+        .filter(company=company, ldc='N')
+        .values_list('wtaxcode', flat=True)
+        .distinct()
+    )
+    print(list(codes_qs))
+    return JsonResponse(list(codes_qs), safe=False)
+    

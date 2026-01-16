@@ -40,68 +40,77 @@
 
         .checkbox-col input { transform: scale(1.3); cursor: pointer; }
 
-        .modal {
-        display: none;
-        position: fixed;
-        z-index: 999;
-        padding-top: 80px;
-        left: 0; top: 0;
-        width: 100%; height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.6);
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 999; 
+            padding-top: 10px; 
+            padding-left: 100px;
+            left: 0; top: 0;
+            width: 100%; 
+            height: 120%; 
+             
+            background-color: rgba(0,0,0,0.6); 
+            overflow: hidden;         /*🔑 IMPORTANT */
         }
-
+        #popupContent {
+            overflow-y: auto;
+            flex: 1;                 /* 🔑 takes remaining space */
+        }
         .modal-content {
-        background-color: #fff;
-        margin: auto;
-        padding: 20px;
-        width: 80%;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        animation: fadeIn 0.3s ease-in-out;
+            background-color: #fff;
+            width: 80%;
+            max-height: 90vh;        /* 🔑 NEVER exceed screen */
+            display: flex;
+            flex-direction: column;
+
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid #eee;
-        }
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            }
 
         .close {
-        font-size: 24px;
-        cursor: pointer;
-        }
+            font-size: 24px;
+            cursor: pointer;
+            }
 
         .table-container {
-        max-height: 60vh;
-        overflow-y: auto;
-        margin-top: 15px;
-        }
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-top: 15px;
+            }
 
         .popup-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        font-size: 14px;
-        }
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+            }
 
         .popup-table th, .popup-table td {
-        border: 1px solid #f0e2e2;
-        padding: 8px 10px;
-        text-align: left;
-        }
+            border: 1px solid #f0e2e2;
+            padding: 8px 10px;
+            text-align: left;
+            }
 
         .popup-table th {
-        background-color: #494646;
-        font-weight: bold;
-        position: sticky;
-        top: 0;
-        }
+            background-color: #494646;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            }
 
         .popup-table tr:nth-child(even) {
-        background-color: #fafafa;
-        }
+            background-color: #fafafa;
+            }
 
         @keyframes fadeIn {
         from { opacity: 0; transform: scale(0.95); }
@@ -342,12 +351,35 @@
             color: white !important;
             font-weight: bold !important;
         }
+        .draggable-row {
+            cursor: grab;
+            background-color: #fff6e5;
+        }
+
+        .draggable-row.dragging {
+            opacity: 0.5;
+        }
+
+        .droppable-row.drag-over {
+            outline: 2px dashed #4CAF50;
+            background-color: #f0fff4;
+        }
+
+        .assigned-row {
+            background-color: #e6fffa;
+        }
+
+        .hidden-row {
+            display: none;
+        }
+
 
     </style>
 </head>
 <script>
     const COMPANY = "{{ company|escapejs }}";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <body>
     <header>
         <h1>
@@ -374,6 +406,7 @@
         <table id="invoiceTable">
             <thead>
                 <tr>
+                    <th>InvoiceID</th>
                     <th>Vendor Name</th>
                     <th>Invoice No.</th>
                     <th>Invoice Date</th>
@@ -392,7 +425,11 @@
             <tbody>
                 {% load indian_numbers %}
                 {% for row in data %}
-                <tr data-groupkey="{{ row.InvoiceGroupKey }}">
+                <tr 
+                    data-groupkey="{{ row.InvoiceGroupKey }}"
+                    data-accountindicator="{{ row.accountindicator }}"
+                >
+                    <td>{{ row.InvoiceId }}</td>
                     <td>{{ row.VendorName }}</td>
                     <td>{{ row.InvoiceNo }}</td>
                     <td>{{ row.InvoiceDate}}</td>
@@ -463,7 +500,7 @@
             </tbody>
         </table>
 
-        <!-- ✅ New Generate Template Button -->
+        <!-- ✅ New Generate Template Button
         <div style="text-align:center; margin-top:20px;">
             <button id="generateTemplateBtn" style="
                 background-color:#007bff; 
@@ -474,7 +511,7 @@
                 cursor:pointer;">
                 Generate Template
             </button>
-        </div>
+        </div> -->
 
         <!-- Modal (unchanged) -->
         <div id="dataModal" class="modal">
@@ -490,6 +527,12 @@
     <!-- Include Bootstrap bundle before your JS logic -->
     
     <script>
+        // ---- r1 drag & drop state ----
+        let dragSourceRowIndex = null;
+        const manualAssignments = new Map();
+        // invoiceRowIndex -> grnRowIndex
+        const undoStack = [];
+
         const ROLE_MATRIX = "{{ rolematrix|escapejs }}";
         const USER_ROLE = "{{ role|escapejs }}";
         function toggleActionMenu(btn) {
@@ -611,15 +654,14 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log("Invoice Data:", data);
-                console.log("Updated Data:", data.Updated_Data);
-                createAndOpenModal(data, tab);
+                createAndOpenModal(data, role, tab);
 
                 // ⬇️ APPLY ROLE MATRIX AFTER MODAL LOADS
                 setTimeout(() => applyRolePermissions(role), 50);
             })
             .catch(error => console.error("Error fetching invoice:", error));
         }
+
         function getValue(invoice, field) {
             if (invoice.Updated_Data && invoice.Updated_Data[field]) {
                 return invoice.Updated_Data[field].updated 
@@ -629,14 +671,92 @@
             return invoice[field] || '';
         }
 
-        function createAndOpenModal(invoice, tab = null) {
+        function fetchGLCodes() {
+            return fetch("/unallocatedcost-gl-list/")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.GL_CODES = data.data;
+                    } else {
+                        window.GL_CODES = [];
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to load GL codes", err);
+                    window.GL_CODES = [];
+                });
+        }
+        function buildGLCodeOptions(selectedValue = "") {
+            let options = `<option value="">Select GL Code</option>`;
+
+            if (Array.isArray(window.GL_CODES)) {
+                window.GL_CODES.forEach(gl => {
+                    const selected = gl.code === selectedValue ? "selected" : "";
+                    options += `
+                        <option value="${gl.code}" ${selected}>
+                            ${gl.code} (${gl.description})
+                        </option>
+                    `;
+                });
+            }
+
+            return options;
+        }
+
+        function renderWithholdingTaxDropdown(invoice) {
+            const selectEl = document.getElementById("withholdingTaxCodeSelect");
+            const currentValue = getValue(invoice, "WithholdingTaxCode") || "";
+
+            selectEl.innerHTML = "";
+
+            // 1️⃣ If current value exists but not in master list → keep it
+            if (
+                currentValue &&
+                !window.WITHHOLDINGTAXCODES.includes(currentValue)
+            ) {
+                const opt = document.createElement("option");
+                opt.value = currentValue;
+                opt.textContent = currentValue + " (Current)";
+                opt.selected = true;
+                selectEl.appendChild(opt);
+            }
+
+            // 2️⃣ Add master withholding tax codes
+            window.WITHHOLDINGTAXCODES.forEach(code => {
+                const option = document.createElement("option");
+                option.value = code;
+                option.textContent = code;
+
+                if (code === currentValue) {
+                    option.selected = true;
+                }
+
+                selectEl.appendChild(option);
+            });
+        }
+
+
+        async function createAndOpenModal(invoice, role= null, tab = null) {
             window.currentInvoice = invoice;
 
             const existing = document.getElementById("customEditModal");
             if (existing) existing.remove();
 
             let modalBody = "";
+            
+            // Fetch GL codes first
+            if (!window.GL_CODES) {
+                await fetchGLCodes();
+            }
 
+            // Fetch GL codes first
+            if (!window.WITHHOLDINGTAXCODES) {
+                await fetchWithHoldingTaxCodes(invoice.VendorCode);
+            }
+
+            
+            console.log(invoice);
+            
             /* ======================================================
             DEFAULT LAYOUT (tab === null / undefined)
             ====================================================== */
@@ -657,8 +777,11 @@
                             </div>
                             <div>
                                 <label>Withholding Tax Code</label>
-                                <input type="text" id="withholdingTaxCodeInput" value="${getValue(invoice, 'WithholdingTaxCode')}">
+                                <select id="withholdingTaxCodeSelect">
+                                    <!-- options injected dynamically -->
+                                </select>
                             </div>
+
                             <div>
                                 <label>Narration</label>
                                 <input type="text" id="narrationInput" value="${getValue(invoice, 'Narration')}">
@@ -690,32 +813,54 @@
 
                     <!-- SECTION 3 -->
                     <div class="section">
-                        <h3>Section 3 – Cost & GL</h3>
-                        <div class="grid">
-                            <div>
-                                <label>Invoice Value</label>
-                                <input type="text" id="invoiceValueInput" value="${getValue(invoice, 'InvoiceValue')}">
-                            </div>
-                            <div>
-                                <label>Unplanned Cost</label>
-                                <input type="text" id="unplannedCostInput">
-                            </div>
-                            <div>
-                                <label>GL Code</label>
-                                <select id="glCodeSelect">
-                                    <option value="">Select GL Code</option>
-                                    <option value="1001">1001 – Office Supplies</option>
-                                    <option value="2002">2002 – Travel Expenses</option>
-                                    <option value="3003">3003 – IT Hardware</option>
-                                </select>
-                            </div>
+                    <h3>Section 3 – Cost & GL</h3>
+
+                    <div class="grid">
+                        <div>
+                        <label>Invoice Value</label>
+                        <input type="text"
+                                id="invoiceValueInput"
+                                readonly
+                                value="${invoice.InvoiceValue || ''}">
                         </div>
-                        <button type="button" class="btn-save" onclick="submitSection(3)">Save Section 3</button>
+
+                        <div>
+                        <label>Invoice Value (MIGO)</label>
+                        <input type="text"
+                                id="invoiceValueMigoInput"
+                                readonly
+                                value="${invoice.InvoiceValueMigo || ''}">
+                        </div>
+
+                        <div>
+                        <label>Unplanned Cost</label>
+                        <input type="number"
+                                id="unplannedCostInput"
+                                disabled>
+                        <small id="unplannedLimitMsg"
+                                style="color:#0066cc; font-weight:600;"></small>
+                        </div>
+
+                        <div>
+                            <label>GL Code</label>
+                            <select id="glCodeSelect">
+                                ${buildGLCodeOptions()}
+                            </select>
+                        </div>
                     </div>
+
+                    <button type="button"
+                            class="btn-save"
+                            onclick="submitSection(3)">
+                        Save Section 3
+                    </button>
+                    </div>
+
 
                     <!-- SECTION 4 -->
                     <div class="section">
                         <h3>Section 4 – Exchange Rate</h3>
+
                         <div class="grid">
                             <div>
                                 <label>Exchange Rate (MIGO)</label>
@@ -724,6 +869,7 @@
                                     value="${getValue(invoice, 'ExchangeRate')}"
                                     readonly>
                             </div>
+
                             <div>
                                 <label>Exchange Rate (API)</label>
                                 <input type="text"
@@ -731,6 +877,7 @@
                                     value="${getValue(invoice, 'CurrentExchangeRate')}"
                                     readonly>
                             </div>
+
                             <div>
                                 <label>Exchange Rate (User)</label>
                                 <input type="text"
@@ -738,6 +885,11 @@
                                     ${invoice.exchange_edit === "true" ? "" : "disabled"}
                                     oninput="validateExchangeRate()">
                             </div>
+                        </div>
+
+                        <!-- ✅ ADD THIS -->
+                        <div id="exchangeToleranceMsg"
+                            style="display:none; color:red; font-size:13px; margin-top:6px;">
                         </div>
                         <button type="button" class="btn-save" onclick="submitSection(4)">Save Section 4</button>
                     </div>
@@ -794,7 +946,9 @@
             ====================================================== */
             // else if (tab === "review") { ... }
             // else if (tab === "audit") { ... }
-
+            setTimeout(() => {
+                setupUnplannedCostLogic(invoice, role);
+            }, 0);
             const modalHTML = `
                 <div id="customEditModal" class="custom-modal">
                     <div class="custom-modal-content">
@@ -812,6 +966,8 @@
             `;
 
             document.body.insertAdjacentHTML("beforeend", modalHTML);
+            // Render dropdown
+            renderWithholdingTaxDropdown(invoice);
 
             const modal = document.getElementById("customEditModal");
             setTimeout(() => modal.classList.add("show"), 10);
@@ -822,6 +978,93 @@
                 handleSaveInvoiceNumber();
             }
         });
+
+        function setupUnplannedCostLogic(invoice, role) {
+            const normalizedRole = (role || "").toLowerCase();
+            const invVal = Number(invoice.InvoiceValue || 0);
+            const migoVal = Number(invoice.InvoiceValueMigo || 0);
+
+            const unplannedInput = document.getElementById("unplannedCostInput");
+            const msg = document.getElementById("unplannedLimitMsg");
+
+            // ✅ ADD: GL dropdown
+            const glSelect = document.getElementById("glCodeSelect");
+
+            // Disable by default
+            unplannedInput.disabled = true;
+            msg.innerText = "";
+
+            // Enable GL by default
+            if (glSelect) glSelect.disabled = false;
+
+            // Enable only if difference exists
+            if (invVal === migoVal) return;
+
+            const config = invoice.unplanned_cost;
+            if (!config || !config[normalizedRole]) return;
+
+            // ✅ ADD: Disable GL if cost added to material/service
+            if (glSelect && config.add_to_material_service === 'Y') {
+                glSelect.disabled = true;
+                glSelect.value = ""; // optional but clean
+            }
+
+            const rule = config[normalizedRole];
+            const thresholdAmount = Number(rule.threshold_amount || 0);
+            const thresholdPercent = Number(rule.threshold_percent || 0);
+            const condition = rule.condition;
+
+            const percentAmount = (migoVal * thresholdPercent) / 100;
+
+            let maxAllowed;
+            if (condition === "AND") {
+                maxAllowed = Math.max(thresholdAmount, percentAmount);
+            } else {
+                maxAllowed = Math.min(thresholdAmount, percentAmount);
+            }
+
+            let FinalmaxAllowed;
+            let diffrenceMigoInvoice = invVal-migoVal
+            FinalmaxAllowed = Math.min(maxAllowed, diffrenceMigoInvoice);
+            
+            unplannedInput.disabled = false;
+            unplannedInput.max = FinalmaxAllowed;
+
+            msg.innerText = `Maximum allowed unplanned cost: ${FinalmaxAllowed.toFixed(2)}`;
+
+            // Enforce limit
+            unplannedInput.addEventListener("input", () => {
+                if (Number(unplannedInput.value) > FinalmaxAllowed) {
+                    unplannedInput.value = FinalmaxAllowed;
+                }
+            });
+        }
+
+        async function fetchWithHoldingTaxCodes(vendorCode) {
+            try {
+                const response = await fetch(
+                    `/fetch-withholdingtax/?vendor_code=${encodeURIComponent(vendorCode)}`,
+                    { method: "GET" }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch withholding tax codes");
+                }
+
+                // Backend returns a plain list
+                const taxCodes = await response.json();
+
+                // Cache globally
+                window.WITHHOLDINGTAXCODES = Array.isArray(taxCodes) ? taxCodes : [];
+
+                return window.WITHHOLDINGTAXCODES;
+
+            } catch (error) {
+                console.error("Withholding Tax Fetch Error:", error);
+                window.WITHHOLDINGTAXCODES = [];
+                return [];
+            }
+        }
 
         function handleSaveInvoiceNumber() {
             const invoiceNoInput = document.getElementById("invoiceNoInput");
@@ -860,13 +1103,16 @@
             // Current invoice object (already stored by createAndOpenModal)
             const invoice = window.currentInvoice;
 
+            console.log('invoice',invoice);
+            
+
             if (!invoice) {
                 console.error("Current invoice not available");
                 return;
             }
 
             // Prepare payload (example structure)
-            const payload = {
+            const basePayload = {
                 invoice_group_key: invoice.InvoiceGroupKey,
                 VendorCode: VendorCodeValue,
                 invoice_no: updatedInvoiceNo,
@@ -874,176 +1120,87 @@
                 tab: "no_data"   // optional, if backend needs context
             };
 
-            console.log("Saving invoice number:", payload);
+            console.log("Saving invoice number:", basePayload);
 
-            fetch("/resubmit-nodata-invoice/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCookie("csrftoken"),
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Invoice resubmitted successfully");
+            // 1️⃣ Check invoice number change
+            if (updatedInvoiceNo !== invoice.InvNo || updatedGSTNo !== invoice.VendorGst){
 
-                    // Optional UI actions
-                    closeCustomModal();
+                const confirmChange = confirm(
+                    "You are changing the invoice number.\n" +
+                    "This invoice will be sent for approval at checker level.\n\n" +
+                    "Do you want to proceed?"
+                );
 
-                    // Reload current section
-                    const activeSection = localStorage.getItem("activeSection") || "uploaded";
-                    loadSection(activeSection);
-                } else {
-                    alert(data.message || "Failed to resubmit invoice");
+                // User cancelled
+                if (!confirmChange) {
+                    return;
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Server error while resubmitting invoice");
-            });
+
+                // 2️⃣ Call Invoice Number Change API
+                const changePayload = {
+                    ...basePayload,
+                    original_invoice_no: invoice.InvoiceNo,
+                    original_gst_no: invoice.VendorGst
+                };
+                console.log('changePayload',changePayload);
+                
+                fetch("/submit-for-InvoiceNumberChange/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify(changePayload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Invoice sent for approval successfully");
+
+                        closeCustomModal();
+                        const activeSection = localStorage.getItem("activeSection") || "uploaded";
+                        loadSection(activeSection);
+                    } else {
+                        alert(data.message || "Failed to submit invoice for approval");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Server error while submitting invoice for approval");
+                });
+
+            } else {
+
+                // 3️⃣ Normal resubmission flow (NO invoice number change)
+                fetch("/resubmit-nodata-invoice/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify(basePayload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Invoice resubmitted successfully");
+
+                        closeCustomModal();
+                        const activeSection = localStorage.getItem("activeSection") || "uploaded";
+                        loadSection(activeSection);
+                    } else {
+                        alert(data.message || "Failed to resubmit invoice");
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Server error while resubmitting invoice");
+                });
+            }
         }
 
 
-        // // ⬇️ Dynamically create + open popup modal
-        // function createAndOpenModal(invoice, tab = null) {
-        //     window.currentInvoice = invoice; // save globally
-        //     const existing = document.getElementById("customEditModal");
-        //     if (existing) existing.remove();
-
-        //     const modalHTML = `
-        //     <div id="customEditModal" class="custom-modal">
-        //         <div class="custom-modal-content">
-        //             <span class="close-btn" onclick="closeCustomModal()">&times;</span>
-        //             <h2>Edit Invoice</h2>
-
-        //             <form id="editInvoiceForm">
-        //                 <input type="hidden" id="invoiceGroupKeyInput" value="${invoice.InvoiceGroupKey || ''}">
-
-        //                 <!-- SECTION 1 -->
-        //                 <div class="section">
-        //                     <h3>Section 1 – Tax & Basic Info</h3>
-        //                     <div class="grid">
-        //                         <div>
-        //                             <label>Invoice Date</label>
-        //                             <input type="text" id="invoiceDateInput" value="${getValue(invoice, 'InvoiceDate')}">
-        //                         </div>
-        //                         <div>
-        //                             <label>Tax Code</label>
-        //                             <input type="text" id="taxCodeInput" value="${getValue(invoice, 'TaxCode')}">
-        //                         </div>
-        //                         <div>
-        //                             <label>Withholding Tax Code</label>
-        //                             <input type="text" id="withholdingTaxCodeInput" value="${getValue(invoice, 'WithholdingTaxCode')}"}">
-        //                         </div>
-        //                         <div>
-        //                             <label>Narration</label>
-        //                             <input type="text" id="narrationInput" value="${getValue(invoice, 'Narration')}">
-        //                         </div>
-        //                     </div>
-        //                     <button type="button" class="btn-save" onclick="submitSection(1)">Save Section 1</button>
-        //                 </div>
-
-        //                 <!-- SECTION 2 -->
-        //                 <div class="section">
-        //                     <h3>Section 2 – Vendor Verification</h3>
-        //                     <div class="grid">
-        //                         <div>
-        //                             <label>Vendor GST</label>
-        //                             <input type="text" 
-        //                                 id="vendorGstVerifyInput" 
-        //                                 value="${invoice.VendorGst || ''}" 
-        //                                 readonly>
-        //                         </div>
-        //                         <div>
-        //                             <label>Vendor Verification Result</label>
-        //                             <input type="text" 
-        //                                 id="vendorVerifyResult" 
-        //                                 value="Pending Verification" 
-        //                                 readonly>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-
-        //                 <!-- SECTION 3 -->
-        //                 <div class="section">
-        //                     <h3>Section 3 – Cost & GL</h3>
-        //                     <div class="grid">
-        //                         <div>
-        //                             <label>Invoice Value</label>
-        //                             <input type="text" id="invoiceValueInput" value="${getValue(invoice, 'InvoiceValue')}">
-        //                         </div>
-        //                         <div>
-        //                             <label>Unplanned Cost</label>
-        //                             <input type="text" id="unplannedCostInput" value="">
-        //                         </div>
-        //                         <div>
-        //                             <label>GL Code</label>
-        //                             <select id="glCodeSelect">
-        //                                 <option value="">Select GL Code</option>
-        //                                 <option value="1001">1001 – Office Supplies</option>
-        //                                 <option value="2002">2002 – Travel Expenses</option>
-        //                                 <option value="3003">3003 – IT Hardware</option>
-        //                             </select>
-        //                         </div>
-        //                     </div>
-        //                     <button type="button" class="btn-save" onclick="submitSection(3)">Save Section 3</button>
-        //                 </div>
-
-        //                 <!-- SECTION 4 -->
-        //                 <div class="section">
-        //                     <h3>Section 4 – Exchange Rate</h3>
-        //                     <div class="grid">
-        //                         <div>
-        //                             <label>Exchange Rate (MIGO)</label>
-        //                             <input type="text" id="exchangeRateMigoInput" 
-        //                                 value="${getValue(invoice, 'ExchangeRate')}" readonly>
-        //                         </div>
-
-        //                         <div>
-        //                             <label>Exchange Rate (API)</label>
-        //                             <input type="text" id="exchangeRateApiInput" 
-        //                                 value="${getValue(invoice, 'CurrentExchangeRate')}" readonly>
-        //                         </div>
-
-        //                         <div>
-        //                             <label>Exchange Rate (User)</label>
-        //                             <input 
-        //                                 type="text" 
-        //                                 id="exchangeRateUserInput"
-        //                                 value=""
-        //                                 ${invoice.exchange_edit === "true" ? "" : "disabled"}
-        //                                 oninput="validateExchangeRate()"
-        //                             >
-        //                         </div>
-
-        //                         <div>
-        //                             <small id="exchangeToleranceMsg" style="color:red; display:none;"></small>
-        //                         </div>
-        //                     </div>
-
-        //                     <button 
-        //                         type="button"
-        //                         id="saveSection4Btn"
-        //                         class="btn-save"
-        //                         onclick="submitSection(4)"
-        //                     >
-        //                         Save Section 4
-        //                     </button>
-        //                 </div>
-
-        //             </form>
-        //         </div>
-        //     </div>
-        //     `;
-
-        //     document.body.insertAdjacentHTML("beforeend", modalHTML);
-
-        //     const modal = document.getElementById("customEditModal");
-        //     setTimeout(() => modal.classList.add("show"), 10);
-        // }
-
+        
         function validateExchangeRate() {
             const migo = parseFloat(document.getElementById("exchangeRateMigoInput").value);
             const api = parseFloat(document.getElementById("exchangeRateApiInput").value);
@@ -1122,12 +1279,13 @@
                 InvoiceGroupKey: document.getElementById("invoiceGroupKeyInput").value
             };
             const original_data = {};
-
+            
             if (sectionId === 1) {
                 data.InvoiceDate = document.getElementById("invoiceDateInput").value;
                 data.TaxCode = document.getElementById("taxCodeInput").value;
                 data.WithholdingTaxCode = document.getElementById("withholdingTaxCodeInput").value;
                 data.Narration = document.getElementById("narrationInput").value;
+                
 
                 original_data.InvoiceDate = original_invoice.InvoiceDate;
                 original_data.TaxCode = original_invoice.TaxCode;
@@ -1143,12 +1301,15 @@
 
             if (sectionId === 3) {
                 data.InvoiceValue = document.getElementById("invoiceValueInput").value;
+                data.MigoValue = document.getElementById("invoiceValueMigoInput").value;
                 data.UnplannedCost = document.getElementById("unplannedCostInput").value;
                 data.GLCode = document.getElementById("glCodeSelect").value;
 
                 original_data.InvoiceValue = original_invoice.InvoiceValue;
+                original_data.MigoValue = original_invoice.InvoiceValueMigo;
                 original_data.UnplannedCost = 0; // FIXED
                 original_data.GLCode = '';
+
             }
 
             if (sectionId === 4) {
@@ -1292,6 +1453,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1330,11 +1492,13 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
                                 <th>Invoice Value</th>
-                                <th>Invoice Status</th>
+                                <th>Reason</th>
+                                <th>Status</th>
                                 <th>Response</th>
                                 <th>File</th>
                                 <th>Preview</th>
@@ -1368,6 +1532,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1406,6 +1571,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1444,6 +1610,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1471,7 +1638,7 @@
                 .then(res => res.json())
                 .then(responseData => {
                     console.log("No-Data Table:", responseData);
-                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                    populateInvoiceReadyTable(responseData.data);   // <-- refresh table
                 })
                 .catch(err => console.error("Error fetching No-Data:", err));
                 
@@ -1482,6 +1649,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1520,6 +1688,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1570,13 +1739,14 @@
                                     <option value="gsttaxmaster">GST Tax Master</option>
                                     <option value="hsnmaster">HSN Master</option>
                                     <option value="sacmaster">SAC Master</option>
+                                    <option value="einvoice">E Invoice Register</option>
                                 </select>
                             </div>
 
                             <div class="form-group">
                                 <label>Upload Excel File</label>
                                 <input type="file" name="excel_file" id="excel_file" 
-                                    accept=".xlsx,.xls" required class="input-file">
+                                    accept=".xlsx,.xls,.json" required class="input-file">
                             </div>
 
                             <button type="button" class="upload-btn" onclick="submitDataUpload()">
@@ -1628,9 +1798,138 @@
             });
         }
 
-        function populateInvoiceTable(rows) {
+        function populateInvoiceReadyTable(rows) {
             const tbody = document.querySelector("#invoiceTable tbody");
             tbody.innerHTML = ""; // Clear old rows
+
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align:center;">
+                            No Records Found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            rows.forEach(row => {
+                let statusHTML = "";
+
+                for (const key in row.InvoiceCheck) {
+                    const status = row.InvoiceCheck[key];
+                    statusHTML += `
+                        <span class="status-radio ${status.color}"
+                            title="${key}"
+                            data-tooltip="${status.message}"
+                            data-data='${JSON.stringify(status.data)}'
+                            onclick="showData(this.dataset.data, '${status.message}', '${status.color}', '${key}', '${row.InvoiceGroupKey}')">
+                        </span>
+                    `;
+                }
+
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
+                tr.setAttribute("data-accountindicator", row.account_indicator);
+                
+                tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
+                    <td>${row.Invoice}</td>
+                    <td>${row.VendorName}</td>
+                    <td>${row.InvoiceNo}</td>
+                    <td>${row.InvoiceDate}</td>
+                    <td>${row.InvoiceValue}</td>
+                    <td>${statusHTML}</td>
+
+                    <td>
+                        <a href="/invoice-display/?response_file=${row.unique_name}.json" target="_blank">
+                            Show Response
+                        </a>
+                    </td>
+
+                    <td>
+                        <a href="/media/invoices/${row.company}/${row.unique_name}" target="_blank">
+                            📎 PDF
+                        </a>
+                    </td>
+
+                    <td>
+                        <button class="btn btn-primary btn-sm"
+                                onclick="previewFunction('${row.InvoiceGroupKey}')">
+                            Preview
+                        </button>
+                    </td>
+
+                    <td class="checkbox-col">
+                        <input type="checkbox" class="row-check">
+                    </td>
+
+                    <td class="action-col" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm"
+                                onclick="toggleActionMenu(this)">
+                            Action
+                        </button>
+
+                        <div class="action-menu" style="
+                            display:none;
+                            position:absolute;
+                            background:white;
+                            border:1px solid #ccc;
+                            padding:5px;
+                            border-radius:4px;
+                            z-index:1000;
+                        ">
+                            <button class="btn btn-success btn-sm"
+                                    onclick="approveInvoice('${row.InvoiceGroupKey}')">
+                                Approve
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="rejectInvoice('${row.InvoiceGroupKey}')">
+                                Reject
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="editInvoice('${window.roleMatrix}', '${row.InvoiceGroupKey}')">
+                                Edit
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            /* ✅ ADD BUTTON ROW AT BOTTOM */
+            const btnRow = document.createElement("tr");
+            btnRow.innerHTML = `
+                <td colspan="10" style="text-align:center; padding:15px;">
+                    <button id="generateTemplateBtn"
+                        style="
+                            background-color:#007bff;
+                            color:white;
+                            border:none;
+                            padding:10px 20px;
+                            border-radius:6px;
+                            cursor:pointer;
+                        ">
+                        Generate Template
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(btnRow);
+
+            /* ✅ Attach listener AFTER button exists */
+            document
+                .getElementById("generateTemplateBtn")
+                .addEventListener("click", handleGenerateTemplateClick);
+        }
+
+
+        function populateInvoiceTable(rows) {
+            const tbody = document.querySelector("#invoiceTable tbody");
+            tbody.innerHTML = ""; // Clear old rows populateInvoiceTableReady
 
             if (!rows || rows.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No Records Found</td></tr>`;
@@ -1656,6 +1955,7 @@
                 tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
 
                 tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
                     <td>${row.VendorName}</td>
                     <td>${row.InvNo}</td>
                     <td>${row.InvDate}</td>
@@ -1751,10 +2051,12 @@
                 tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
 
                 tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
                     <td>${row.VendorName}</td>
                     <td>${row.InvNo}</td>
                     <td>${row.InvDate}</td>
                     <td>${row.TotalAmount}</td>
+                    <td>${row.message}</td>
                     <td>${statusHTML}</td>
 
                     <td>
@@ -1845,6 +2147,7 @@
                 tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
 
                 tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
                     <td>${row.VendorName}</td>
                     <td>${row.InvNo}</td>
                     <td>${row.InvDate}</td>
@@ -1955,42 +2258,85 @@
             document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
         });
 
-        // ✅ New Script for "Generate Template"
-        document.getElementById("generateTemplateBtn").addEventListener("click", function() {
-            const selectedKeys = [];
+        function handleGenerateTemplateClick() {
+            const selectedKeys = [];   // allowed invoices
+            const blockedKeys = [];    // payment-blocked invoices
+
             document.querySelectorAll("#invoiceTable tbody tr").forEach(row => {
                 const checkbox = row.querySelector(".row-check");
-                if (checkbox && checkbox.checked) {
-                    selectedKeys.push(row.getAttribute("data-groupkey"));
+                if (!checkbox || !checkbox.checked) return;
+
+                const groupKey = row.getAttribute("data-groupkey");
+                const accountindicator = row.getAttribute("data-accountindicator");
+                console.log(accountindicator);
+                // Payment block condition: NOT N and NOT null/empty
+                if (accountindicator && accountindicator !== "N") {
+                    blockedKeys.push(groupKey);
+                } else {
+                    selectedKeys.push(groupKey);
                 }
             });
-            console.log(selectedKeys);
-            
 
-            if (selectedKeys.length === 0) {
+            // Nothing selected at all
+            if (selectedKeys.length === 0 && blockedKeys.length === 0) {
                 alert("Please select at least one invoice to generate template.");
                 return;
             }
 
-            // Send to backend
+            let finalKeysToSend = [...selectedKeys];
+
+            // Ask confirmation only if blocked invoices exist
+            if (blockedKeys.length > 0) {
+                const confirmProcess = confirm(
+                    "Some selected invoices have Payment Block applied.\n\n" +
+                    "OK → Process all invoices\n" +
+                    "Cancel → Skip blocked invoices"
+                );
+
+                if (confirmProcess) {
+                    // Second confirmation ONLY when user chose OK
+                    const finalConfirm = confirm(
+                        "Are you sure you want to generate the template for\n" +
+                        "selected Account Block invoices?"
+                    );
+
+                    if (finalConfirm) {
+                        finalKeysToSend = selectedKeys.concat(blockedKeys);
+                    } else {
+                        // User backed out at second confirmation
+                        return;
+                    }
+                }
+            }
+
+            // Safety check
+            if (finalKeysToSend.length === 0) {
+                alert("No invoices available to process after filtering.");
+                return;
+            }
+
+            console.log("Sending invoice keys:", finalKeysToSend);
+
             fetch("/template-generate/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRFToken": getCookie("csrftoken")
                 },
-                body: JSON.stringify({ invoice_keys: selectedKeys })
+                body: JSON.stringify({ invoice_keys: finalKeysToSend })
             })
             .then(res => res.json())
             .then(data => {
-                alert("Response: " + JSON.stringify(data, null, 2));
                 console.log("Backend response:", data);
+                alert("Template generated successfully");
             })
             .catch(err => {
                 console.error("Error:", err);
                 alert("Error sending data to backend.");
             });
-        });
+        }
+
+
 
         // Helper to get CSRF token
         function getCookie(name) {
@@ -2009,9 +2355,10 @@
         }
         
         function showData(rawData, message, color, key, uniqueKey) {
+            console.log("typeof rawData" ,typeof rawData);
             try {
                 const data = typeof rawData === "string" ? JSON.parse(rawData) : rawData;
-                // console.log("Parsed Data:", data);
+                console.log("typeof data" ,typeof data);
 
                 const modal = document.getElementById("dataModal");
                 const modalTitle = document.getElementById("modalTitle");
@@ -2024,8 +2371,7 @@
                 } else {
                     // popupContent.innerHTML = generateTableHTML(data,color,key,uniqueKey);
                     if (key === "r1" || key === "r2" || key === "r6" || key === "r5") {
-                        // console.log("Processing r1...");
-                        // html += generateMultiTablesForR1(parsed, data.color, key);
+                        
                         popupContent.innerHTML = generateMultiTablesForR1(data,color,key,uniqueKey);
                     } 
                     else {
@@ -2036,13 +2382,123 @@
                 }
 
                 modal.style.display = "block";
+                if (key === "r1") {
+                    enableR1DragDrop();
+                }
             } catch (e) {
                 console.error("Error parsing data:", e, rawData);
                 alert("Unable to display data for this check.");
             }
         }
 
-       
+        function enableR1DragDrop() {
+            const table = document.getElementById("r1-table");
+            if (!table) return;
+
+            const rows = table.querySelectorAll("tbody tr");
+
+            rows.forEach(row => {
+                const isDraggable = row.dataset.draggable === "true";
+                const isDroppable = row.dataset.droppable === "true";
+
+                if (isDraggable) {
+                    row.draggable = true;
+
+                    row.addEventListener("dragstart", e => {
+                        dragSourceRowIndex = row.dataset.rowIndex;
+                        e.dataTransfer.setData("text/plain", dragSourceRowIndex); // REQUIRED
+                        row.classList.add("dragging");
+                    });
+
+                    row.addEventListener("dragend", () => {
+                        row.classList.remove("dragging");
+                    });
+                }
+
+                if (isDroppable) {
+                    row.addEventListener("dragover", e => {
+                        e.preventDefault(); // REQUIRED
+                        row.classList.add("drag-over");
+                    });
+
+                    row.addEventListener("dragleave", () => {
+                        row.classList.remove("drag-over");
+                    });
+
+                    row.addEventListener("drop", e => {
+                        e.preventDefault();
+                        row.classList.remove("drag-over");
+                        handleDrop(row);
+                    });
+                }
+            });
+        }
+
+
+        function handleDrop(targetRow) {
+            if (dragSourceRowIndex === null) return;
+
+            const table = document.getElementById("r1-table");
+            if (!table) return;
+
+            const sourceRow = table.querySelector(
+                `tr[data-row-index="${dragSourceRowIndex}"]`
+            );
+            if (!sourceRow) return;
+
+            const targetRowIndex = Number(targetRow.dataset.rowIndex);
+
+            if (manualAssignments.has(targetRowIndex)) {
+                alert("This invoice row is already manually matched.");
+                return;
+            }
+
+            // Backup for undo
+            const previousCells = {};
+            targetRow.querySelectorAll("td[data-col]").forEach(td => {
+                previousCells[td.dataset.col] = td.innerHTML;
+            });
+
+            const GRN_COLUMNS = ["GRN_description", "GRN_qty", "GRN_rate"];
+            const PO_COLUMNS = ["po_qty", "po_rate"];
+
+            // Copy GRN + PO values
+            [...GRN_COLUMNS, ...PO_COLUMNS].forEach(col => {
+                const sourceCell = sourceRow.querySelector(`td[data-col="${col}"]`);
+                const targetCell = targetRow.querySelector(`td[data-col="${col}"]`);
+                if (sourceCell && targetCell) {
+                    targetCell.innerHTML = sourceCell.innerHTML || "";
+                }
+            });
+
+            // System updates
+            const indexCell = targetRow.querySelector(`td[data-col="index_matching"]`);
+            if (indexCell) indexCell.innerText = dragSourceRowIndex;
+
+            const statusCell = targetRow.querySelector(`td[data-col="status"]`);
+            if (statusCell) statusCell.innerText = "Manually Matched";
+
+            const reasonCell = targetRow.querySelector(`td[data-col="Reason"]`);
+            if (reasonCell) reasonCell.innerText = "Manually matched by user";
+
+            // Visual state
+            targetRow.classList.add("assigned-row");
+            sourceRow.classList.add("hidden-row");
+
+            // Persist state
+            manualAssignments.set(targetRowIndex, dragSourceRowIndex);
+
+            undoStack.push({
+                sourceIndex: dragSourceRowIndex,
+                targetIndex: targetRowIndex,
+                previousCells
+            });
+
+            dragSourceRowIndex = null;
+        }
+
+
+
 
         function generateMultiTablesForR1(r1Data, color, key, uniqueKey) {
             // console.log('generateMultiTablesForR1 called for r1');
@@ -2066,7 +2522,7 @@
             return html;
         }
         function generateTableHTML(data, color, key, uniqueKey,sectionKey) {
-            // console.log("Generating table for:", { key, uniqueKey, data, sectionKey });
+            console.log("Generating table for:", { key, uniqueKey, data, sectionKey });
 
             const inputPrefix = `remark_${key}_${uniqueKey}${sectionKey}`.replace(/[^a-zA-Z0-9_-]/g, "_");
             function escapeHtml(s) {
@@ -2198,6 +2654,8 @@
 
             // ---------- Case 1: Array of objects ----------
             if (Array.isArray(data)) {
+
+                console.log('case1',key,data); 
                 // Collect unique headers from ALL inner objects
                 let rawHeaders = [];
                 for (const row of Object.values(data)) {
@@ -2207,25 +2665,68 @@
                 let headers = filterHeaders(rawHeaders);
                 
                 if (headers.includes("processor_remark")) hasRemark = true;
+                table += `<div class="table-container"><table class="popup-table"><thead>`;
+                // ✅ Special grouped header for r1
+                if (key === "r1") {
+                    table += `<table id="r1-table" class="data-table">`;
+                    // table += buildGroupedHeader(headers);
 
-                table += `<div class="table-container"><table class="popup-table">
-                    <thead><tr>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr></thead><tbody>`;
-                        
-                data.forEach((row, idx) => {
-                    table += "<tr>";
+                    // Normal column header row
+                    table += `<tr>`;
                     headers.forEach(h => {
-                        table += `<td>${renderCell(idx, h, row[h])}</td>`;
+                        table += `<th data-col="${h}">${beautifyLabel(h)}</th>`;
                     });
-                    table += "</tr>";
-                });
-                
+                    table += `</tr>`;
 
-                table += "</tbody></table></div>";
+                    table += `</thead><tbody>`;
+
+                    data.forEach((row, idx) => {
+                        const draggable = row.status === "Unmatched_df2";
+                        const droppable = row.index_matching == null;
+
+                        table += `
+                        <tr 
+                            data-row-index="${idx}"
+                            data-draggable="${draggable}"
+                            data-droppable="${droppable}"
+                            class="${draggable ? 'draggable-row' : ''} ${droppable ? 'droppable-row' : ''}"
+                        >
+                        `;
+
+                        headers.forEach(h => {
+                            table += `<td data-col="${h}">${renderCell(idx, h, row[h])}</td>`;
+                        });
+
+
+                        table += "</tr>";
+                    });
+                    
+
+                    table += "</tbody></table></div>";
+                    
+                }
+
+                else{
+                    // Normal column header row
+                    table += `<tr>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr>`;
+                    table += `</thead><tbody>`;
+                            
+                    data.forEach((row, idx) => {
+                        table += "<tr>";
+                        headers.forEach(h => {
+                            table += `<td>${renderCell(idx, h, row[h])}</td>`;
+                        });
+                        table += "</tr>";
+                    });
+                    
+
+                    table += "</tbody></table></div>";
+                }
             }
 
             // ---------- Case 2: Nested object ----------
             else if (typeof data === "object" && data !== null && typeof Object.values(data)[0] === "object") {
-                
+                console.log('case2',key,data);
                 let headerss = [];
                 for (const row of Object.values(data)) {
                     headerss = [...new Set([...headerss, ...Object.keys(row)])];
@@ -2270,9 +2771,11 @@
 
             // ---------- Case 3: Flat object ----------
             else if (typeof data === "object" && data !== null) {
+                console.log('case3',key,data);
                 let headerss = Object.keys(data);
                 headers = filterHeaders(headerss);
-                
+
+                console.log('case3',key,data);               
                 
                 if (headers.includes("processor_remark")) hasRemark = true;
 
@@ -2332,44 +2835,87 @@
             return table;
         }
 
-        // ---------- POST handler ----------
-        async function postRemarks(key, uniqueKey, originalData, sectionKey) {
-            console.log('postremark key is clicked', sectionKey);
-            console.log('postremark key is originaldata', originalData);
-            
-            try {
-                const inputs = Array.from(document.querySelectorAll(".processor-remark"));
-                const updatedData = JSON.parse(JSON.stringify(originalData)); // deep copy
-                console.log('postremark key is updatedData', updatedData);
-                inputs.forEach(inp => {
-                    const rowId = inp.dataset.row;
-                    const field = inp.dataset.field;
-                    const value = inp.value.trim();
+        function buildGroupedHeader(headers) {
+            const colCount = headers.length;
+            let groupHeader = "<tr>";
 
-                    if (!value) {
-                        // skip empty values
-                        return;
-                    }
+            if (colCount <= 10) {
+                // Category 1
+                groupHeader += `<th colspan="3">Invoice</th>`;
+                groupHeader += `<th colspan="4">MIGO</th>`;
+                groupHeader += `<th colspan="${colCount - 7}">Result</th>`;
+            } else {
+                // Category 2
+                groupHeader += `<th colspan="3">Invoice</th>`;
+                groupHeader += `<th colspan="4">MIGO</th>`;
+                groupHeader += `<th colspan="2">PO</th>`;
+                groupHeader += `<th colspan="${colCount - 9}">Result</th>`;
+            }
 
-                    if (Array.isArray(updatedData)) {
-                        if (updatedData[rowId]) updatedData[rowId][field] = value;
+            groupHeader += "</tr>";
+            return groupHeader;
+        }
 
-                    } else if (typeof updatedData[rowId] === "object") {
-                        updatedData[rowId][field] = value;
+        function buildR1PayloadFromTable() {
+            const table = document.getElementById("r1-table");
+            if (!table) return [];
 
-                    } else {
-                        updatedData[field] = value;
-                    }
+            const rows = table.querySelectorAll("tbody tr");
+            const payload = [];
+
+            rows.forEach(row => {
+                // ❌ Exclude hidden (drag source) rows
+                if (row.classList.contains("hidden-row")) return;
+
+                const rowData = {};
+                row.querySelectorAll("td[data-col]").forEach(td => {
+                    rowData[td.dataset.col] = td.innerText.trim() || null;
                 });
 
+                payload.push(rowData);
+            });
+
+            return payload;
+        }
+        // ---------- POST handler ----------
+        async function postRemarks(key, uniqueKey, originalData, sectionKey) {
+            try {
+                let updatedData;
+
+                // 🔴 SPECIAL CASE: r1
+                if (key === "r1" || sectionKey === '2/3 Way Match') {
+                    updatedData = buildR1PayloadFromTable();
+                } 
+                // 🟢 DEFAULT FLOW (unchanged)
+                else {
+                    const inputs = Array.from(document.querySelectorAll(".processor-remark"));
+                    updatedData = JSON.parse(JSON.stringify(originalData));
+
+                    inputs.forEach(inp => {
+                        const rowId = inp.dataset.row;
+                        const field = inp.dataset.field;
+                        const value = inp.value.trim();
+                        if (!value) return;
+
+                        if (Array.isArray(updatedData)) {
+                            if (updatedData[rowId]) updatedData[rowId][field] = value;
+                        } else if (typeof updatedData[rowId] === "object") {
+                            updatedData[rowId][field] = value;
+                        } else {
+                            updatedData[field] = value;
+                        }
+                    });
+                }
+
                 const payload = {
-                    key: key,
-                    uniqueKey: uniqueKey,
-                    sectionKey: sectionKey,
+                    key,
+                    uniqueKey,
+                    sectionKey,
                     role: "processor",
                     updated_data: updatedData
                 };
-                console.log('data sent to backend', payload);
+
+                console.log("Submitting payload:", payload);
                 
 
                 const csrfToken = getCookie("csrftoken");
@@ -2395,56 +2941,7 @@
         
         
 
-        // // ---------- POST handler ----------
-        // async function postRemarks(key, uniqueKey, originalData) {
-        //     console.log('postremark key is clicked', uniqueKey);
-            
-        //     try {
-        //         const inputs = Array.from(document.querySelectorAll(".processor-remark"));
-        //         const updatedData = JSON.parse(JSON.stringify(originalData)); // deep copy
-
-        //         inputs.forEach(inp => {
-        //             const rowId = inp.dataset.row;
-        //             const field = inp.dataset.field;
-        //             const value = inp.value.trim();
-
-        //             if (Array.isArray(updatedData)) {
-        //                 if (updatedData[rowId]) updatedData[rowId][field] = value;
-        //             } else if (typeof updatedData[rowId] === "object") {
-        //                 updatedData[rowId][field] = value;
-        //             } else {
-        //                 updatedData[field] = value;
-        //             }
-        //         });
-
-        //         const payload = {
-        //             key: key,
-        //             uniqueKey: uniqueKey,
-        //             role: "processor",
-        //             updated_data: updatedData
-        //         };
-        //         console.log('data sent to backend', payload);
-                
-
-        //         const csrfToken = getCookie("csrftoken");
-
-        //         const response = await fetch("/update-remark/", {
-        //             method: "POST",
-        //             headers: {
-        //                 "Content-Type": "application/json",
-        //                 "X-CSRFToken": csrfToken
-        //             },
-        //             body: JSON.stringify(payload)
-        //         });
-
-        //         const result = await response.json();
-        //         alert(result.message || "✅ Remarks saved successfully!");
-        //         loadSection('uploaded')
-        //     } catch (err) {
-        //         console.error("Error saving remarks:", err);
-        //         alert("❌ Error saving remarks.");
-        //     }
-        // }
+        
 
         // ---------- CSRF helper ----------
         function getCookie(name) {

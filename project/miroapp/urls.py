@@ -22,6 +22,7 @@ urlpatterns = [
     path('update-remark/', views.update_remark, name='update_remark'),
     path('template_preview/', views.template_preview, name='template_preview'),
     path("unallocatedcost-gl/", views.unallocatedcost_gl_view, name="unallocatedcost_gl"),
+    path("unallocatedcost-gl-list/", views.unallocatedcost_gl_list, name="unallocatedcost_gl_list"),
     path("delete-gl/<str:code>/", views.delete_gl_code, name="delete_gl_code"),
     path("get-configuration/", views.get_configuration, name="get_configuration"),
     path("get-vendor-code/", views.get_vendor_code, name="get_vendor_code"),
@@ -60,9 +61,16 @@ urlpatterns = [
     path("checker-edits-approve/", views.checker_edits_approve, name="checker_edits_approve"),
     path("save-additional-mappings/", views.save_additional_varaiables_view, name="save_additional_varaiables_view"),
     path("resubmit-nodata-invoice/", views.resubmit_nodata_invoice, name="resubmit_nodata_invoice"),
-
+    path("submit-for-InvoiceNumberChange/", views.submit_for_InvoiceNumberChange, name="submit_for_InvoiceNumberChange"),
+    path("get-InvoiceNumberChange-pending/", views.get_InvoiceNumberChange_pending, name="get_InvoiceNumberChange_pending"),
+    path("get-exceptioninvoice-pending/", views.get_exceptions_checker_approvals, name="get_exceptions_checker_approvals"),
+    path("approve-InvoicenNum-Change/", views.approve_invoicenum_change, name="approve_invoicenum_change"),
+    path("reject-InvoicenNum-Change/", views.reject_invoicenum_change, name="reject_invoicenum_change"),
+    path("approveexception/", views.approve_invoicenum_change, name="approve_invoicenum_change"),
+    path("rejectexception/", views.reject_invoicenum_change, name="reject_invoicenum_change"),
+    path("fetch-withholdingtax/", views.fetch_withholding_tax, name="fetch_withholding_tax"),
         
 ]
 
-if settings.DEBUG:  # Only for development  pendingwithchecker
+if settings.DEBUG:  # Only for development  
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

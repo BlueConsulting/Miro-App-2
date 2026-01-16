@@ -273,10 +273,33 @@
             box-shadow: 0 0 10px black;
         }
 
+        /* Card container */
+        .upload-card {
+            width: 420px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Title */
+        .upload-title {
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
         
 
     </style>
 </head>
+<script>
+    const COMPANY = "{{ company|escapejs }}";
+</script>
 <body>
     <header>
         <h1>
@@ -284,11 +307,14 @@
         </h1>
         <nav>
             
-            <button onclick="loadSection('uploaded')">Pending Actions</button> 
+            <button onclick="loadSection('uploaded')">Pending Actions</button>
+            <button onclick="loadSection('other_approvals')">Other Approvals</button>  
+            <button onclick="loadSection('exceptions')">Exceptions Approvals</button>  
             <button onclick="loadSection('hold')">On Hold</button>
             <button onclick="loadSection('rejected')">Rejected</button>
             <button onclick="loadSection('ready')">Ready For Template</button>
             <button onclick="loadSection('generated')">Template Generated</button>
+            <button id="btn-uploaddata" onclick="loadSection('uploaddata')">Upload Data</button>
             <button onclick="window.location.href='/logout/'">Logout</button>
 
         </nav>
@@ -299,6 +325,7 @@
         <table id="invoiceTable">
             <thead>
                 <tr>
+                    <th>InvoiceID</th>
                     <th>Vendor Name</th>
                     <th>Invoice No.</th>
                     <th>Invoice Date</th>
@@ -318,6 +345,7 @@
             <tbody>
                 {% for row in data %}
                 <tr data-groupkey="{{ row.InvoiceGroupKey }}">
+                    <td>{{ row.InvoiceId }}</td>
                     <td>{{ row.VendorName }}</td>
                     <td>{{ row.InvoiceNo }}</td>
                     <td>{{ row.InvoiceDate}}</td>
@@ -338,7 +366,7 @@
                         </a>
                     </td>
                     <td>
-                        <a href="/media/invoices/{{ company }}/{{ row.unique_name }}" target="_blank">
+                        <a href="/media/invoices/{{ COMPANY }}/{{ row.unique_name }}" target="_blank">
                             📎 PDF
                         </a>
                     </td>
@@ -427,14 +455,202 @@
             <br><button onclick="closeApprovePopup()" class="btn btn-success">Done</button>
         </div>
     </div>
+
+    <div id="adjustmentModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h4 id="modalTitle">Adjustment</h4>
+
+            <div id="adjustmentBody"></div>
+
+            <div style="margin-top:15px; text-align:right;">
+                <button class="btn btn-secondary btn-sm" onclick="closeAdjustmentForm()">Close</button>
+            </div>
+        </div>
+    </div>
     <!-- Include Bootstrap bundle before your JS logic -->
     
     <script>
+
+        document.addEventListener("click", function (e) {
+            if (!e.target.classList.contains("exception-btn")) return;
+
+            const btn = e.target;
+            const invoiceGroupKey = btn.dataset.groupkey;
+            const exceptionType = btn.dataset.exceptionType;
+            const exceptionData = JSON.parse(decodeURIComponent(btn.dataset.exceptionData));
+
+            openAdjustmentForm(invoiceGroupKey, exceptionType, exceptionData);
+        });
+
+
+        function openAdjustmentForm(invoiceGroupKey, exceptionType, exceptionData) {
+            const body = document.getElementById("adjustmentBody");
+            const title = document.getElementById("modalTitle");
+
+            body.innerHTML = ""; // clear previous UI
+
+            // ---- Migo > Invoice ----
+            if (exceptionType === "Migo>Invoice") {
+                title.innerText = "MIGO vs Invoice";
+
+                body.innerHTML = `
+                    <div class="form-group">
+                        <label>Value As Per MIGO</label>
+                        <input type="text"
+                            class="form-control"
+                            value="${exceptionData.MigoValue}"
+                            readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Value As Per Invoice</label>
+                        <input type="text"
+                            class="form-control"
+                            value="${exceptionData.InvoiceValue}"
+                            readonly>
+                    </div>
+                `;
+            }
+
+            // ---- Future types placeholder ----
+            else {
+                title.innerText = "Adjustment";
+                body.innerHTML = `
+                    <p>No UI defined for exception type: <b>${exceptionType}</b></p>
+                `;
+            }
+
+            document.getElementById("adjustmentModal").style.display = "block";
+        }
+
+        function closeAdjustmentForm() {
+            document.getElementById("adjustmentModal").style.display = "none";
+        }
+
         function toggleActionMenu(btn) {
             let menu = btn.nextElementSibling;
             menu.style.display = (menu.style.display === "none" || menu.style.display === "") 
                 ? "block" 
                 : "none";
+        }
+
+        function approveInvoicenNumChange(InvoiceGroupKey) {
+            console.log(InvoiceGroupKey);
+
+            
+            
+            fetch("/approve-InvoicenNum-Change/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Approved and now stadning for approavls in pending Invoices!");
+
+                    // 🔄 Reload the uploaded section 
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+        function rejectInvoiceNumChange(InvoiceGroupKey) {
+            console.log(InvoiceGroupKey);
+
+            
+            
+            fetch("/reject-InvoicenNum-Change/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Approved and now stadning for approavlsin pending Invoices!");
+
+                    // 🔄 Reload the uploaded section 
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+
+        function approveexception(InvoiceGroupKey) {
+            console.log(InvoiceGroupKey);
+
+            
+            
+            fetch("/approveexception/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Approved and now stadning for approavlsin pending Invoices!");
+
+                    // 🔄 Reload the uploaded section 
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
+        }
+
+        function approveexception(InvoiceGroupKey) {
+            console.log(InvoiceGroupKey);
+
+            
+            
+            fetch("/rejectexception/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ invoice_group_key: InvoiceGroupKey })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("✅ Invoice Approved and now stadning for approavlsin pending Invoices!");
+
+                    // 🔄 Reload the uploaded section 
+                    loadSection("uploaded");
+                } else {
+                    alert("❌ Error: " + data.message);
+                }
+            })
+            .catch(err => {
+                console.error("Error approving invoice:", err);
+                alert("❌ Server error");
+            });
         }
 
         function approveInvoice(InvoiceGroupKey,checker_approval) {
@@ -467,7 +683,7 @@
                 if (data.status === "success") {
                     alert("✅ Invoice Approved. Ready for template generation!");
 
-                    // 🔄 Reload the uploaded section
+                    // 🔄 Reload the uploaded section 
                     loadSection("uploaded");
                 } else {
                     alert("❌ Error: " + data.message);
@@ -827,6 +1043,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -859,21 +1076,57 @@
                 .catch(err => console.error("Error fetching No-Data:", err));
                 
             }
-            else if (section === "waiting") {
+            else if (section === "uploaddata") {
+                contentArea.innerHTML = `
+                    <div class="upload-card">
+                        <h2 class="upload-title">📤 Upload Data File</h2>
+
+                        <form id="uploadDataForm" enctype="multipart/form-data">
+
+                            <div class="form-group">
+                                <label>Select Data Type</label>
+                                <select name="data_type" id="data_type" required class="input-field">
+                                    <option value="">-- Select Type --</option>
+                                    <option value="migo">MIGO</option>
+                                    <option value="po">Purchase Order (PO)</option>
+                                    <option value="vendormaster">Vendor Master</option>
+                                    <option value="withholdtaxmaster">WithHold Tax Master</option>
+                                    <option value="gsttaxmaster">GST Tax Master</option>
+                                    <option value="hsnmaster">HSN Master</option>
+                                    <option value="sacmaster">SAC Master</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Upload Excel File</label>
+                                <input type="file" name="excel_file" id="excel_file" 
+                                    accept=".xlsx,.xls" required class="input-file">
+                            </div>
+
+                            <button type="button" class="upload-btn" onclick="submitDataUpload()">
+                                Upload File
+                            </button>
+                        </form>
+
+                        <p id="uploadMsg" class="upload-msg"></p>
+                    </div>
+                `;
+            }
+            else if (section === "other_approvals") {
                 // Create a fresh empty table
                 contentArea.innerHTML = `
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
-                                <th>Invoice No.</th>
                                 <th>Invoice Date</th>
-                                <th>Invoice Value</th>
-                                <th>Invoice Status</th>
-                                <th>Response</th>
+                                <th>VendorGST(OCR)</th>
+                                <th>VendorGST(Updated)</th>
+                                <th>Invoice No(OCR)</th>
+                                <th>Invoice No(Updated)</th>
                                 <th>File</th>
-                                <th>Preview</th>
-                                <th>Check</th>
+                                
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -882,7 +1135,7 @@
                 `;
 
 
-                fetch("/get-waiting/", {
+                fetch("/get-InvoiceNumberChange-pending/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -891,8 +1144,46 @@
                 })
                 .then(res => res.json())
                 .then(responseData => {
-                    console.log("No-Data Table:", responseData);
-                    populateInvoiceTable(responseData.data);   // <-- refresh table
+                    console.log("No-Data invoice chnage approvals:", responseData);
+                    populateInvoiceNumberApprovalTable(responseData.data);   // <-- refresh table
+                })
+                .catch(err => console.error("Error fetching No-Data:", err));
+                
+            }
+            else if (section === "exceptions") {
+                // Create a fresh empty table
+                contentArea.innerHTML = `
+                    <table id="invoiceTable">
+                        <thead>
+                            <tr>
+                                <th>InvoiceID</th>
+                                <th>Vendor Code</th>
+                                <th>Vendor Name</th>
+                                <th>Invoice Number</th>
+                                <th>Message</th>
+                                <th>File</th>
+                                <th>Response</th>
+                                <th>Exception</th>
+                                
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+
+
+                fetch("/get-exceptioninvoice-pending/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    }
+                })
+                .then(res => res.json())
+                .then(responseData => {
+                    
+                    populateexceptionApprovalTable(responseData.data);   // <-- refresh table
                 })
                 .catch(err => console.error("Error fetching No-Data:", err));
                 
@@ -903,6 +1194,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -941,6 +1233,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -979,6 +1272,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1017,6 +1311,7 @@
                     <table id="invoiceTable">
                         <thead>
                             <tr>
+                                <th>InvoiceID</th>
                                 <th>Vendor Name</th>
                                 <th>Invoice No.</th>
                                 <th>Invoice Date</th>
@@ -1059,6 +1354,36 @@
             }
             
         }
+
+        function submitDataUpload() {
+            const form = document.getElementById("uploadDataForm");
+            const formData = new FormData(form);
+
+            fetch("/upload-data/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")   // only this
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const msg = document.getElementById("uploadMsg");
+
+                if (data.error) {
+                    msg.style.color = "red";
+                    msg.textContent = "Error: " + data.error;
+                } else {
+                    msg.style.color = "green";
+                    msg.textContent = data.message || "File uploaded successfully!";
+                }
+            })
+            .catch(err => {
+                console.error("Upload error:", err);
+                document.getElementById("uploadMsg").textContent = "Something went wrong!";
+            });
+        }
+
         function populateInvoiceTable(rows) {
             const tbody = document.querySelector("#invoiceTable tbody");
             tbody.innerHTML = ""; // Clear old rows
@@ -1087,6 +1412,7 @@
                 tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
 
                 tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
                     <td>${row.VendorName}</td>
                     <td>${row.InvoiceNo}</td>
                     <td>${row.InvoiceDate}</td>
@@ -1151,6 +1477,152 @@
                 tbody.appendChild(tr);
             });
         }
+
+        function populateexceptionApprovalTable(rows) {
+            const tbody = document.querySelector("#invoiceTable tbody");
+            tbody.innerHTML = ""; // Clear old rows 
+
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No Records Found</td></tr>`;
+                return;
+            }
+
+            rows.forEach(row => {
+                let statusHTML = "";
+
+                
+
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
+
+                tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
+                    <td>${row.VendorCode}</td>
+                    <td>${row.VendorName}</td>
+                    <td>${row.InvoiceNo}</td>
+                    <td>${row.message}</td>
+                    <td>
+                        <a href="/media/invoices/${COMPANY}/${row.unique_name}" target="_blank">
+                            📎 PDF
+                        </a>
+                    </td>
+
+                    <td>
+                        <a href="/invoice-display/?response_file=${row.unique_name}.json" target="_blank">
+                            Show Response
+                        </a>
+                    </td>
+
+                    <td class="action-col">
+                        <button class="btn btn-secondary btn-sm exception-btn"
+                            data-groupkey="${row.InvoiceGroupKey}"
+                            data-exception-type="${row.exception_type}"
+                            data-exception-data='${encodeURIComponent(JSON.stringify(row.exception_data))}'>
+                            Exceptions
+                        </button>
+                    </td>
+                    
+                    <td class="action-col" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleActionMenu(this)">
+                            Action
+                        </button>
+
+                        <div class="action-menu" style="
+                            display:none;
+                            position:absolute;
+                            background:white;
+                            border:1px solid #ccc;
+                            padding:5px;
+                            border-radius:4px;
+                            z-index:1000;
+                        ">
+
+                            <button class="btn btn-success btn-sm"
+                                    onclick="approveInvoicenNumChange('${row.InvoiceGroupKey}')">
+                                Approve
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="rejectInvoiceNumChange('${row.InvoiceGroupKey}')">
+                                Reject
+                            </button>
+
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateInvoiceNumberApprovalTable(rows) {
+            const tbody = document.querySelector("#invoiceTable tbody");
+            tbody.innerHTML = ""; // Clear old rows 
+
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;">No Records Found</td></tr>`;
+                return;
+            }
+
+            rows.forEach(row => {
+                let statusHTML = "";
+
+                
+
+                const tr = document.createElement("tr");
+                tr.setAttribute("data-groupkey", row.InvoiceGroupKey);
+
+                tr.innerHTML = `
+                    <td>${row.InvoiceId}</td>
+                    <td>${row.VendorName}</td>
+                    <td>${row.InvDate}</td>
+                    <td>${row.VendorGst}</td>
+                    <td>${row.checker_approval["Updated VendorGST"]}</td>
+                    <td>${row.InvNo}</td>
+                    <td>${row.checker_approval["Updated InvNumber"]}</td>
+                    <td>
+                        <a href="/media/invoices/${COMPANY}/${row.unique_name}" target="_blank">
+                            📎 PDF
+                        </a>
+                    </td>
+
+                    
+                    
+                    <td class="action-col" style="position: relative;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleActionMenu(this)">
+                            Action
+                        </button>
+
+                        <div class="action-menu" style="
+                            display:none;
+                            position:absolute;
+                            background:white;
+                            border:1px solid #ccc;
+                            padding:5px;
+                            border-radius:4px;
+                            z-index:1000;
+                        ">
+
+                            <button class="btn btn-success btn-sm"
+                                    onclick="approveexception('${row.InvoiceGroupKey}')">
+                                Approve
+                            </button>
+
+                            <button class="btn btn-danger btn-sm"
+                                    onclick="rejectexception('${row.InvoiceGroupKey}')">
+                                Reject
+                            </button>
+
+                        </div>
+                    </td>
+                    
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        
 
         function approvalFunction(invoiceKey, approvalData) {
             console.log("Invoice:", invoiceKey);
@@ -1274,49 +1746,7 @@
         }
 
         
-        // function approvalFunction(invoiceKey, checker_approval) {
-        //     console.log("Invoice:", invoiceKey);
-        //     console.log("checker_approval object:", checker_approval);
-            
-        //     // const jsonData = JSON.parse(checker_approval);
-
-        //     const table = document.getElementById("approvalTable");
-        //     table.innerHTML = `
-        //         <tr>
-        //             <th>Parameter</th>
-        //             <th>Original Value</th>
-        //             <th>Updated Value</th>
-        //             <th>Approve?</th>
-        //         </tr>
-        //     `;
-
-        //     Object.keys(checker_approval).forEach(paramKey => {
-        //         const row = checker_approval[paramKey];
-
-        //         // row.Checker_Approavl is "true" or "false"
-        //         const isApproved = row.Checker_Approavl === "true";
-
-        //         table.innerHTML += `
-        //             <tr>
-        //                 <td>${paramKey}</td>
-        //                 <td>${row.Original_Value}</td>
-        //                 <td>${row.Updated_Value}</td>
-        //                 <td>
-        //                     <button class="btn btn-sm btn-primary"
-        //                         onclick="approveSingleParam('${invoiceKey}','${paramKey}', 'single')"
-        //                         ${isApproved ? "disabled style='background:gray;cursor:not-allowed;'" : ""}
-        //                     >
-        //                         ${isApproved ? "Approved" : "Approve Change"}
-        //                     </button>
-        //                 </td>
-        //             </tr>
-        //         `;
-        //     });
-
-        //     // Show popup
-        //     document.getElementById("approvePopup").style.display = "flex";
-        // }
-
+   
         function approveSingleParam(invoiceKey, matrix, paramName, sub, type) {
 
             fetch("/checker-edits-approve/", {
@@ -1444,9 +1874,11 @@
 
 
         function showData(rawData, message, color, key, uniqueKey) {
+
+            console.log("typeof rawData" ,typeof rawData);
             try {
                 const data = typeof rawData === "string" ? JSON.parse(rawData) : rawData;
-                // console.log("Parsed Data:", data);
+                console.log("typeof data" ,typeof data);
 
                 const modal = document.getElementById("dataModal");
                 const modalTitle = document.getElementById("modalTitle");
@@ -1458,7 +1890,7 @@
                     popupContent.innerHTML = `<p style="text-align:center; color:gray;">No data available for this check.</p>`;
                 } else {
                     // popupContent.innerHTML = generateTableHTML(data,color,key,uniqueKey);
-                    if (key === "r1" || key === "r2" || key === "r6") {
+                    if (key === "r1" || key === "r2" || key === "r6" || key === "r5") {
                         // console.log("Processing r1...");
                         // html += generateMultiTablesForR1(parsed, data.color, key);
                         popupContent.innerHTML = generateMultiTablesForR1(data,color,key,uniqueKey);
@@ -1587,8 +2019,8 @@
 
             function renderCell(rowId, field, val) {
                 // remark input unchanged
-                if (field === "checker_remark") {
-                    return `<input type="text" class="checker-remark"
+                if (field === "processor_remark") {
+                    return `<input type="text" class="processor-remark"
                                 data-row="${escapeHtml(rowId)}"
                                 data-field="${escapeHtml(field)}"
                                 maxlength="50"
@@ -1607,8 +2039,8 @@
 
             function renderCellr7(rowId, field, val) {
                 // remark input unchanged
-                if (field === "checker_remark") {
-                    return `<input type="text" class="checker-remark"
+                if (field === "processor_remark") {
+                    return `<input type="text" class="processor-remark"
                                 data-row="${escapeHtml(rowId)}"
                                 data-field="${escapeHtml(field)}"
                                 maxlength="50"
@@ -1633,6 +2065,7 @@
 
             // ---------- Case 1: Array of objects ----------
             if (Array.isArray(data)) {
+                console.log('case1',key,data); 
                 // Collect unique headers from ALL inner objects
                 let rawHeaders = [];
                 for (const row of Object.values(data)) {
@@ -1641,26 +2074,69 @@
 
                 let headers = filterHeaders(rawHeaders);
                 
-                if (headers.includes("checker_remark")) hasRemark = true;
+                if (headers.includes("processor_remark")) hasRemark = true;
+                table += `<div class="table-container"><table class="popup-table"><thead>`;
+                // ✅ Special grouped header for r1
+                if (key === "r1") {
+                    table += `<table id="r1-table" class="data-table">`;
+                    // table += buildGroupedHeader(headers);
 
-                table += `<div class="table-container"><table class="popup-table">
-                    <thead><tr>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr></thead><tbody>`;
-                        
-                data.forEach((row, idx) => {
-                    table += "<tr>";
+                    // Normal column header row
+                    table += `<tr>`;
                     headers.forEach(h => {
-                        table += `<td>${renderCell(idx, h, row[h])}</td>`;
+                        table += `<th data-col="${h}">${beautifyLabel(h)}</th>`;
                     });
-                    table += "</tr>";
-                });
-                
+                    table += `</tr>`;
 
-                table += "</tbody></table></div>";
+                    table += `</thead><tbody>`;
+
+                    data.forEach((row, idx) => {
+                        const draggable = row.status === "Unmatched_df2";
+                        const droppable = row.index_matching == null;
+
+                        table += `
+                        <tr
+                            data-row-index="${idx}"
+                            data-draggable="${draggable}"
+                            data-droppable="${droppable}"
+                            class="${draggable ? 'draggable-row' : ''} ${droppable ? 'droppable-row' : ''}"
+                        >
+                        `;
+
+                        headers.forEach(h => {
+                            table += `<td data-col="${h}">${renderCell(idx, h, row[h])}</td>`;
+                        });
+
+
+                        table += "</tr>";
+                    });
+
+
+                    table += "</tbody></table></div>";
+
+                }
+
+                else{
+                    // Normal column header row
+                    table += `<tr>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr>`;
+                    table += `</thead><tbody>`;
+
+                    data.forEach((row, idx) => {
+                        table += "<tr>";
+                        headers.forEach(h => {
+                            table += `<td>${renderCell(idx, h, row[h])}</td>`;
+                        });
+                        table += "</tr>";
+                    });
+
+
+                    table += "</tbody></table></div>";
+                }
             }
 
             // ---------- Case 2: Nested object ----------
             else if (typeof data === "object" && data !== null && typeof Object.values(data)[0] === "object") {
-                
+                console.log('case2',key,data);
                 let headerss = [];
                 for (const row of Object.values(data)) {
                     headerss = [...new Set([...headerss, ...Object.keys(row)])];
@@ -1668,7 +2144,7 @@
 
                 headers = filterHeaders(headerss);
                 console.log(key,data);
-                if (headers.includes("checker_remark")) hasRemark = true;
+                if (headers.includes("processor_remark")) hasRemark = true;
 
                 table += `<div class="table-container"><table class="popup-table">
                     <thead><tr><th>Parameter</th>${headers.map(h => `<th>${beautifyLabel(h)}</th>`).join("")}</tr></thead><tbody>`;
@@ -1705,11 +2181,13 @@
 
             // ---------- Case 3: Flat object ----------
             else if (typeof data === "object" && data !== null) {
+                console.log('case3',key,data);
                 let headerss = Object.keys(data);
                 headers = filterHeaders(headerss);
+
+                console.log('case3',key,data);               
                 
-                
-                if (headers.includes("checker_remark")) hasRemark = true;
+                if (headers.includes("processor_remark")) hasRemark = true;
 
                 table += `<div class="table-container"><table class="popup-table">
                     <thead><tr><th>Parameter</th><th>Status/Value</th></tr></thead><tbody>`;
@@ -1765,6 +2243,27 @@
             }, 100);
 
             return table;
+        }
+
+        function buildGroupedHeader(headers) {
+            const colCount = headers.length;
+            let groupHeader = "<tr>";
+
+            if (colCount <= 10) {
+                // Category 1
+                groupHeader += `<th colspan="3">Invoice</th>`;
+                groupHeader += `<th colspan="4">MIGO</th>`;
+                groupHeader += `<th colspan="${colCount - 7}">Result</th>`;
+            } else {
+                // Category 2
+                groupHeader += `<th colspan="3">Invoice</th>`;
+                groupHeader += `<th colspan="4">MIGO</th>`;
+                groupHeader += `<th colspan="2">PO</th>`;
+                groupHeader += `<th colspan="${colCount - 9}">Result</th>`;
+            }
+
+            groupHeader += "</tr>";
+            return groupHeader;
         }
 
         // ---------- POST handler ----------

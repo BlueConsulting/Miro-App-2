@@ -191,37 +191,64 @@
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            <label><b>Add GL Codes (comma separated):</b></label>
-            <input type="text" name="new_gl" placeholder="e.g. 400100, 500200" style="width:100%; padding:10px; margin-top:8px;">
+
+            <label><b>GL Code:</b></label>
+            <input type="text"
+                name="gl_code"
+                placeholder="e.g. 400100"
+                style="width:100%; padding:10px; margin-top:8px;"
+                autocomplete="off">
 
             <br><br>
-            <label><b>OR Upload Excel (Must contain column 'GL'):</b></label>
-            <input type="file" name="gl_file" accept=".xlsx" style="margin-top:8px;">
+
+            <label><b>Description:</b></label>
+            <input type="text"
+                name="description"
+                placeholder="e.g. Office Expenses"
+                style="width:100%; padding:10px; margin-top:8px;"
+                autocomplete="off">
 
             <br><br>
-            <button type="submit">Add GL Codes</button>
+
+            <label><b>OR Upload Excel</b></label>
+            <div style="font-size:12px; color:#666; margin-top:4px;">
+                Excel must contain columns: <b>GL Code</b>, <b>Description</b>
+            </div>
+            <input type="file"
+                name="gl_file"
+                accept=".xlsx"
+                style="margin-top:8px;">
+
+            <br><br>
+
+            <button type="submit">Add GL Code</button>
         </form>
 
         <hr>
 
         <h3>Existing GL Codes</h3>
-        <table>
+        <table style="width:100%; border-collapse:collapse;">
             <tr>
-                <th>GL Code</th>
-                <th>Action</th>
+                <th style="border-bottom:1px solid #ccc; text-align:left;">GL Code</th>
+                <th style="border-bottom:1px solid #ccc; text-align:left;">Description</th>
+                <th style="border-bottom:1px solid #ccc;">Action</th>
             </tr>
 
-            {% for code in gl_list %}
+            {% for item in gl_list %}
             <tr>
-                <td>{{ code }}</td>
+                <td>{{ item.gl_code }}</td>
+                <td>{{ item.code_description }}</td>
                 <td>
-                    <a href="/delete-gl/{{ code }}/" style="color:red; font-weight:bold;">Delete</a>
+                    <a href="/delete-gl/{{ item.gl_code }}/"
+                    style="color:red; font-weight:bold;">
+                        Delete
+                    </a>
                 </td>
             </tr>
             {% endfor %}
-
         </table>
     </div>
+
 
 </body>
 

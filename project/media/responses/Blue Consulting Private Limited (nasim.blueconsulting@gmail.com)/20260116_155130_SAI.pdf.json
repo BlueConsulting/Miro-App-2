@@ -10,12 +10,18 @@
                 "Customer_Adress": {
                     "Gst_Portal": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
                     "Invoice_data": "No.151, Hoodi\nVillage, KR Puram hobli Bangalore, -560066, karnataka, None, India",
-                    "status": "Not Matching"
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
                 },
                 "Customer_Name": {
                     "Gst_Portal": "GLODESI TECHNOLOGIES PRIVATE LIMITED",
                     "Invoice_data": "GLODESI TECHNOLOGIES PRIVATE\nLIMITED",
-                    "status": "Matching"
+                    "status": "Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
                 },
                 "Invoice_Blocked_Credit": {
                     "Gst_Portal": "",
@@ -54,11 +60,237 @@
                 }
             },
             "data_from_gst": {
-                "206AB_Compliance": {},
-                "Filing Frequency": "Invalid API Key",
-                "Filing Status": "Invalid API Key",
-                "Pan_Status": {},
-                "Vendor_Filing_status": "Invalid API Key",
+                "206AB_Compliance": {
+                    "fin_year": "2024-25",
+                    "pan": "BDRPK4890D",
+                    "pan_allotment_date": "2008-09-26",
+                    "pan_name": "SXXXXXXR SXXXXXXXXXA KXXXXD",
+                    "pan_operative_status": "operative",
+                    "specified_person": "N"
+                },
+                "Filing Frequency": [
+                    {
+                        "preference": "M",
+                        "quarter": "Q1"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q2"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q3"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q4"
+                    }
+                ],
+                "Filing Status": [
+                    {
+                        "arn": "AB291025182970Z",
+                        "dof": "20-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2904251700465",
+                        "dof": "20-05-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "042025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290725057317S",
+                        "dof": "19-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290525015243D",
+                        "dof": "19-06-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "052025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB290625183367M",
+                        "dof": "18-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290825843693K",
+                        "dof": "17-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291125797562R",
+                        "dof": "16-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290925891521N",
+                        "dof": "16-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2912259492035",
+                        "dof": "16-01-2026",
+                        "mof": "ONLINE",
+                        "ret_prd": "122025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290925693438A",
+                        "dof": "13-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR1A",
+                        "status": "Filed"
+                    },
+                    {
+                        "arn": "AA291025598770T",
+                        "dof": "12-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR1A",
+                        "status": "Filed"
+                    },
+                    {
+                        "arn": "AA2911252396640",
+                        "dof": "08-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2908252280907",
+                        "dof": "08-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290925163753N",
+                        "dof": "07-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290725232348W",
+                        "dof": "07-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2906252113574",
+                        "dof": "07-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290525182743T",
+                        "dof": "07-06-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "052025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290425197294R",
+                        "dof": "07-05-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "042025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291225214580F",
+                        "dof": "06-01-2026",
+                        "mof": "ONLINE",
+                        "ret_prd": "122025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291025129987R",
+                        "dof": "05-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    }
+                ],
+                "Pan_Status": {
+                    "aadhaar_linked": true,
+                    "aadhaar_number": "XXXXXXXX6857",
+                    "aadhaar_seeding_status": "Y",
+                    "address": {
+                        "building_name": "No 228 vinayaka krupa nilaya",
+                        "city": "BANGALORE",
+                        "country": "India",
+                        "locality": "Bangalore North",
+                        "pincode": "560072",
+                        "state": "Karnataka",
+                        "street_name": "2nd main 6th cross"
+                    },
+                    "dob": "22/07/1987",
+                    "email": "",
+                    "first_name": "SHRIDHAR",
+                    "fullname": "SHRIDHAR SHANKAREPPA KAGGOD",
+                    "gender": "male",
+                    "last_name": "KAGGOD",
+                    "middle_name": "SHANKAREPPA",
+                    "mobile": "",
+                    "pan": "BDRPK4890D",
+                    "pan_status": "Active",
+                    "pan_type": "Individual"
+                },
                 "customer_gst_data": {
                     "Address": "No.71 , EPIP Industrial Area , Road No.3 , Bengaluru Urban , Karnataka , 560066",
                     "Central tax Jurisdiction": "RANGE-BED7",
@@ -80,7 +312,7 @@
                     "Central tax Jurisdiction Code": "YU0205",
                     "Date of Registration": "01/07/2017",
                     "Duty": "Regular",
-                    "E-Invoice Status": "",
+                    "E-Invoice Status": "No",
                     "Gstin": "29BDRPK4890D1Z1",
                     "Legal Name": "SHRIDHAR SHANKAREPPA KAGGOD",
                     "Nature of Business Activity": [
@@ -91,10 +323,26 @@
                 }
             },
             "e-invoice_data": {
+                "einvoice_liability": "No",
                 "reason": "Vendor is not liable to raise E-Invoice",
                 "status": "okay_"
             },
             "eway_bill_data": {
+                "Invoice_No": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "FY25-26/36",
+                    "color": "r"
+                },
+                "Total_Amount": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "106200.00",
+                    "color": "r"
+                },
+                "Vendor_Gst": {
+                    "e-waybill": "Eway bill Number not found or ocr is unable to capture it",
+                    "invoice": "29BDRPK4890D1Z1",
+                    "color": "r"
+                },
                 "reason": "Vendor is liable to raise E-Way Bill, but Eway bill Number not found or ocr is unable to capture it",
                 "status": "not okay"
             },
@@ -113,14 +361,14 @@
                     "status": "YES"
                 },
                 "Vendor_206AB": {
-                    "Gst_Portal": "",
+                    "Gst_Portal": "N",
                     "Invoice_data": "",
-                    "status": "Not Okay"
+                    "status": "Okay"
                 },
                 "Vendor_Filing_status": {
-                    "Gst_Portal": "Not fetched as no vendor Gst or Invalid Gst on Invoice",
+                    "Gst_Portal": "",
                     "Invoice_data": " ",
-                    "status": "Not fetched as no vendor Gst or Invalid Gst on Invoice"
+                    "status": "Filled"
                 },
                 "Vendor_Gst_Active": {
                     "Gst_Portal": "",
@@ -138,14 +386,14 @@
                     "status": "YES"
                 },
                 "Vendor_Pan-Adhar_Linked": {
-                    "Gst_Portal": "Invalid Input Pan, does not match pan pattern",
+                    "Gst_Portal": true,
                     "Invoice_data": "",
-                    "status": "Not Okay"
+                    "status": "Okay"
                 },
                 "Vendor_Pan_Active": {
-                    "Gst_Portal": "Invalid Input Pan, does not match pan pattern",
+                    "Gst_Portal": "Active",
                     "Invoice_data": "",
-                    "status": "Not Okay"
+                    "status": "Okay"
                 },
                 "Vendor_TaxPayer_type": {
                     "Gst_Portal": "Regular",
@@ -153,9 +401,9 @@
                     "status": "Regular"
                 },
                 "Vendor_Taxfiliging_Frequency": {
-                    "Gst_Portal": "Not fetched",
+                    "Gst_Portal": "Monthly",
                     "Invoice_data": " ",
-                    "status": "Not fetched"
+                    "status": "Monthly"
                 },
                 "tax_type_on_invoice": {
                     "Gst_Portal": " ",
@@ -293,10 +541,7 @@
             "status": "Not All Okay",
             "message": [
                 "Customer_Adress Not Matched",
-                "Vendor_206AB",
-                "Vendor_Filing_status",
-                "Vendor_Pan-Adhar not Linked",
-                "Vendor_Pan not Active"
+                "Vendor_Filing_status"
             ]
         }
     }
