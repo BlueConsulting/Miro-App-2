@@ -14,7 +14,7 @@ class User(AbstractUser):
         on_delete=models.CASCADE,
         related_name='users'
     )
-    role = models.CharField(max_length=20)  # Role (e.g., Admin, Manager, Employee)
+    role = models.CharField(max_length=20)  # Role (e.g., SuperUser, Processor, Uploader, Uploader)
     
     status = models.CharField(max_length=20, null=True, blank=True)
 

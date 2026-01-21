@@ -1,32 +1,69 @@
-from rapidfuzz import fuzz
-# from sentence_transformers import SentenceTransformer, util
-import requests
 from pprint import pprint
 import pandas as pd
 
-fuzzy_weight = 0.5
-# semantic_weight = 0.5
-# # Load sentence transformer model (better semantic understanding)
-# # model = SentenceTransformer('all-mpnet-base-v2')
-# model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-
-def hybrid_similarity(text1, text2, fuzzy_weight=0.5, semantic_weight=0.5):
-    """Combine fuzzy matching & semantic similarity."""
-    # Fuzzy similarity (0–100 → 0–1)
-    fuzzy_score = fuzz.token_sort_ratio(text1, text2) / 100.0
-
-    # # Semantic similarity (cosine: -1..1 → 0..1)
-    # emb1 = model.encode(text1, convert_to_tensor=True)
-    # emb2 = model.encode(text2, convert_to_tensor=True)
-    # semantic_score = util.cos_sim(emb1, emb2).item()
-    # semantic_score = (semantic_score + 1) / 2
-
-    # return (fuzzy_weight * fuzzy_score) + (semantic_weight * semantic_score)
-    return (fuzzy_weight * fuzzy_score)
+from rapidfuzz import fuzz
+from numpy import dot
+from numpy.linalg import norm
+# from .semantic_model import get_model
+import re
+import requests
 
 
 
-def map_rows(df1, df2, matching, fuzzy_weight=1, semantic_weight=0.5, threshold=0.6):
+
+def normalize(text: str) -> str:
+    if not text:
+        return ""
+    text = text.lower()
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+def semantic_similarity(a, b):
+    url = rf"http://20.40.43.125:8020/similarity"
+    resp = requests.post(
+        url,
+        json={"text1": a, "text2": b},
+        timeout=5
+    )
+    return resp.json()["similarity"]
+
+def fuzzy_similarity(a: str, b: str) -> float:
+    return (
+        0.5 * fuzz.token_set_ratio(a, b) +
+        0.3 * fuzz.partial_ratio(a, b) +
+        0.2 * fuzz.ratio(a, b)
+    ) / 100.0
+
+
+def hybrid_similarity(
+    text1: str,
+    text2: str,
+    fuzzy_weight: float,
+    semantic_weight: float,
+):
+    a = normalize(text1)
+    b = normalize(text2)
+
+    if not a or not b:
+        return 0.0
+
+    try:
+        fuzzy_score = fuzzy_similarity(a, b)
+        semantic_score = semantic_similarity(a, b)
+
+        return (
+            fuzzy_weight * fuzzy_score +
+            semantic_weight * semantic_score
+        )
+
+    except Exception:
+        # fallback: fuzzy only
+        return fuzzy_similarity(a, b)
+    
+
+
+def map_rows(df1, df2, matching, fuzzy_weight=0.5, semantic_weight=0.5, threshold=0.6):
     import numpy as np
     # Copy input to avoid side effects
     df1 = df1.copy()
@@ -230,5 +267,8 @@ def validate_row_2way(row):
 
     # All rules passed
     return "matched", ""
+
+if __name__ == "__main__":
+    print(hybrid_similarity('charger','adapter'))
 
 

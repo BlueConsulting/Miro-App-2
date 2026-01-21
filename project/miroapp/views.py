@@ -8,19 +8,16 @@ from .other_functions import send_email
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import timezone
 from django.utils.crypto import salted_hmac
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from .decorators import role_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 # from .models import User, CompanyDetails, Header, OpenGRNData, InvoiceDetail, Configurations, SystemVariableMapping
 from .models import *
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
-from django.db import IntegrityError, connection, transaction
-from decimal import Decimal
-from django.db.utils import ProgrammingError
-from django.views.decorators.http import require_GET
+from django.db import connection, transaction
 import json
 import pandas as pd
 import threading, requests
@@ -33,7 +30,6 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 import traceback
 import re
-from collections import OrderedDict, defaultdict
 import random
 from django.core.cache import cache
 from .diffrent_functions import filingstatus,Table_data,InvoiceTable_vs_GrnTable,all_okay,Invoicetable_vs_Grntable_compare,get_exchange_rate
@@ -208,6 +204,59 @@ def user_logout(request):
     request.session.flush()  # Clears all session data
     return redirect("login")
 
+def platform_login(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        password = request.POST["password"]
+
+        user = authenticate(request, username=username, password=password)
+
+        if user and user.is_superuser:
+            login(request, user)
+            return redirect("app_admin_company_list")
+
+        return render(
+            request,
+            "platform/login.html",
+            {"error": "Invalid platform admin credentials"}
+        )
+
+    return render(request, "platform/login.html")
+
+def platform_logout(request):
+    logout(request)
+    return redirect("platform_login")
+
+# ---------- ACCESS CONTROL ----------
+def is_app_admin(user):
+    return user.is_authenticated and user.is_superuser
+
+@login_required
+@user_passes_test(is_app_admin)
+def delete_company(request, company_code):
+    company = get_object_or_404(CompanyDetails, company_code=company_code)
+
+    if request.method == "POST":
+        # DELETE LOGIC WILL BE ADDED LATER
+        # For now, just redirect back
+        return redirect("app_admin_company_list")
+
+    return redirect("app_admin_company_list")
+
+# ---------- COMPANY LIST ----------
+@login_required
+@user_passes_test(is_app_admin)
+def company_list(request):
+    companies = CompanyDetails.objects.all().order_by("business_name")
+
+    return render(
+        request,
+        "app_admin/company_list.html",
+        {
+            "companies": companies
+        }
+    )
+
 @login_required
 def checker_dashboard(request):
     company = request.user.company_code
@@ -224,12 +273,14 @@ def uploader_dashboard(request):
 
 
 @login_required
+@role_required(['SuperUser'])
 def admin_dashboard(request):
     return render(request, 'config_home.html', {'message': 'This is superuser home Page'})
 
 
 @login_required
 @csrf_exempt
+@role_required(['SuperUser'])
 def save_configuration(request):
     if request.method == "POST":
         company = request.user.company_code  # assuming user has company_code FK
@@ -284,7 +335,7 @@ def save_configuration(request):
                 "service_entry_migo": payload.get("service_entry_migo", {}),
                 "matching_logic_ratio": payload.get("matching_logic", {}),
                 "data_upload_rights": payload.get("data_upload_rights", {}),
-                "pans": payload.get("companyPans", {}),
+                "pans": payload.get("companyPan"),
             }
         )
 
@@ -294,6 +345,8 @@ def save_configuration(request):
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
+@login_required
+@role_required(['SuperUser'])
 def get_configuration(request):
     company = request.user.company_code  # same company reference you are using
 
@@ -364,6 +417,7 @@ def home(request):
     return render(request, 'home.html')
 
 @login_required
+@role_required(['SuperUser'])
 def upload_header(request):
     if request.method == "GET":
         return render(request, "upload_header.html")
@@ -439,6 +493,7 @@ def upload_header(request):
     
 
 @login_required
+@role_required(['SuperUser'])
 def mapping_configuration_view(request):
     company = request.user.company_code  # This is a CompanyDetails instance
     header_obj = Header.objects.filter(company=company).first()
@@ -505,6 +560,8 @@ def mapping_configuration_view(request):
     })
 
 @csrf_exempt
+@login_required
+@role_required(['SuperUser'])
 def get_mapping_data(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
@@ -626,6 +683,7 @@ def get_mapping_data(request):
 
 @csrf_exempt
 @login_required
+@role_required(['SuperUser'])
 def save_mappings(request):
     if request.method == "POST":
         data = json.loads(request.body)
@@ -729,6 +787,7 @@ def configurations(request):
     return render(request, "config_home.html")
 
 @login_required
+@role_required(['SuperUser'])
 def additional_varaiables_view(request):
     company = request.user.company_code  # This is a CompanyDetails instance
     header_obj = Header.objects.filter(company=company).first()
@@ -1285,13 +1344,19 @@ def process_incoming_file(api_response,company,invoice_path,unique_name,invoice_
             invoice_key = uuid.uuid4() 
         # concept to park invoices if any field is missing
         invoice_data = api_response.get("result", {}).get('Invoice_data', {})
-        # print(invoice_data)
+        print(invoice_data)
         InvNo=str(invoice_data.get('InvoiceId', '')),
         vendor_gst = invoice_data.get('Vendor Gst No.')
         inv_number = invoice_data.get('InvoiceId')
         vendor_code = None  # ✅ Initialize first
-
-        vendor_master_data = VendorMastersData.objects.filter(company_id=company, GSTNo=vendor_gst).first()
+        print('company-->',company)
+        print('company_code-->',company.company_code)
+        print('vendor_gst-->',vendor_gst)
+        vendor_master_data = VendorMastersData.objects.filter(company_id=company.company_code, GSTNo=vendor_gst).first()
+        # vendor_master_data = VendorMastersData.objects.filter(
+        #         company=company,
+        #         GSTNo=vendor_gst
+        #     ).first()
 
         if vendor_master_data:    
             vendor_code = vendor_master_data.VendorCode
@@ -1451,27 +1516,29 @@ def process_invoice(invoice_path, unique_name, company):
         response = requests.post(url, files=files, data=data)
         files['pdf_file'].close()  # Close file after request
         
-
+        # response = 'true'
     
-        
+        # if response:
         if response.status_code == 200:
             api_response = response.json()
+            # api_response = api_response_test
             print('data fecthed from ocr api')
             pans = Configurations.objects.get(company=company).pans
             
             invoice_data = api_response.get("result", {}).get('Invoice_data', {})
             vendor_gst = invoice_data.get('Vendor Gst No.')
             customer_gst = invoice_data.get('Cutomer Gst No.')
-            if pans:
+            if pans and customer_gst:
+                pan_in_customer = pans in customer_gst
                 # Check if any PAN is in the customer GST
-                pan_in_customer = any(pan in customer_gst for pan in pans)
+                
 
                 if pan_in_customer:
                     # No changes needed if PAN is in customer GST
                     pass
                 else:
                     # Check if any PAN is in the vendor GST
-                    pan_in_vendor = any(pan in vendor_gst for pan in pans)
+                    pan_in_vendor = pans in vendor_gst
 
                     if pan_in_vendor:
                         # Swap the values
@@ -1487,6 +1554,7 @@ def process_invoice(invoice_path, unique_name, company):
             inv_number = invoice_data.get('InvoiceId')
             vendor_name = invoice_data.get('VendorAddressRecipient') or invoice_data.get('VendorName')
             inv_date = invoice_data.get('InvoiceDate')
+            print(api_response.get("result", {}).get('Invoice_data', {}))
             invoice_obj = InvoiceId.objects.create(
                 company=company,
                 path=invoice_path,
@@ -3043,6 +3111,20 @@ def normalize_date(date_str):
     # Unique results only
     return list(set(possible_dates))   # remove duplicates
 
+def fetch_invoice_by_inv(inv_no,COMPANY_ID):
+    # API_URL = "http://20.40.43.125:5001"
+    API_URL = "http://127.0.0.1:5000"
+
+    
+    url = f"{API_URL}/invoice/inv/"
+
+    params = {
+        "inv_no":inv_no,
+        "company_id": COMPANY_ID
+    }
+
+    response = requests.get(url, params=params, timeout=10)
+    return response
 
 def radio_checkss(company,configurations,api_response_):
 
@@ -3595,28 +3677,84 @@ def radio_checkss(company,configurations,api_response_):
 
         ### E Invoice data
         try:
-            vendor_gst_eway = {}
-            invoice_number_eway = {}
-            total_amount_eway = {}
-            ewaybill_response = api_response_.get('result',{}).get('CHECKS').get('eway_bill_data')
-            print(ewaybill_response)
-            invoice_number_eway = ewaybill_response.get('Invoice_No')
-            invoice_number_eway['color'] = 'g'
-            if invoice_number_eway['invoice'] != invoice_number_eway['e-waybill']:
-                invoice_number_eway['color'] = 'r'
-            vendor_gst_eway = ewaybill_response.get('Vendor_Gst')
-            vendor_gst_eway['color'] = 'g'
-            if vendor_gst_eway['invoice'] != vendor_gst_eway['e-waybill']:
-                vendor_gst_eway['color'] = 'r'
-            total_amount_eway = ewaybill_response.get('Total_Amount')
-            total_amount_eway['color'] = 'g'
-            if total_amount_eway['invoice'] != total_amount_eway['e-waybill']:
-                total_amount_eway['color'] = 'r'
+            vendor_gst_einvoice = {}
+            invoice_number_einvoice = {}
+            total_amount_einvoice = {}
+            einvoice_response = api_response_.get('result',{}).get('CHECKS').get('e-invoice_data')
+            print(einvoice_response)
+            einvoice_liability = einvoice_response.get('einvoice_liability')
+            if einvoice_liability == 'Yes':
+                invoiceid = invoice_data.get('InvoiceId')
+                # invoiceid = '2535111660'
+                print(invoiceid)
+                einvoice_status = fetch_invoice_by_inv(invoiceid,company)
+                print(einvoice_status)
+                if einvoice_status.status_code == 200:
+                    data = einvoice_status.json()
+                    print(data)
+                    if data.get('data_found'):
+                        invoice_number_einvoice['invoice'] = invoice_data.get('InvoiceId')
+                        invoice_number_einvoice['e-invoice register'] = invoice_data.get('InvoiceId')
+                        invoice_number_einvoice['color'] = 'g'
+
+                        vendor_gst_einvoice['invoice'] = invoice_data.get('Vendor Gst No.')
+                        vendor_gst_einvoice['e-invoice register'] = data.get('VendorGst')
+                        vendor_gst_einvoice['color'] = 'g'
+                        if vendor_gst_einvoice['invoice'] != vendor_gst_einvoice['e-invoice register']:
+                            vendor_gst_einvoice['color'] = 'r'
+
+                        total_amount_einvoice['invoice'] = invoice_data.get('InvoiceTotal')
+                        total_amount_einvoice['e-invoice register'] = data.get('TotalValue')
+                        total_amount_einvoice['color'] = 'g'
+                        if total_amount_einvoice['invoice'] != total_amount_einvoice['e-invoice register']:
+                            total_amount_einvoice['color'] = 'r'
+                    else:
+                        invoice_number_einvoice['invoice'] = invoice_data.get('InvoiceId')
+                        invoice_number_einvoice['e-invoice register'] = 'Not Found in E-Invoice Register or E-Invoice Register is not updated'
+                        invoice_number_einvoice['color'] = 'r'
+
+                        vendor_gst_einvoice['invoice'] = invoice_data.get('Vendor Gst No.')
+                        vendor_gst_einvoice['e-invoice register'] = 'Not Found in E-Invoice Register or E-Invoice Register is not updated'
+                        vendor_gst_einvoice['color'] = 'r'
+                        
+
+                        total_amount_einvoice['invoice'] = invoice_data.get('InvoiceTotal')
+                        total_amount_einvoice['e-invoice register'] = 'Not Found in E-Invoice Register or E-Invoice Register is not updated'
+                        total_amount_einvoice['color'] = 'r'
+                else:
+                    
+                    invoice_number_einvoice['invoice'] = invoice_data.get('InvoiceId')
+                    invoice_number_einvoice['e-invoice register'] = 'Some error occured while fetching data from E-Invoice Register, Contact Admin to Reprot'
+                    invoice_number_einvoice['color'] = 'r'
+
+                    vendor_gst_einvoice['invoice'] = invoice_data.get('Vendor Gst No.')
+                    vendor_gst_einvoice['e-invoice register'] = 'Some error occured while fetching data from E-Invoice Register, Contact Admin to Reprot'
+                    vendor_gst_einvoice['color'] = 'r'
+                    
+
+                    total_amount_einvoice['invoice'] = invoice_data.get('InvoiceTotal')
+                    total_amount_einvoice['e-invoice register'] = 'Some error occured while fetching data from E-Invoice Register, Contact Admin to Reprot'
+                    total_amount_einvoice['color'] = 'r'
+
+            else:
+                invoice_number_einvoice['invoice'] = invoice_data.get('InvoiceId')
+                invoice_number_einvoice['e-invoice register'] = 'Not liable to raise E Invoice'
+                invoice_number_einvoice['color'] = 'g'
+
+                vendor_gst_einvoice['invoice'] = invoice_data.get('Vendor Gst No.')
+                vendor_gst_einvoice['e-invoice register'] = 'Not liable to raise E Invoice'
+                vendor_gst_einvoice['color'] = 'g'
+                
+
+                total_amount_einvoice['invoice'] = invoice_data.get('InvoiceTotal')
+                total_amount_einvoice['e-invoice register'] = 'Not liable to raise E Invoice'
+                total_amount_einvoice['color'] = 'g'
+                
             
             
-            eway_bill_check['vendor_gst'] = vendor_gst_eway
-            eway_bill_check['invoice_number'] = invoice_number_eway
-            eway_bill_check['total_amount'] = total_amount_eway
+            e_invoice_check['vendor_gst'] = vendor_gst_einvoice
+            e_invoice_check['invoice_number'] = invoice_number_einvoice
+            e_invoice_check['total_amount'] = total_amount_einvoice
                 
         except Exception as e:
             print(f"Error {e}")
@@ -3770,6 +3908,7 @@ def radio_checkss(company,configurations,api_response_):
                 
                 data_r5['Tax Check'] = gsttax_check_data
                 data_r5['Eway Bill Check'] = eway_bill_check
+                data_r5['E-Invoice Check'] = e_invoice_check
                 gsttax_check['data'] = data_r5
                 gsttax_check['message'] = 'GST Check'           
             
@@ -3777,12 +3916,14 @@ def radio_checkss(company,configurations,api_response_):
             else:
                 data_r5['Tax Check'] = {'status': 'Check Skip'}
                 data_r5['Eway Bill Check'] = eway_bill_check
+                data_r5['E-Invoice Check'] = e_invoice_check
                 gsttax_check['color'] = 'r'
                 gsttax_check['message'] = f'No Record found for Tax code {migo_taxcode} in master data'
                 gsttax_check['data'] = data_r5
         else:
             data_r5['Tax Check'] = {'status': 'Check Skip'}
             data_r5['Eway Bill Check'] = eway_bill_check
+            data_r5['E-Invoice Check'] = e_invoice_check
             gsttax_check['color'] = 'r'
             gsttax_check['message'] = 'No Tax code found in MIgo data'
             gsttax_check['data'] = data_r5
@@ -3808,11 +3949,58 @@ def radio_checkss(company,configurations,api_response_):
         try:
 
             # print('tax_check--->',tax_check) 
-            master_wcode = migo_data[0].row_data.get(field_map['WithholdingTaxCode'])
-            whold_tax_rate_master_data = withholdingtaxMastersData.objects.filter(company_id=company,wtaxcode=master_wcode).first()#
-            if whold_tax_rate_master_data:
-                whold_tax_rate_master = whold_tax_rate_master_data.wtaxcoderate
-                whold_tax_section_master = whold_tax_rate_master_data.wtaxsection
+            master_wcode = migo_data[0].row_data.get(field_map.get('WithholdingTaxCode'))
+            if master_wcode:
+                whold_tax_rate_master_data = withholdingtaxMastersData.objects.filter(company_id=company,wtaxcode=master_wcode).first()#
+                if whold_tax_rate_master_data:
+                    whold_tax_rate_master = whold_tax_rate_master_data.wtaxcoderate
+                    whold_tax_section_master = whold_tax_rate_master_data.wtaxsection
+                    if hsn_list:
+                        for hsn in set(hsn_list):
+                            if len(hsn) == 6 and int(hsn[:2]) == 99:
+                                sac_master_data = SACMastersData.objects.filter(company_id=company,saccode=hsn).first()
+                                if sac_master_data:
+                                    whold_tax_section_inv = sac_master_data.section
+                                    whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection=whold_tax_section_inv).first()
+                                    whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
+                                    break
+                                else:
+                                    whold_tax_section_inv = 'Data not Found in HSN/SAC Master for HSN'
+                                    whold_tax_rate_inv = 'Data not Found in HSN/SAC Master for HSN'
+                            elif len(hsn) < 6:
+                                whold_tax_section_inv = 'HSN is less than 4 Char or not captured by OCR'
+                                whold_tax_rate_inv = 'HSN is less than 4 Char or not captured by OCR'
+                            else:
+                                whold_tax_section_inv = '194Q'
+                                whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection='194Q').first()
+                                whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
+                    else:
+                        whold_tax_section_inv = 'HSN is not captured by OCR'
+                        whold_tax_rate_inv = 'HSN is not captured by OCR'  
+                else:
+                    whold_tax_rate_master = 'WithHolding Tax Code found in Migo does not match any record in with hold tax masters'
+                    whold_tax_section_master = 'WithHolding Tax Code found in Migo does not match any record in with hold tax masters' 
+                    if hsn_list:
+                        for hsn in set(hsn_list):
+                            if len(hsn) == 6 and int(hsn[:2]) == 99:
+                                sac_master_data = SACMastersData.objects.filter(company_id=company,saccode=hsn).first()
+                                if sac_master_data:
+                                    whold_tax_section_inv = sac_master_data.section
+                                    whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection=whold_tax_section_inv).first()
+                                    whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
+                                    break
+                            elif len(hsn) < 6:
+                                whold_tax_section_inv = 'HSN is less than 4 Char or not captured by OCR'
+                                whold_tax_rate_inv = 'HSN is less than 4 Char or not captured by OCR'
+                            else:
+                                whold_tax_section_inv = '194Q'
+                                whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection='194Q').first()
+                                whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
+                    else:
+                        whold_tax_section_inv = 'HSN is not captured by OCR'
+                        whold_tax_rate_inv = 'HSN is not captured by OCR'  
+
+            else:
                 if hsn_list:
                     for hsn in set(hsn_list):
                         if len(hsn) == 6 and int(hsn[:2]) == 99:
@@ -3831,32 +4019,15 @@ def radio_checkss(company,configurations,api_response_):
                         else:
                             whold_tax_section_inv = '194Q'
                             whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection='194Q').first()
-                            whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
-                else:
-                    whold_tax_section_inv = 'HSN is not captured by OCR'
-                    whold_tax_rate_inv = 'HSN is not captured by OCR'  
-            else:
-                whold_tax_rate_master = 'WithHolding Tax Code found in Migo does not match any record in with hold tax masters'
-                whold_tax_section_master = 'WithHolding Tax Code found in Migo does not match any record in with hold tax masters' 
-                if hsn_list:
-                    for hsn in set(hsn_list):
-                        if len(hsn) == 6 and int(hsn[:2]) == 99:
-                            sac_master_data = SACMastersData.objects.filter(company_id=company,saccode=hsn).first()
-                            if sac_master_data:
-                                whold_tax_section_inv = sac_master_data.section
-                                whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection=whold_tax_section_inv).first()
+                            if whold_tax_rate_master_data_inv:
                                 whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
-                                break
-                        elif len(hsn) < 6:
-                            whold_tax_section_inv = 'HSN is less than 4 Char or not captured by OCR'
-                            whold_tax_rate_inv = 'HSN is less than 4 Char or not captured by OCR'
-                        else:
-                            whold_tax_section_inv = '194Q'
-                            whold_tax_rate_master_data_inv = withholdingtaxMastersData.objects.filter(company_id=company,wtaxsection='194Q').first()
-                            whold_tax_rate_inv = whold_tax_rate_master_data_inv.wtaxcoderate
+                            else:
+                                whold_tax_rate_inv = 'Withholding Tax master is not uploaded or tax rate for 194Q is not deifned in master'
                 else:
                     whold_tax_section_inv = 'HSN is not captured by OCR'
-                    whold_tax_rate_inv = 'HSN is not captured by OCR'  
+                    whold_tax_rate_inv = 'HSN is not captured by OCR'
+                whold_tax_section_master = 'WithholdingTaxCode system key is not mapped with MIGO Data'
+                whold_tax_rate_master = 'WithholdingTaxCode system key is not mapped with MIGO Data'
             
             tds_rate = {}
             tds_section = {}
@@ -3948,26 +4119,36 @@ def radio_checkss(company,configurations,api_response_):
     count = 5
     account_check_data = {}
     try:
-        account_check_data['Company Code'] = migo_data[0].row_data.get(field_map['CompanyCode'])
-        if migo_data[0].row_data.get(field_map['CompanyCode']):
+        account_check_data['Company Code'] = migo_data[0].row_data.get(field_map.get('CompanyCode'))
+        if migo_data[0].row_data.get(field_map.get('CompanyCode')):
             account_check_data['Company Code'] = migo_data[0].row_data.get(field_map['CompanyCode'])
+        else:
+            account_check_data['Company Code'] = 'CompanyCode system key is not mapped with any column from MiGO DATA'
             count = count - 1
         account_check_data['posting_date'] = configurations['posting_date']
         if configurations['posting_date']:
             account_check_data['posting_date'] = configurations['posting_date']
+        else:
+            account_check_data['posting_date'] = invoice_data.get('InvoiceDate')
             count = count - 1
         account_check_data['Currency'] = invoice_data.get('Currency')
         if invoice_data.get('Currency'):
             account_check_data['Currency'] = invoice_data.get('Currency')
             count = count - 1
-        account_check_data['GL Account'] = migo_data[0].row_data.get(field_map['GLAccount'])
-        if migo_data[0].row_data.get(field_map['GLAccount']):
+        
+        if migo_data[0].row_data.get(field_map.get('GLAccount')):
             account_check_data['GL Account'] = migo_data[0].row_data.get(field_map['GLAccount'])
+        else:
+            account_check_data['GL Account'] = 'GLAccount system key is not mapped with any column from MiGO DATA'
             count = count - 1
-        account_check_data['Cost Center'] = migo_data[0].row_data.get(field_map['CostCenter'])
-        if migo_data[0].row_data.get(field_map['CostCenter']):
+        
+
+        if migo_data[0].row_data.get(field_map.get('CostCenter')):
             account_check_data['Cost Center'] = migo_data[0].row_data.get(field_map['CostCenter'])
+        else:
+            account_check_data['Cost Center'] = 'CostCenter system key is not mapped with any column from MiGO DATA'
             count = count - 1
+
         if count == 1:
             account_check['color'] = 'o' 
         elif count >1:
@@ -4081,6 +4262,7 @@ def configuration_setting(company,api_response_):
             configurations['block_acc'] = block_acc
             configurations['block_pay'] = block_pay
             # print(configurations)
+
         curr_config = config.currency
         currency = {}
         if curr_config:
@@ -4092,6 +4274,7 @@ def configuration_setting(company,api_response_):
 
         narration_config = config.narration
         narration = ''
+
 
         if narration_config:
             fields = narration_config.get('fields', [])
@@ -4118,13 +4301,18 @@ def configuration_setting(company,api_response_):
 
         configurations['narration'] = narration 
 
+
         matching_config = config.matching
         matching_result = {}
         if matching_config:
             typ = matching_config.get('matching_type')
+            matching_logic_ratio = config.matching_logic_ratio
+            fuzzyratio = float(matching_logic_ratio.get('fuzzyratio',50))/100
+            sementicratio = float(matching_logic_ratio.get('sementicratio',50))/100
+            matching_tolerance = float(matching_logic_ratio.get('matching_tolerance',60))/100
             print('matching_type--->',typ)
             if typ == '2way':
-                df1,result = _2way_match(company,migo_data,invoice_data)
+                df1,result = _2way_match(company,migo_data,invoice_data,fuzzyratio,sementicratio,matching_tolerance)
                 matching_result['matching type'] = '2way'
                 matching_result['result'] = result['status']
                 matching_result['reason'] = result['reason']
@@ -4132,13 +4320,13 @@ def configuration_setting(company,api_response_):
             elif typ == '3way':
                 po_data = POData.objects.filter(company_id=company,vendor_code=vendorcode,inv_no=invoice_num)
                 if po_data:
-                    df1,result = _3way_match(company,migo_data,po_data,invoice_data)
+                    df1,result = _3way_match(company,migo_data,po_data,invoice_data,fuzzyratio,sementicratio,matching_tolerance)
                     matching_result['matching type'] = '3way'
                     matching_result['result'] = result['status']
                     matching_result['reason'] = result['reason']
                     matching_result['table'] = df1
                 else:
-                    df1,result = _2way_match(company,migo_data,invoice_data)
+                    df1,result = _2way_match(company,migo_data,invoice_data,fuzzyratio,sementicratio,matching_tolerance)
                     matching_result['matching type'] = '2way'
                     matching_result['result'] = result['status']
                     matching_result['reason'] = result['reason']
@@ -4280,7 +4468,7 @@ def configuration_setting(company,api_response_):
         print("No configuration found for this company.")
     print(configurations)
     return configurations
-def _3way_match(company,migo_data,po_data,invoice_data):
+def _3way_match(company,migo_data,po_data,invoice_data,fuzzyratio,sementicratio,matching_tolerance):
     result = {}
     try:
         try:
@@ -4376,7 +4564,7 @@ def _3way_match(company,migo_data,po_data,invoice_data):
 
         df2.drop(columns=["po_description"], inplace=True)
         
-        invoice_grn_po_df,d2 = map_rows(df1,df2,'3way')
+        invoice_grn_po_df,d2 = map_rows(df1,df2,'3way',fuzzyratio,sementicratio,matching_tolerance)
         cols_to_move = ['matching%', 'color', 'status']
         invoice_grn_po_df = invoice_grn_po_df[[c for c in invoice_grn_po_df.columns if c not in cols_to_move] + cols_to_move]
         invoice_grn_po_df["Reason"] = ""
@@ -4399,7 +4587,7 @@ def _3way_match(company,migo_data,po_data,invoice_data):
         import traceback
         traceback.print_exc()
 
-def _2way_match(company,migo_data,invoice_data):
+def _2way_match(company,migo_data,invoice_data,fuzzyratio,sementicratio,matching_tolerance):
     result = {}
     try:
         try:
@@ -4450,7 +4638,7 @@ def _2way_match(company,migo_data,invoice_data):
             result['reason'] = "Data not found in open grn records"
             return '',result
         
-        invoice_grn_df,d2 = map_rows(df1,df2,'2way')
+        invoice_grn_df,d2 = map_rows(df1,df2,'2way',fuzzyratio,sementicratio,matching_tolerance)
         print(invoice_grn_df)
         cols_to_move = ['matching%', 'color', 'status']
         invoice_grn_df = invoice_grn_df[[c for c in invoice_grn_df.columns if c not in cols_to_move] + cols_to_move]

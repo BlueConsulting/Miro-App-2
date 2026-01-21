@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App Admin – Companies</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .danger {
+            color: white;
+            background-color: #d9534f;
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Registered Companies</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Company Name</th>
+            <th>Superuser Email</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for company in companies %}
+        <tr>
+            <td>{{ company.business_name }}</td>
+            <td>{{ company.contact_person_email }}</td>
+            <td>
+                <form method="post" action="{% url 'app_admin_delete_company' company.company_code %}">
+                    {% csrf_token %}
+                    <button type="submit" class="danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No companies found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

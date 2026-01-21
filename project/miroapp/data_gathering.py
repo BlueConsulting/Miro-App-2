@@ -1,63 +1,54 @@
 
-
-
-
-
-
-
 api_response_test = {'result': {'CHECKS': {'Account_check': {'Complete_Invoice': {'Gst_Portal': '-',
                                                               'Invoice_data': '',
                                                               'status': 'YES'},
-                                         'Customer_Adress': {'Gst_Portal': 'No.71 '
+                                         'Customer_Adress': {'Gst_Portal': '1511 '
+                                                                           ',  '
                                                                            ', '
-                                                                           'EPIP '
-                                                                           'Industrial '
-                                                                           'Area '
-                                                                           ', '
-                                                                           'Road '
-                                                                           'No.3 '
+                                                                           'Railway '
+                                                                           'Parallel '
+                                                                           'road '
                                                                            ', '
                                                                            'Bengaluru '
                                                                            'Urban '
                                                                            ', '
                                                                            'Karnataka '
                                                                            ', '
-                                                                           '560066',
-                                                             'Invoice_data': '#71, '
-                                                                             'EPIP '
-                                                                             'INDL '
-                                                                             'AREA '
-                                                                             ', '
-                                                                             'HOODY '
-                                                                             'VILLAGE, '
-                                                                             'WHITEFIELD '
-                                                                             'ROAD, '
+                                                                           '560064',
+                                                             'Invoice_data': 'Survey '
+                                                                             'No '
+                                                                             '197, '
+                                                                             'Hoody '
+                                                                             'Village, '
                                                                              'KR '
-                                                                             'PURAM\n'
-                                                                             'HOBLI, '
-                                                                             'BANGLORE, '
+                                                                             'Puram, '
+                                                                             'Hobli, '
+                                                                             'BANGALORE, '
                                                                              'None, '
-                                                                             'None, '
-                                                                             '-560066',
+                                                                             '560048, '
+                                                                             'None',
                                                              'status': 'Not '
                                                                        'Matching'},
-                                         'Customer_Name': {'Gst_Portal': 'GLODESI '
-                                                                         'TECHNOLOGIES '
+                                         'Customer_Name': {'Gst_Portal': 'G P '
+                                                                         'NET '
+                                                                         'INDIA '
                                                                          'PRIVATE '
                                                                          'LIMITED',
-                                                           'Invoice_data': 'GLODESI '
-                                                                           'TECHNOLOGIES '
-                                                                           'PRIVATE '
-                                                                           'LIMITED',
-                                                           'status': 'Matching'},
+                                                           'Invoice_data': 'Avirata '
+                                                                           'Afl '
+                                                                           'Connectivity '
+                                                                           'Systems '
+                                                                           'Limited',
+                                                           'status': 'Not '
+                                                                     'Matching'},
                                          'Invoice_Blocked_Credit': {'Gst_Portal': '',
                                                                     'Invoice_data': '',
                                                                     'status': 'Okay'},
                                          'Invoice_Date': {'Gst_Portal': ' ',
-                                                          'Invoice_data': '2025-08-11',
+                                                          'Invoice_data': '2026-01-09',
                                                           'status': 'Okay'},
                                          'Invoice_Number': {'Gst_Portal': ' ',
-                                                            'Invoice_data': '4765/25-26',
+                                                            'Invoice_data': 'GPN/2526/2501776',
                                                             'status': 'Okay'},
                                          'Invoice_RCM-Services': {'Gst_Portal': '',
                                                                   'Invoice_data': '',
@@ -72,176 +63,289 @@ api_response_test = {'result': {'CHECKS': {'Account_check': {'Complete_Invoice':
                                                            'Invoice_data': '',
                                                            'status': 'YES'}},
                        'data_from_gst': {'206AB_Compliance': {'fin_year': '2024-25',
-                                                              'pan': 'AABFV9313N',
-                                                              'pan_allotment_date': '1999-09-06',
-                                                              'pan_name': 'VXXXXA '
-                                                                          'MXXXL '
-                                                                          'FXXXXXXXS',
+                                                              'pan': 'ABCCA9817F',
+                                                              'pan_allotment_date': '2025-05-23',
+                                                              'pan_name': 'AXXXXXA '
+                                                                          'AXL '
+                                                                          'CXXXXXXXXXXY '
+                                                                          'SXXXXXS '
+                                                                          'LXXXXXD',
                                                               'pan_operative_status': 'operative',
                                                               'specified_person': 'N'},
-                                         'Filing Frequency': [{'preference': 'Q',
+                                         'Filing Frequency': [{'preference': 'M',
                                                                'quarter': 'Q1'},
-                                                              {'preference': 'Q',
+                                                              {'preference': 'M',
                                                                'quarter': 'Q2'},
-                                                              {'preference': 'Q',
+                                                              {'preference': 'M',
                                                                'quarter': 'Q3'},
-                                                              {'preference': 'Q',
+                                                              {'preference': 'M',
                                                                'quarter': 'Q4'}],
-                                         'Filing Status': [{'arn': 'AB070325024986Y',
-                                                            'dof': '18-04-2025',
+                                         'Filing Status': [{'arn': 'AB2910251941743',
+                                                            'dof': '20-11-2025',
                                                             'mof': 'ONLINE',
-                                                            'ret_prd': '032025',
+                                                            'ret_prd': '102025',
                                                             'rtntype': 'GSTR3B',
                                                             'status': 'Filed',
                                                             'valid': 'Y'},
-                                                           {'arn': 'AA070325662210L',
-                                                            'dof': '12-04-2025',
+                                                           {'arn': 'AB2911252480095',
+                                                            'dof': '19-12-2025',
                                                             'mof': 'ONLINE',
-                                                            'ret_prd': '032025',
-                                                            'rtntype': 'GSTR1',
-                                                            'status': 'Filed',
-                                                            'valid': 'Y'},
-                                                           {'arn': 'AA070924487895A',
-                                                            'dof': '11-10-2024',
-                                                            'mof': 'ONLINE',
-                                                            'ret_prd': '092024',
-                                                            'rtntype': 'GSTR1',
-                                                            'status': 'Filed',
-                                                            'valid': 'Y'},
-                                                           {'arn': 'AA070924488104Y',
-                                                            'dof': '11-10-2024',
-                                                            'mof': 'ONLINE',
-                                                            'ret_prd': '092024',
+                                                            'ret_prd': '112025',
                                                             'rtntype': 'GSTR3B',
                                                             'status': 'Filed',
                                                             'valid': 'Y'},
-                                                           {'arn': 'AA071224444910E',
-                                                            'dof': '11-01-2025',
+                                                           {'arn': 'AB2909251986665',
+                                                            'dof': '18-10-2025',
                                                             'mof': 'ONLINE',
-                                                            'ret_prd': '122024',
-                                                            'rtntype': 'GSTR1',
-                                                            'status': 'Filed',
-                                                            'valid': 'Y'},
-                                                           {'arn': 'AA071224445326C',
-                                                            'dof': '11-01-2025',
-                                                            'mof': 'ONLINE',
-                                                            'ret_prd': '122024',
+                                                            'ret_prd': '092025',
                                                             'rtntype': 'GSTR3B',
                                                             'status': 'Filed',
                                                             'valid': 'Y'},
-                                                           {'arn': 'AA070624220225K',
-                                                            'dof': '08-07-2024',
+                                                           {'arn': 'AA290825946550S',
+                                                            'dof': '18-09-2025',
                                                             'mof': 'ONLINE',
-                                                            'ret_prd': '062024',
+                                                            'ret_prd': '082025',
+                                                            'rtntype': 'GSTR3B',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA290625842446S',
+                                                            'dof': '15-07-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '062025',
+                                                            'rtntype': 'GSTR3B',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA290725618699D',
+                                                            'dof': '12-08-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '072025',
+                                                            'rtntype': 'GSTR3B',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA291125475883Q',
+                                                            'dof': '11-12-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '112025',
                                                             'rtntype': 'GSTR1',
                                                             'status': 'Filed',
                                                             'valid': 'Y'},
-                                                           {'arn': 'AA070624220322O',
-                                                            'dof': '08-07-2024',
+                                                           {'arn': 'AA291025493747O',
+                                                            'dof': '11-11-2025',
                                                             'mof': 'ONLINE',
-                                                            'ret_prd': '062024',
-                                                            'rtntype': 'GSTR3B',
+                                                            'ret_prd': '102025',
+                                                            'rtntype': 'GSTR1',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA290925345806K',
+                                                            'dof': '10-10-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '092025',
+                                                            'rtntype': 'GSTR1',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA2912255447604',
+                                                            'dof': '10-01-2026',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '122025',
+                                                            'rtntype': 'GSTR1',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA2906253203259',
+                                                            'dof': '09-07-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '062025',
+                                                            'rtntype': 'GSTR1',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA290725277398E',
+                                                            'dof': '08-08-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '072025',
+                                                            'rtntype': 'GSTR1',
+                                                            'status': 'Filed',
+                                                            'valid': 'Y'},
+                                                           {'arn': 'AA290825142728N',
+                                                            'dof': '04-09-2025',
+                                                            'mof': 'ONLINE',
+                                                            'ret_prd': '082025',
+                                                            'rtntype': 'GSTR1',
                                                             'status': 'Filed',
                                                             'valid': 'Y'}],
                                          'Pan_Status': {'aadhaar_linked': None,
                                                         'aadhaar_number': '',
                                                         'aadhaar_seeding_status': 'NA',
-                                                        'address': {'building_name': 'No '
-                                                                                     '365 '
-                                                                                     '10th '
-                                                                                     'cross',
-                                                                    'city': 'BANGALORE',
+                                                        'address': {'building_name': 'Plot '
+                                                                                     'No '
+                                                                                     '311 '
+                                                                                     'NPR '
+                                                                                     'Complex '
+                                                                                     'Opposite '
+                                                                                     'to '
+                                                                                     'Prestage '
+                                                                                     'Shanthinikethan',
+                                                                    'city': 'Bangalore '
+                                                                            'North',
                                                                     'country': 'India',
-                                                                    'locality': 'Peenya '
-                                                                                'I '
-                                                                                'Stage '
-                                                                                'S.O',
-                                                                    'pincode': '560058',
+                                                                    'locality': 'Hoodi '
+                                                                                'B.O',
+                                                                    'pincode': '560048',
                                                                     'state': 'Karnataka',
-                                                                    'street_name': 'Peenya '
-                                                                                   'Industrial '
-                                                                                   'Area'},
-                                                        'dob': '15/04/1991',
+                                                                    'street_name': ' '
+                                                                                   'KR '
+                                                                                   'Puram '
+                                                                                   'Hobli '
+                                                                                   'Hoodi '
+                                                                                   'White '
+                                                                                   'Field '
+                                                                                   'Road '
+                                                                                   'Bengaluru'},
+                                                        'dob': '23/05/2025',
                                                         'email': '',
                                                         'first_name': '',
-                                                        'fullname': 'VIJAYA '
-                                                                    'METAL '
-                                                                    'FINISHERS',
+                                                        'fullname': 'AVIRATA '
+                                                                    'AFL '
+                                                                    'CONNECTIVITY '
+                                                                    'SYSTEMS '
+                                                                    'LIMITED',
                                                         'gender': None,
-                                                        'last_name': 'VIJAYA '
-                                                                     'METAL '
-                                                                     'FINISHERS',
+                                                        'last_name': 'AVIRATA '
+                                                                     'AFL '
+                                                                     'CONNECTIVITY '
+                                                                     'SYSTEMS '
+                                                                     'LIMITED',
                                                         'middle_name': '',
                                                         'mobile': '',
-                                                        'pan': 'AABFV9313N',
+                                                        'pan': 'ABCCA9817F',
                                                         'pan_status': 'Active',
-                                                        'pan_type': 'Firm/Limited '
-                                                                    'Liability '
-                                                                    'Partnership'},
-                                         'Vendor_Filing_status': 'Invalid '
-                                                                 'GSTIN',
-                                         'customer_gst_data': {'Address': 'No.71 '
+                                                        'pan_type': 'Company'},
+                                         'customer_gst_data': {'Address': '1511 '
+                                                                          ',  '
                                                                           ', '
-                                                                          'EPIP '
-                                                                          'Industrial '
-                                                                          'Area '
-                                                                          ', '
-                                                                          'Road '
-                                                                          'No.3 '
+                                                                          'Railway '
+                                                                          'Parallel '
+                                                                          'road '
                                                                           ', '
                                                                           'Bengaluru '
                                                                           'Urban '
                                                                           ', '
                                                                           'Karnataka '
                                                                           ', '
-                                                                          '560066',
-                                                               'Central tax Jurisdiction': 'RANGE-BED7',
-                                                               'Central tax Jurisdiction Code': 'YT0702',
-                                                               'Date of Registration': '01/07/2017',
+                                                                          '560064',
+                                                               'Central tax Jurisdiction': 'RANGE-BND8',
+                                                               'Central tax Jurisdiction Code': 'YW0803',
+                                                               'Date of Registration': '01/11/2022',
                                                                'Duty': 'Regular',
                                                                'E-Invoice Status': 'Yes',
-                                                               'Gstin': '29AAGCG0335D2ZX',
-                                                               'Legal Name': 'GLODESI '
-                                                                             'TECHNOLOGIES '
+                                                               'Gstin': '29AAKCG0838K1Z7',
+                                                               'Legal Name': 'G '
+                                                                             'P '
+                                                                             'NET '
+                                                                             'INDIA '
                                                                              'PRIVATE '
                                                                              'LIMITED',
                                                                'Nature of Business Activity': ['Factory '
                                                                                                '/ '
-                                                                                               'Manufacturing'],
-                                                               'State Jurisdiction Code': 'KA119',
-                                                               'Trade Name': 'GLODESI '
-                                                                             'TECHNOLOGIES '
+                                                                                               'Manufacturing',
+                                                                                               'Recipient '
+                                                                                               'of '
+                                                                                               'Goods '
+                                                                                               'or '
+                                                                                               'Services',
+                                                                                               'Export',
+                                                                                               'Import'],
+                                                               'State Jurisdiction Code': 'KA032',
+                                                               'Trade Name': 'G '
+                                                                             'P '
+                                                                             'NET '
+                                                                             'INDIA '
                                                                              'PRIVATE '
                                                                              'LIMITED'},
-                                         'vendor_gst_data': {'vendor_gst': 'Invalid '
-                                                                           'Gst '
-                                                                           'Number'}},
-                       'e-invoice_data': {'einvoice_liability': 'InValid GST '
-                                                                'Number',
-                                          'reason': 'InValid GST Number',
-                                          'status': 'Not Okay'},
-                       'eway_bill_data': {'Invoice_No': {'e-waybill': 'GST '
+                                         'vendor_gst_data': {'Address': 'Plot '
+                                                                        'No '
+                                                                        '311 , '
+                                                                        'NPR '
+                                                                        'Complex, '
+                                                                        'Survey '
+                                                                        'No '
+                                                                        '197 , '
+                                                                        'White '
+                                                                        'Field '
+                                                                        'Road '
+                                                                        ', '
+                                                                        'Bengaluru '
+                                                                        'Urban '
+                                                                        ', '
+                                                                        'Karnataka '
+                                                                        ', '
+                                                                        '560048',
+                                                             'Central tax Jurisdiction': 'RANGE-BED8',
+                                                             'Central tax Jurisdiction Code': 'YT0802',
+                                                             'Date of Registration': '24/06/2025',
+                                                             'Duty': 'Regular',
+                                                             'E-Invoice Status': 'No',
+                                                             'Gstin': '29ABCCA9817F1ZH',
+                                                             'Legal Name': 'AVIRATA '
+                                                                           'AFL '
+                                                                           'CONNECTIVITY '
+                                                                           'SYSTEMS '
+                                                                           'LIMITED',
+                                                             'Nature of Business Activity': ['Factory '
+                                                                                             '/ '
+                                                                                             'Manufacturing'],
+                                                             'State Jurisdiction Code': 'KA119',
+                                                             'Trade Name': 'AVIRATA '
+                                                                           'AFL '
+                                                                           'CONNECTIVITY '
+                                                                           'SYSTEMS '
+                                                                           'LIMITED'}},
+                       'e-invoice_data': {'einvoice_liability': 'No',
+                                          'reason': 'Vendor is not liable to '
+                                                    'raise E-Invoice',
+                                          'status': 'okay_'},
+                       'eway_bill_data': {'Invoice_No': {'e-waybill': 'Invalid '
+                                                                      'Eway '
+                                                                      'Bill '
                                                                       'Number '
-                                                                      'is Not '
-                                                                      'Valid',
-                                                         'invoice': '4765/25-26'},
-                                          'Total_Amount': {'e-waybill': 'GST '
+                                                                      'or No '
+                                                                      'data '
+                                                                      'against '
+                                                                      'captured '
+                                                                      'Eway '
+                                                                      'Bill No',
+                                                         'invoice': 'GPN/2526/2501776'},
+                                          'Total_Amount': {'e-waybill': 'Invalid '
+                                                                        'Eway '
+                                                                        'Bill '
                                                                         'Number '
-                                                                        'is '
-                                                                        'Not '
-                                                                        'Valid',
-                                                           'invoice': '4921.00'},
-                                          'Vendor_Gst': {'e-waybill': 'GST '
+                                                                        'or No '
+                                                                        'data '
+                                                                        'against '
+                                                                        'captured '
+                                                                        'Eway '
+                                                                        'Bill '
+                                                                        'No',
+                                                           'invoice': '477900.00'},
+                                          'Vendor_Gst': {'e-waybill': 'Invalid '
+                                                                      'Eway '
+                                                                      'Bill '
                                                                       'Number '
-                                                                      'is Not '
-                                                                      'Valid',
-                                                         'invoice': '29AABFV9313NIZL'},
-                                          'reason': 'Vendor is liable to raise '
-                                                    'E-Way Bill, but GST '
-                                                    'Number is Not Valid',
+                                                                      'or No '
+                                                                      'data '
+                                                                      'against '
+                                                                      'captured '
+                                                                      'Eway '
+                                                                      'Bill No',
+                                                         'invoice': '29ABCCA9817F1ZH'},
+                                          'reason': {'error_cd': '325',
+                                                     'message': 'Could not '
+                                                                'retrieve '
+                                                                'data'},
                                           'status': 'not okay'},
-                       'table_data': {'Table_Check_data': '[{"item_description":"DP '
-                                                          'Angle","item_quantity":13.0,"unit_price":338.0,"product_code":"998873","tax_rate":6.0,"amount":4394.0,"qty_unitprice":4394.0,"qty_unit+rate_qty_unit":4657.64,"qty_unit+2_rate_qty_unit":4921.28,"check1":"correct"}]'},
+                       'table_data': {'Table_Check_data': '[{"item_description":"ATC-RS-01 '
+                                                          '- OPTIPOP RS ( '
+                                                          'Spare reel for '
+                                                          'OPTIPOP R, 6 '
+                                                          'pcs\\/set)","item_quantity":50.0,"unit_price":8100.0,"product_code":"85367000","amount":405000.0,"qty_unitprice":405000.0,"check1":"correct"}]'},
                        'tax_check': {'Company_Gst_Valid': {'Gst_Portal': '',
                                                            'Invoice_data': '',
                                                            'status': 'YES'},
@@ -251,111 +355,101 @@ api_response_test = {'result': {'CHECKS': {'Account_check': {'Complete_Invoice':
                                      'Vendor_206AB': {'Gst_Portal': 'N',
                                                       'Invoice_data': '',
                                                       'status': 'Okay'},
-                                     'Vendor_Filing_status': {'Gst_Portal': 'Not '
-                                                                            'fetched '
-                                                                            'as '
-                                                                            'no '
-                                                                            'vendor '
-                                                                            'Gst '
-                                                                            'or '
-                                                                            'Invalid '
-                                                                            'Gst '
-                                                                            'on '
-                                                                            'Invoice',
+                                     'Vendor_Filing_status': {'Gst_Portal': '',
                                                               'Invoice_data': ' ',
-                                                              'status': 'Not '
-                                                                        'fetched '
-                                                                        'as no '
-                                                                        'vendor '
-                                                                        'Gst '
-                                                                        'or '
-                                                                        'Invalid '
-                                                                        'Gst '
-                                                                        'on '
-                                                                        'Invoice'},
+                                                              'status': 'Filled'},
                                      'Vendor_Gst_Active': {'Gst_Portal': '',
-                                                           'Invoice_data': '',
-                                                           'status': 'NO'},
-                                     'Vendor_Gst_Valid': {'Gst_Portal': 'Invalid '
-                                                                        'Gst '
-                                                                        'Number',
-                                                          'Invoice_data': '29AABFV9313NIZL',
-                                                          'status': 'NO'},
+                                                           'Invoice_data': 'Active',
+                                                           'status': 'YES'},
+                                     'Vendor_Gst_Valid': {'Gst_Portal': '',
+                                                          'Invoice_data': '29ABCCA9817F1ZH',
+                                                          'status': 'YES'},
                                      'Vendor_Gst_mentioned': {'Gst_Portal': '',
-                                                              'Invoice_data': '29AABFV9313NIZL',
+                                                              'Invoice_data': '29ABCCA9817F1ZH',
                                                               'status': 'YES'},
                                      'Vendor_Pan-Adhar_Linked': {'Gst_Portal': None,
                                                                  'Invoice_data': '',
-                                                                 'status': 'Not Okay'},
-                                     'Vendor_Pan_Active': {'Gst_Portal': 'Not Active',
+                                                                 'status': 'Okay'},
+                                     'Vendor_Pan_Active': {'Gst_Portal': 'Active',
                                                            'Invoice_data': '',
-                                                           'status': 'Not Okay'},
-                                     'Vendor_TaxPayer_type': {'Gst_Portal': 'Invalid '
-                                                                            'Gst '
-                                                                            'Number',
-                                                              'Invoice_data': '29AABFV9313NIZL',
-                                                              'status': 'Invalid '
-                                                                        'Gst '
-                                                                        'Number'},
-                                     'Vendor_Taxfiliging_Frequency': {'Gst_Portal': 'Not '
-                                                                                    'fetched',
+                                                           'status': 'Okay'},
+                                     'Vendor_TaxPayer_type': {'Gst_Portal': 'Regular',
+                                                              'Invoice_data': '-',
+                                                              'status': 'Regular'},
+                                     'Vendor_Taxfiliging_Frequency': {'Gst_Portal': 'Monthly',
                                                                       'Invoice_data': ' ',
-                                                                      'status': 'Not '
-                                                                                'fetched'},
+                                                                      'status': 'Monthly'},
                                      'tax_type_on_invoice': {'Gst_Portal': ' ',
                                                              'Invoice_data': ' ',
                                                              'status': 'Okay'}}},
-            'Invoice_data': {'Ack_No': None,
-                             'Bank_Details': {'Account_holder_name': 'Dutch 5',
+            'Invoice_data': {'Ack_No': '112628501510712',
+                             'Bank_Details': {'Account_holder_name': 'GP',
                                               'Bank_Account_No': None,
                                               'Email': None,
-                                              'VendorAddress': '#365, 10th '
-                                                               'Cross,IV '
-                                                               'Phase, Peenya '
-                                                               'Indl Area, '
-                                                               'Bangalore, '
-                                                               'Karnataka, '
-                                                               '560058, INDIA'},
+                                              'VendorAddress': '3rd Floor, 9th '
+                                                               'Cross,\n'
+                                                               'MCECHS Layout, '
+                                                               'Phase 2,\n'
+                                                               'Dr S R K '
+                                                               'Nagar, 2nd '
+                                                               'Stage,\n'
+                                                               'Jakkur, '
+                                                               'Bangalore-560064, '
+                                                               'None, None, '
+                                                               'None, None'},
+                             'BillingAddress': 'Survey No 197, Hoody Village, '
+                                               'KR Puram, Hobli, BANGALORE, '
+                                               'None, 560048, None',
+                             'BillingAddressRecipient': 'Avirata Afl '
+                                                        'Connectivity Systems '
+                                                        'Limited',
                              'Currency': 'INR',
-                             'CustomerAddress': '#71, EPIP INDL AREA , HOODY '
-                                                'VILLAGE, WHITEFIELD ROAD, KR '
-                                                'PURAM\n'
-                                                'HOBLI, BANGLORE, None, None, '
-                                                '-560066',
-                             'CustomerAddressRecipient': 'GLODESI TECHNOLOGIES '
-                                                         'PRIVATE LIMITED',
-                             'CustomerName': 'GLODESI TECHNOLOGIES PRIVATE '
-                                             'LIMITED',
-                             'Cutomer Gst No.': '29AAGCG0335D2ZX',
-                             'EwayBill_No': None,
-                             'Invoice items:': {'item#1': {'amount': '4394.0',
-                                                           'item_description': 'DP '
-                                                                               'Angle',
-                                                           'item_quantity': 13.0,
-                                                           'product_code': '998873',
-                                                           'tax_rate': '6.00%\n'
-                                                                       '6.00%',
-                                                           'unit_price': '338.0'}},
-                             'InvoiceDate': '2025-08-11',
-                             'InvoiceId': '4765/25-26',
-                             'InvoiceTotal': '4921.00',
-                             'Irn_No': None,
-                             'Payment_Term': 'Within 30 days',
-                             'PurchaseOrder': '241000599',
-                             'SubTotal': '4394.00',
-                             'Tax Items': {'CGST': {'amount': '263.64'},
-                                           'IGST': {'amount': '0.00'},
-                                           'SGST': {'amount': '263.64'}},
+                             'CustomerName': 'Avirata Afl Connectivity Systems '
+                                             'Limited',
+                             'Cutomer Gst No.': '29AAKCG0838K1Z7',
+                             'EwayBill_No': '122314852635',
+                             'Invoice items:': {'item#1': {'amount': '405000.0',
+                                                           'item_description': 'ATC-RS-01 '
+                                                                               '- '
+                                                                               'OPTIPOP '
+                                                                               'RS '
+                                                                               '( '
+                                                                               'Spare '
+                                                                               'reel '
+                                                                               'for '
+                                                                               'OPTIPOP '
+                                                                               'R, '
+                                                                               '6 '
+                                                                               'pcs/set)',
+                                                           'item_quantity': 50.0,
+                                                           'product_code': '85367000',
+                                                           'unit_price': '8100.0'}},
+                             'InvoiceDate': '2026-01-09',
+                             'InvoiceId': 'GPN/2526/2501776',
+                             'InvoiceTotal': '477900.00',
+                             'Irn_No': '',
+                             'Payment_Term': '30 Days',
+                             'PurchaseOrder': '9940000009',
+                             'ShippingAddress': 'Survey No 197, Hoody Village, '
+                                                'KR Puram, Hobli, BANGALORE, '
+                                                'None, 560048, None',
+                             'ShippingAddressRecipient': 'Avirata Afl '
+                                                         'Connectivity Systems '
+                                                         'Limited',
+                             'SubTotal': '405000.00',
+                             'Tax Items': {'CGST': {'amount': '36450.00'},
+                                           'SGST': {'amount': '36450.00'}},
                              'Tax_Invoice': 'Tax Invoice',
-                             'TotalDiscount': '0.00',
-                             'TotalTax': '527.28',
-                             'Vendor Gst No.': '29AABFV9313NIZL',
-                             'VendorAddress': '#365, 10th Cross,IV Phase, '
-                                              'Peenya Indl Area, Bangalore, '
-                                              'Karnataka, 560058, INDIA',
-                             'VendorAddressRecipient': 'VIJAYA METAL FINISHERS',
-                             'VendorName': 'Dutch 5',
-                             'relevent_page': ['1']}}}
+                             'TotalTax': '72900.00',
+                             'Vendor Gst No.': '29ABCCA9817F1ZH',
+                             'VendorAddress': '3rd Floor, 9th Cross,\n'
+                                              'MCECHS Layout, Phase 2,\n'
+                                              'Dr S R K Nagar, 2nd Stage,\n'
+                                              'Jakkur, Bangalore-560064, None, '
+                                              'None, None, None',
+                             'VendorAddressRecipient': 'G P NET INDIA PVT LTD',
+                             'VendorName': 'GP',
+                             'relevent_page': [0]}}}
 if __name__ == "__main__":
     #.get('data_from_gst',{}).get('eway_bill_data')
     ewy = api_response_test.get('result',{}).get('CHECKS').get('eway_bill_data')

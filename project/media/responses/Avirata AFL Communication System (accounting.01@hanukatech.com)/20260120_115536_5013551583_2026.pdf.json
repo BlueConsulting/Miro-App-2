@@ -1,0 +1,425 @@
+{
+    "result": {
+        "CHECKS": {
+            "Account_check": {
+                "Complete_Invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Customer_Adress": {
+                    "Gst_Portal": "1511 ,  , Railway Parallel road , Bengaluru Urban , Karnataka , 560064",
+                    "Invoice_data": "Survey No 197, Hoody Village, KR Puram, Hobli, BANGALORE, None, 560048, None",
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Customer_Name": {
+                    "Gst_Portal": "G P NET INDIA PRIVATE LIMITED",
+                    "Invoice_data": "Avirata Afl Connectivity Systems Limited",
+                    "status": "Not Matching",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Invoice_Blocked_Credit": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Invoice_Date": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "2026-01-09",
+                    "status": "Okay"
+                },
+                "Invoice_Number": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": "GPN/2526/2501776",
+                    "status": "Okay"
+                },
+                "Invoice_RCM-Services": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "Pre_year": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "NO"
+                },
+                "gstnumber_gstcharged": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "valid_invoice": {
+                    "Gst_Portal": "-",
+                    "Invoice_data": "",
+                    "status": "YES"
+                }
+            },
+            "data_from_gst": {
+                "206AB_Compliance": {
+                    "fin_year": "2024-25",
+                    "pan": "ABCCA9817F",
+                    "pan_allotment_date": "2025-05-23",
+                    "pan_name": "AXXXXXA AXL CXXXXXXXXXXY SXXXXXS LXXXXXD",
+                    "pan_operative_status": "operative",
+                    "specified_person": "N"
+                },
+                "Filing Frequency": [
+                    {
+                        "preference": "M",
+                        "quarter": "Q1"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q2"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q3"
+                    },
+                    {
+                        "preference": "M",
+                        "quarter": "Q4"
+                    }
+                ],
+                "Filing Status": [
+                    {
+                        "arn": "AB2910251941743",
+                        "dof": "20-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2911252480095",
+                        "dof": "19-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AB2909251986665",
+                        "dof": "18-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290825946550S",
+                        "dof": "18-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290625842446S",
+                        "dof": "15-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290725618699D",
+                        "dof": "12-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR3B",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291125475883Q",
+                        "dof": "11-12-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "112025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA291025493747O",
+                        "dof": "11-11-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "102025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290925345806K",
+                        "dof": "10-10-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "092025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2912255447604",
+                        "dof": "10-01-2026",
+                        "mof": "ONLINE",
+                        "ret_prd": "122025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA2906253203259",
+                        "dof": "09-07-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "062025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290725277398E",
+                        "dof": "08-08-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "072025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    },
+                    {
+                        "arn": "AA290825142728N",
+                        "dof": "04-09-2025",
+                        "mof": "ONLINE",
+                        "ret_prd": "082025",
+                        "rtntype": "GSTR1",
+                        "status": "Filed",
+                        "valid": "Y"
+                    }
+                ],
+                "Pan_Status": {
+                    "aadhaar_linked": null,
+                    "aadhaar_number": "",
+                    "aadhaar_seeding_status": "NA",
+                    "address": {
+                        "building_name": "Plot No 311 NPR Complex Opposite to Prestage Shanthinikethan",
+                        "city": "Bangalore North",
+                        "country": "India",
+                        "locality": "Hoodi B.O",
+                        "pincode": "560048",
+                        "state": "Karnataka",
+                        "street_name": " KR Puram Hobli Hoodi White Field Road Bengaluru"
+                    },
+                    "dob": "23/05/2025",
+                    "email": "",
+                    "first_name": "",
+                    "fullname": "AVIRATA AFL CONNECTIVITY SYSTEMS LIMITED",
+                    "gender": null,
+                    "last_name": "AVIRATA AFL CONNECTIVITY SYSTEMS LIMITED",
+                    "middle_name": "",
+                    "mobile": "",
+                    "pan": "ABCCA9817F",
+                    "pan_status": "Active",
+                    "pan_type": "Company"
+                },
+                "customer_gst_data": {
+                    "Address": "1511 ,  , Railway Parallel road , Bengaluru Urban , Karnataka , 560064",
+                    "Central tax Jurisdiction": "RANGE-BND8",
+                    "Central tax Jurisdiction Code": "YW0803",
+                    "Date of Registration": "01/11/2022",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "Yes",
+                    "Gstin": "29AAKCG0838K1Z7",
+                    "Legal Name": "G P NET INDIA PRIVATE LIMITED",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing",
+                        "Recipient of Goods or Services",
+                        "Export",
+                        "Import"
+                    ],
+                    "State Jurisdiction Code": "KA032",
+                    "Trade Name": "G P NET INDIA PRIVATE LIMITED"
+                },
+                "vendor_gst_data": {
+                    "Address": "Plot No 311 , NPR Complex, Survey No 197 , White Field Road , Bengaluru Urban , Karnataka , 560048",
+                    "Central tax Jurisdiction": "RANGE-BED8",
+                    "Central tax Jurisdiction Code": "YT0802",
+                    "Date of Registration": "24/06/2025",
+                    "Duty": "Regular",
+                    "E-Invoice Status": "No",
+                    "Gstin": "29ABCCA9817F1ZH",
+                    "Legal Name": "AVIRATA AFL CONNECTIVITY SYSTEMS LIMITED",
+                    "Nature of Business Activity": [
+                        "Factory / Manufacturing"
+                    ],
+                    "State Jurisdiction Code": "KA119",
+                    "Trade Name": "AVIRATA AFL CONNECTIVITY SYSTEMS LIMITED"
+                }
+            },
+            "e-invoice_data": {
+                "einvoice_liability": "No",
+                "reason": "Vendor is not liable to raise E-Invoice",
+                "status": "okay_"
+            },
+            "eway_bill_data": {
+                "Invoice_No": {
+                    "e-waybill": "Invalid Eway Bill Number or No data against captured Eway Bill No",
+                    "invoice": "GPN/2526/2501776",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Total_Amount": {
+                    "e-waybill": "Invalid Eway Bill Number or No data against captured Eway Bill No",
+                    "invoice": "477900.00",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "Vendor_Gst": {
+                    "e-waybill": "Invalid Eway Bill Number or No data against captured Eway Bill No",
+                    "invoice": "29ABCCA9817F1ZH",
+                    "color": "r",
+                    "processor_remark": "",
+                    "checker_remark": ""
+                },
+                "reason": {
+                    "error_cd": "325",
+                    "message": "Could not retrieve data"
+                },
+                "status": "not okay"
+            },
+            "table_data": {
+                "Table_Check_data": "[{\"item_description\":\"ATC-RS-01 - OPTIPOP RS ( Spare reel for OPTIPOP R, 6 pcs\\/set)\",\"item_quantity\":50.0,\"unit_price\":8100.0,\"product_code\":\"85367000\",\"amount\":405000.0,\"qty_unitprice\":405000.0,\"check1\":\"correct\"}]"
+            },
+            "tax_check": {
+                "Company_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Company_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "",
+                    "status": "YES"
+                },
+                "Vendor_206AB": {
+                    "Gst_Portal": "N",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Filing_status": {
+                    "Gst_Portal": "",
+                    "Invoice_data": " ",
+                    "status": "Filled"
+                },
+                "Vendor_Gst_Active": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "Active",
+                    "status": "YES"
+                },
+                "Vendor_Gst_Valid": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29ABCCA9817F1ZH",
+                    "status": "YES"
+                },
+                "Vendor_Gst_mentioned": {
+                    "Gst_Portal": "",
+                    "Invoice_data": "29ABCCA9817F1ZH",
+                    "status": "YES"
+                },
+                "Vendor_Pan-Adhar_Linked": {
+                    "Gst_Portal": null,
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_Pan_Active": {
+                    "Gst_Portal": "Active",
+                    "Invoice_data": "",
+                    "status": "Okay"
+                },
+                "Vendor_TaxPayer_type": {
+                    "Gst_Portal": "Regular",
+                    "Invoice_data": "-",
+                    "status": "Regular"
+                },
+                "Vendor_Taxfiliging_Frequency": {
+                    "Gst_Portal": "Monthly",
+                    "Invoice_data": " ",
+                    "status": "Monthly"
+                },
+                "tax_type_on_invoice": {
+                    "Gst_Portal": " ",
+                    "Invoice_data": " ",
+                    "status": "Okay"
+                }
+            }
+        },
+        "Invoice_data": {
+            "Ack_No": "112628501510712",
+            "Bank_Details": {
+                "Account_holder_name": "GP",
+                "Bank_Account_No": null,
+                "Email": null,
+                "VendorAddress": "3rd Floor, 9th Cross,\nMCECHS Layout, Phase 2,\nDr S R K Nagar, 2nd Stage,\nJakkur, Bangalore-560064, None, None, None, None"
+            },
+            "BillingAddress": "Survey No 197, Hoody Village, KR Puram, Hobli, BANGALORE, None, 560048, None",
+            "BillingAddressRecipient": "Avirata Afl Connectivity Systems Limited",
+            "Currency": "INR",
+            "CustomerName": "Avirata Afl Connectivity Systems Limited",
+            "Cutomer Gst No.": "29ABCCA9817F1ZH",
+            "EwayBill_No": "122314852635",
+            "Invoice items:": {
+                "item#1": {
+                    "amount": "405000.0",
+                    "item_description": "ATC-RS-01 - OPTIPOP RS ( Spare reel for OPTIPOP R, 6 pcs/set)",
+                    "item_quantity": 50.0,
+                    "product_code": "85367000",
+                    "unit_price": "8100.0"
+                }
+            },
+            "InvoiceDate": "2026-01-09",
+            "InvoiceId": "GPN/2526/2501776",
+            "InvoiceTotal": "477900.00",
+            "Irn_No": "",
+            "Payment_Term": "30 Days",
+            "PurchaseOrder": "9940000009",
+            "ShippingAddress": "Survey No 197, Hoody Village, KR Puram, Hobli, BANGALORE, None, 560048, None",
+            "ShippingAddressRecipient": "Avirata Afl Connectivity Systems Limited",
+            "SubTotal": "405000.00",
+            "Tax Items": {
+                "CGST": {
+                    "amount": "36450.00"
+                },
+                "SGST": {
+                    "amount": "36450.00"
+                }
+            },
+            "Tax_Invoice": "Tax Invoice",
+            "TotalTax": "72900.00",
+            "Vendor Gst No.": "29AAKCG0838K1Z7",
+            "VendorAddress": "3rd Floor, 9th Cross,\nMCECHS Layout, Phase 2,\nDr S R K Nagar, 2nd Stage,\nJakkur, Bangalore-560064, None, None, None, None",
+            "VendorAddressRecipient": "G P NET INDIA PVT LTD",
+            "VendorName": "GP",
+            "relevent_page": [
+                0
+            ]
+        },
+        "Okay_NotOkay": {
+            "status": "Not All Okay",
+            "message": [
+                "Customer_Adress Not Matched",
+                "Customer_Name Not Matched",
+                "Vendor_Filing_status"
+            ]
+        }
+    }
+}
